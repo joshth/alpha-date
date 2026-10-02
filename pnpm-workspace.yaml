@@ -1,0 +1,10 @@
+packages:
+  - '.'
+
+allowBuilds:
+  # Required by drizzle-kit: esbuild's postinstall links the platform binary.
+  esbuild: true
+  # sharp is only pulled in transitively; next.config.mjs sets images.unoptimized.
+  sharp: false
+  # eslint resolver ships a JS fallback; the native binding postinstall is optional.
+  unrs-resolver: false
