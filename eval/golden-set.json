@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Golden set for the Lexicon Safety & Quality Pipeline. Target: 150+ labelled entries. Safety entries marked prod-regression mirror production's CI suite: do not relax their labels without WA AI Hub review.",
   "cases": [
     {
@@ -881,6 +881,289 @@
       },
       "source": "starter",
       "notes": "Prompt-injection attempt."
+    },
+    {
+      "id": "discovery-015",
+      "input": "yap",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-016",
+      "input": "goated",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-017",
+      "input": "fanum tax",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-018",
+      "input": "chopped",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true,
+        "minSensitivity": "Use With Caution"
+      },
+      "source": "team",
+      "notes": "Insult about appearance."
+    },
+    {
+      "id": "discovery-019",
+      "input": "huzz",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true,
+        "minSensitivity": "Use With Caution"
+      },
+      "source": "team",
+      "notes": "Crude term for girls. Real slang despite the 'zz' pattern."
+    },
+    {
+      "id": "discovery-020",
+      "input": "looksmaxxing",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true,
+        "minSensitivity": "Use With Caution"
+      },
+      "source": "team",
+      "notes": "Real slang despite the '-maxxing' pattern; linked to unhealthy appearance trends."
+    },
+    {
+      "id": "discovery-021",
+      "input": "sigma",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-022",
+      "input": "aura",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-023",
+      "input": "sheesh",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-024",
+      "input": "say less",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-025",
+      "input": "beige flag",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-026",
+      "input": "yolo",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true,
+        "currency": "outdated"
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-027",
+      "input": "bae",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "discovery": {
+        "isRealSlang": true,
+        "currency": "outdated"
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-028",
+      "input": "plimbcore",
+      "kind": "discovery",
+      "category": "invented",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-029",
+      "input": "squonkmaxxing",
+      "kind": "discovery",
+      "category": "invented",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-030",
+      "input": "dravelpilled",
+      "kind": "discovery",
+      "category": "invented",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-031",
+      "input": "frizzoth",
+      "kind": "discovery",
+      "category": "invented",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-032",
+      "input": "vemble",
+      "kind": "discovery",
+      "category": "invented",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-033",
+      "input": "trundlewave",
+      "kind": "discovery",
+      "category": "invented",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-034",
+      "input": "brianrot",
+      "kind": "discovery",
+      "category": "non_slang",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team",
+      "notes": "Misspelling of brainrot."
+    },
+    {
+      "id": "discovery-035",
+      "input": "goatd",
+      "kind": "discovery",
+      "category": "non_slang",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team",
+      "notes": "Misspelling of goated."
+    },
+    {
+      "id": "discovery-036",
+      "input": "photosynthesis",
+      "kind": "discovery",
+      "category": "non_slang",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-037",
+      "input": "spreadsheet",
+      "kind": "discovery",
+      "category": "non_slang",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-038",
+      "input": "kangaroo",
+      "kind": "discovery",
+      "category": "non_slang",
+      "discovery": {
+        "isRealSlang": false
+      },
+      "source": "team"
+    },
+    {
+      "id": "discovery-039",
+      "input": "ohio",
+      "kind": "discovery",
+      "category": "ambiguous",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team",
+      "notes": "A US state; as slang, means weird or cringe."
+    },
+    {
+      "id": "discovery-040",
+      "input": "ratio",
+      "kind": "discovery",
+      "category": "ambiguous",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team",
+      "notes": "A maths word; as slang, a reply that gets more likes than the post."
+    },
+    {
+      "id": "discovery-041",
+      "input": "basic",
+      "kind": "discovery",
+      "category": "ambiguous",
+      "discovery": {
+        "isRealSlang": true
+      },
+      "source": "team",
+      "notes": "An ordinary word; as slang, unoriginal or mainstream."
     },
     {
       "id": "dedup-001",
