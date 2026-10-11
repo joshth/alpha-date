@@ -27,6 +27,18 @@ const SAFETY_CATEGORIES = [
 
 const RATINGS = ["Generally Harmless", "Use With Caution", "Mature Themes", "Offensive", "Vulgar"] as const
 
+// Evaluation categories (W18EDATE-27). Every safety and discovery case has one,
+// so results can be reported per category. Not the same as `safety.categories`,
+// which lists the sensitive topics an input touches.
+// - valid_slang:  real slang, including sensitive slang that is safe to look up;
+// - non_slang:    ordinary words or phrases, including sensitive plain-English ones;
+// - invented:     made-up words that look like slang (hallucination traps);
+// - ambiguous:    harmless inputs that look risky, or words with two readings;
+// - refusal:      inputs the gate should refuse;
+// - safeguarding: inputs the gate should route to the safeguarding panel.
+export const EVAL_CATEGORIES = ["valid_slang", "non_slang", "invented", "ambiguous", "refusal", "safeguarding"] as const
+export type EvalCategory = (typeof EVAL_CATEGORIES)[number]
+
 const base = {
   id: z.string().min(1),
   input: z.string().min(1).max(500),
@@ -38,6 +50,7 @@ export const goldenCaseSchema = z.discriminatedUnion("kind", [
   z.object({
     ...base,
     kind: z.literal("safety"),
+    category: z.enum(EVAL_CATEGORIES),
     safety: z.object({
       action: z.enum(["safe", "refuse", "safeguarding"]),
       crisis: z.enum(["self_harm", "harm_to_others"]).optional(),
@@ -47,6 +60,7 @@ export const goldenCaseSchema = z.discriminatedUnion("kind", [
   z.object({
     ...base,
     kind: z.literal("discovery"),
+    category: z.enum(EVAL_CATEGORIES),
     discovery: z.object({
       isRealSlang: z.boolean(),
       currency: z.enum(["current", "outdated"]).optional(),
@@ -79,5 +93,33 @@ export function loadGoldenSet(file = path.join(process.cwd(), "eval", "golden-se
     if (seen.has(c.id)) throw new Error(`Duplicate golden-set id: ${c.id}`)
     seen.add(c.id)
   }
+  const problems = parsed.cases.flatMap(labelProblems)
+  if (problems.length) throw new Error(`Inconsistent golden-set labels:\n  ${problems.join("\n  ")}`)
   return parsed
+}
+
+/** Checks that a case's category agrees with its expected outcome. Returns one message per problem. */
+export function labelProblems(c: GoldenCase): string[] {
+  if (c.kind === "safety") {
+    const problems: string[] = []
+    if ((c.category === "safeguarding") !== (c.safety.action === "safeguarding")) {
+      problems.push(`${c.id}: category "${c.category}" does not match action "${c.safety.action}"`)
+    }
+    if ((c.category === "refusal") !== (c.safety.action === "refuse")) {
+      problems.push(`${c.id}: category "${c.category}" does not match action "${c.safety.action}"`)
+    }
+    return [...new Set(problems)]
+  }
+  if (c.kind === "discovery") {
+    if (c.category === "safeguarding" || c.category === "refusal") {
+      return [`${c.id}: discovery cases cannot use category "${c.category}" (use a safety case)`]
+    }
+    if (c.category === "valid_slang" && !c.discovery.isRealSlang) {
+      return [`${c.id}: category "valid_slang" but isRealSlang is false`]
+    }
+    if (c.category !== "valid_slang" && c.category !== "ambiguous" && c.discovery.isRealSlang) {
+      return [`${c.id}: category "${c.category}" but isRealSlang is true`]
+    }
+  }
+  return []
 }
