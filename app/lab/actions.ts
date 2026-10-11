@@ -6,7 +6,8 @@ import { generateDiscoveryObject } from "@/lib/_stubs/llm"
 import { discoverTerm } from "@/lib/discovery/discover"
 import { MAX_INPUT_LENGTH, sanitizeUserText } from "@/lib/discovery/prompt"
 import { recordSuggestion } from "@/lib/feedback"
-import { checkInputSafety } from "@/lib/safety/gate"
+import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
+import { safetyResponseMessage } from "@/lib/safety/responses"
 import { getTermRecord, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
 import type { ActionResult, SearchOutcome } from "@/lib/types"
 
@@ -20,7 +21,7 @@ export async function searchTerm(raw: string): Promise<SearchOutcome> {
   const verdict = await checkInputSafety(query, "search")
   if (verdict.action === "safeguarding") return { kind: "safeguarding", verdict }
   if (verdict.action === "refuse") {
-    return { kind: "refused", verdict, message: "We can't look that up. If something online has upset you, the services below can help." }
+    return { kind: "refused", verdict, message: safetyResponseMessage(verdict, "search") }
   }
 
   try {
@@ -54,14 +55,14 @@ export async function searchTerm(raw: string): Promise<SearchOutcome> {
   }
 }
 
-export async function suggestTerm(rawTerm: string, rawContext?: string): Promise<ActionResult> {
+export async function suggestTerm(rawTerm: string, rawContext?: string): Promise<ActionResult<SafetyVerdict>> {
   const term = sanitizeUserText(rawTerm, 100)
   if (!term || term.length < 2) return { success: false, message: "Please enter a valid term (at least 2 characters)." }
   const context = rawContext ? sanitizeUserText(rawContext, 500) : null
 
   const verdict = await checkInputSafety(`${term}\n${context ?? ""}`, "suggestion")
   if (verdict.action !== "safe") {
-    return { success: false, message: "We can't add that suggestion. If something online has upset you, Kids Helpline (1800 55 1800) can help." }
+    return { success: false, message: safetyResponseMessage(verdict, "suggestion"), data: verdict }
   }
   try {
     const { merged } = await recordSuggestion(term, context)
