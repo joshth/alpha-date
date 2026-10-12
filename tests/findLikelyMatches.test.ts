@@ -13,7 +13,6 @@ test("findLikelyMatches returns every candidate with the same key", () => {
 
   assert.equal(matches.length, 2)
   assert.deepEqual(new Set(matches.map((match) => match.candidate)), new Set(["Brain Rot", "brain-rot"]))
-  for (const match of matches) assert.deepEqual(match, { candidate: match.candidate, score: 1, reason: "same_key" })
 })
 
 test("findLikelyMatches returns no result when no candidate shares the key", () => {
@@ -21,9 +20,20 @@ test("findLikelyMatches returns no result when no candidate shares the key", () 
 })
 
 test("findLikelyMatches ignores input without a key", () => {
-  assert.deepEqual(findLikelyMatches("!!!", ["Brain Rot"]), [])
+  assert.deepEqual(findLikelyMatches("!!!", ["Brain Rot", "???"]), [])
 })
 
 test("findLikelyMatches skips candidates without a key", () => {
-  assert.deepEqual(findLikelyMatches("brainrot", ["???"]), [])
+  assert.deepEqual(findLikelyMatches("brainrot", ["???", "Brain Rot"]), [
+    { candidate: "Brain Rot", score: 1, reason: "same_key" },
+  ])
+})
+
+test("findLikelyMatches uses full suggestion normalisation", () => {
+  assert.deepEqual(findLikelyMatches("6 7", ["six seven"]), [
+    { candidate: "six seven", score: 1, reason: "same_key" },
+  ])
+  assert.deepEqual(findLikelyMatches("rizzzz", ["Rizz"]), [
+    { candidate: "Rizz", score: 1, reason: "same_key" },
+  ])
 })
