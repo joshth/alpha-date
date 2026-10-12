@@ -8,6 +8,13 @@
       "when": 1790906868973,
       "tag": "0000_orange_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791840703191,
+      "tag": "0001_tense_raider",
+      "breakpoints": true
     }
   ]
 }
