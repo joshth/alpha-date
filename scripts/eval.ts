@@ -30,6 +30,18 @@ console.log("By category:", byCategory)
 const empty = EVAL_CATEGORIES.filter((category) => byCategory[category] === 0)
 if (empty.length) console.log(`  (no cases yet for: ${empty.join(", ")})`)
 
+const review = set.review
+if (!review) {
+  console.log("Second review: not yet reviewed!")
+} else {
+  const flagged = review.disagreements.filter((d) => d.status === "flagged").length
+  console.log(
+    `Second review: v${review.version} by ${review.reviewer} on ${review.reviewedOn}; ` +
+      `${review.disagreements.length} disagreements (${flagged} still flagged)`,
+  )
+  if (review.version !== set.version) console.log(`  (review is for v${review.version}; the set is now v${set.version})`)
+}
+
 if (!validateOnly) {
   console.log("\nMetrics not implemented yet — see the comment at the top of scripts/eval.ts (Sprint 2).")
 }

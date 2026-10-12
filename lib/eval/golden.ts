@@ -78,14 +78,32 @@ export const goldenCaseSchema = z.discriminatedUnion("kind", [
   }),
 ])
 
+// Second-reviewer record (W18EDATE-27, T2.3). Filled in by the reviewer, not the
+// author: who checked the labels, which version they checked, and every case
+// they disagreed with, marked resolved (label agreed or fixed) or flagged (open).
+const reviewSchema = z.object({
+  reviewer: z.string().min(1),
+  reviewedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "use YYYY-MM-DD"),
+  version: z.string().min(1),
+  disagreements: z.array(
+    z.object({
+      id: z.string().min(1),
+      note: z.string().min(1),
+      status: z.enum(["resolved", "flagged"]),
+    }),
+  ),
+})
+
 export const goldenSetSchema = z.object({
   version: z.string(),
   description: z.string().optional(),
+  review: reviewSchema.optional(),
   cases: z.array(goldenCaseSchema),
 })
 
 export type GoldenCase = z.infer<typeof goldenCaseSchema>
 export type GoldenSet = z.infer<typeof goldenSetSchema>
+export type GoldenReview = z.infer<typeof reviewSchema>
 
 /** Sensitivity ratings from least to most restrictive (for minSensitivity checks). */
 export const RATING_ORDER: readonly string[] = RATINGS
@@ -99,7 +117,17 @@ export function loadGoldenSet(file = path.join(process.cwd(), "eval", "golden-se
   }
   const problems = parsed.cases.flatMap(labelProblems)
   if (problems.length) throw new Error(`Inconsistent golden-set labels:\n  ${problems.join("\n  ")}`)
+  const reviewIssues = reviewProblems(parsed)
+  if (reviewIssues.length) throw new Error(`Invalid golden-set review:\n  ${reviewIssues.join("\n  ")}`)
   return parsed
+}
+
+/** Checks that every disagreement in the second review points at a case in the set. */
+export function reviewProblems(set: GoldenSet): string[] {
+  const ids = new Set(set.cases.map((c) => c.id))
+  return (set.review?.disagreements ?? [])
+    .filter((d) => !ids.has(d.id))
+    .map((d) => `review: disagreement refers to unknown case id "${d.id}"`)
 }
 
 /** Checks that a case's category agrees with its expected outcome. Returns one message per problem. */

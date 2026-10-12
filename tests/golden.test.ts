@@ -1,7 +1,7 @@
 import "./setup"
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { EVAL_CATEGORIES, type GoldenCase, labelProblems, loadGoldenSet } from "@/lib/eval/golden"
+import { EVAL_CATEGORIES, type GoldenCase, type GoldenSet, labelProblems, loadGoldenSet, reviewProblems } from "@/lib/eval/golden"
 import { checkInputSafety } from "@/lib/safety/gate"
 
 const golden = loadGoldenSet()
@@ -74,4 +74,18 @@ test("label check flags a category that contradicts the expected outcome", () =>
   assert.equal(labelProblems(inventedButReal).length, 1)
   assert.equal(labelProblems(discoveryAsRefusal).length, 1)
   assert.equal(labelProblems(blockedDiscovery).length, 1)
+})
+
+test("review entries must refer to existing cases", () => {
+  const set: GoldenSet = {
+    version: "test",
+    review: {
+      reviewer: "Me",
+      reviewedOn: "2026-10-12",
+      version: "test",
+      disagreements: [{ id: "no-such-case", note: "synthetic", status: "flagged" }],
+    },
+    cases: [],
+  }
+  assert.deepEqual(reviewProblems(set), ['review: disagreement refers to unknown case id "no-such-case"'])
 })
