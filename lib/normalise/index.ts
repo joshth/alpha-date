@@ -12,6 +12,8 @@
 // respellings) — but beware over-merging distinct terms ("mid" vs "midd"?).
 // Measure merge precision with labelled pairs in the golden set.
 
+import { normalizeKey } from "./similarity"
+
 export interface LikelyMatch {
   /** The existing lexicon term or suggestion that this one probably duplicates. */
   candidate: string
@@ -22,8 +24,8 @@ export interface LikelyMatch {
 }
 
 /** Canonical form used as the dedup key for a suggestion. */
-export function normaliseSuggestion(_text: string): string {
-  throw new Error("normaliseSuggestion: not implemented yet (Sprint 2)")
+export function normaliseSuggestion(text: string): string {
+  return normalizeKey(text)
 }
 
 /** Best matches for `text` among `candidates` (lexicon terms and/or other suggestions), best first. */
