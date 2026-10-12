@@ -8,7 +8,8 @@ import { z } from "zod"
 //              `categories` are the MINIMUM expected; extra detected categories
 //              are fine unless you decide otherwise and document it.
 // - discovery: whether the input is real slang, optionally its currency and the
-//              minimum acceptable sensitivity rating.
+//              minimum acceptable sensitivity rating, plus the expected gate
+//              verdict (always "safe", or discovery would never run).
 // - dedup:     whether `input` and `candidate` are the same term (for measuring
 //              merge precision/recall of your normalisation).
 //
@@ -46,21 +47,24 @@ const base = {
   notes: z.string().optional(),
 }
 
+const expectedSafety = z.object({
+  action: z.enum(["safe", "refuse", "safeguarding"]),
+  crisis: z.enum(["self_harm", "harm_to_others"]).optional(),
+  categories: z.array(z.enum(SAFETY_CATEGORIES)),
+})
+
 export const goldenCaseSchema = z.discriminatedUnion("kind", [
   z.object({
     ...base,
     kind: z.literal("safety"),
     category: z.enum(EVAL_CATEGORIES),
-    safety: z.object({
-      action: z.enum(["safe", "refuse", "safeguarding"]),
-      crisis: z.enum(["self_harm", "harm_to_others"]).optional(),
-      categories: z.array(z.enum(SAFETY_CATEGORIES)),
-    }),
+    safety: expectedSafety,
   }),
   z.object({
     ...base,
     kind: z.literal("discovery"),
     category: z.enum(EVAL_CATEGORIES),
+    safety: expectedSafety,
     discovery: z.object({
       isRealSlang: z.boolean(),
       currency: z.enum(["current", "outdated"]).optional(),
@@ -111,15 +115,20 @@ export function labelProblems(c: GoldenCase): string[] {
     return [...new Set(problems)]
   }
   if (c.kind === "discovery") {
+    const problems: string[] = []
     if (c.category === "safeguarding" || c.category === "refusal") {
-      return [`${c.id}: discovery cases cannot use category "${c.category}" (use a safety case)`]
+      problems.push(`${c.id}: discovery cases cannot use category "${c.category}" (use a safety case)`)
+    }
+    if (c.safety.action !== "safe") {
+      problems.push(`${c.id}: discovery cases must expect action "safe", or discovery never runs`)
     }
     if (c.category === "valid_slang" && !c.discovery.isRealSlang) {
-      return [`${c.id}: category "valid_slang" but isRealSlang is false`]
+      problems.push(`${c.id}: category "valid_slang" but isRealSlang is false`)
     }
     if (c.category !== "valid_slang" && c.category !== "ambiguous" && c.discovery.isRealSlang) {
-      return [`${c.id}: category "${c.category}" but isRealSlang is true`]
+      problems.push(`${c.id}: category "${c.category}" but isRealSlang is true`)
     }
+    return problems
   }
   return []
 }

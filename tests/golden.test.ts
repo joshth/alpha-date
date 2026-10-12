@@ -1,15 +1,31 @@
+import "./setup"
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { EVAL_CATEGORIES, type GoldenCase, labelProblems, loadGoldenSet } from "@/lib/eval/golden"
+import { checkInputSafety } from "@/lib/safety/gate"
+
+const golden = loadGoldenSet()
 
 test("every safety and discovery case has a consistent evaluation category", () => {
-  const set = loadGoldenSet()
-  for (const c of set.cases) {
+  for (const c of golden.cases) {
     if (c.kind === "dedup") continue
     assert.ok(EVAL_CATEGORIES.includes(c.category), c.id)
     assert.deepEqual(labelProblems(c), [], c.id)
   }
 })
+
+// Discovery cases must reach discovery, so the gate has to let them through
+// with the labelled sensitive topics (W18EDATE-27: expected safety outcome).
+for (const c of golden.cases) {
+  if (c.kind !== "discovery") continue
+  test(`gate lets discovery case through: ${c.id}`, async () => {
+    const verdict = await checkInputSafety(c.input)
+    assert.equal(verdict.action, c.safety.action, `action for case ${c.id}`)
+    for (const category of c.safety.categories) {
+      assert.ok(verdict.categories.includes(category), `category ${category} for case ${c.id}`)
+    }
+  })
+}
 
 test("label check flags a category that contradicts the expected outcome", () => {
   const safeguardingAsSlang: GoldenCase = {
@@ -26,6 +42,7 @@ test("label check flags a category that contradicts the expected outcome", () =>
     source: "test",
     kind: "discovery",
     category: "invented",
+    safety: { action: "safe", categories: [] },
     discovery: { isRealSlang: true },
   }
   const discoveryAsRefusal: GoldenCase = {
@@ -34,9 +51,20 @@ test("label check flags a category that contradicts the expected outcome", () =>
     source: "test",
     kind: "discovery",
     category: "refusal",
+    safety: { action: "safe", categories: [] },
+    discovery: { isRealSlang: false },
+  }
+  const blockedDiscovery: GoldenCase = {
+    id: "bad-4",
+    input: "synthetic test",
+    source: "test",
+    kind: "discovery",
+    category: "non_slang",
+    safety: { action: "refuse", categories: [] },
     discovery: { isRealSlang: false },
   }
   assert.equal(labelProblems(safeguardingAsSlang).length, 1)
   assert.equal(labelProblems(inventedButReal).length, 1)
   assert.equal(labelProblems(discoveryAsRefusal).length, 1)
+  assert.equal(labelProblems(blockedDiscovery).length, 1)
 })
