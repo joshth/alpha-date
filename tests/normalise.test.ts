@@ -27,10 +27,28 @@ test("normaliseSuggestion leaves digit runs unchanged", () => {
   assert.equal(normaliseSuggestion("1000"), "1000")
 })
 
+test("normaliseSuggestion does not expand multi-digit number tokens", () => {
+  assert.equal(normaliseSuggestion("100 200"), "100200")
+})
+
 test("normaliseSuggestion gives six-seven variants the sixseven key", () => {
   assert.equal(normaliseSuggestion("6 7"), "sixseven")
   assert.equal(normaliseSuggestion("6-7"), "sixseven")
+  assert.equal(normaliseSuggestion("6 - 7"), "sixseven")
+  assert.equal(normaliseSuggestion("6--7"), "sixseven")
+  assert.equal(normaliseSuggestion("6 7 "), "sixseven")
   assert.equal(normaliseSuggestion("six seven"), "sixseven")
+})
+
+test("normaliseSuggestion expands other separated single-digit sequences", () => {
+  assert.equal(normaliseSuggestion("0 0"), "zerozero")
+  assert.equal(normaliseSuggestion("3 8"), "threeight")
+  assert.equal(normaliseSuggestion("three eight"), "threeight")
+  assert.equal(normaliseSuggestion("threeeight"), "threeight")
+})
+
+test("normaliseSuggestion does not expand a lone digit", () => {
+  assert.equal(normaliseSuggestion("6"), "6")
 })
 
 test("normaliseSuggestion keeps 67 distinct from six seven", () => {

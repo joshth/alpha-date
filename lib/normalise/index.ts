@@ -14,6 +14,20 @@
 
 import { normalizeKey } from "./similarity"
 
+const digitWords = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+const separatedSingleDigits = /^\s*\d(?:[\s-]+\d)+\s*$/
+
+function expandSeparatedSingleDigits(text: string): string {
+  // This excludes multi-digit numbers and leetspeak.
+  if (!separatedSingleDigits.test(text)) return text
+
+  return text.replace(/\d/g, (digit) => digitWords[Number(digit)])
+}
+
+function collapseRepeatedLetters(text: string): string {
+  return text.replace(/(\p{L})\1{2,}/gu, "$1$1")
+}
+
 export interface LikelyMatch {
   /** The existing lexicon term or suggestion that this one probably duplicates. */
   candidate: string
@@ -25,11 +39,12 @@ export interface LikelyMatch {
 
 /** Canonical form used as the dedup key for a suggestion. */
 export function normaliseSuggestion(text: string): string {
+  // Convert "6 7" and "6-7" before normalizeKey removes their separators.
+  const expandedText = expandSeparatedSingleDigits(text)
+
   // Strip punctuation first so it cannot split a repeated-letter run.
-  const key = normalizeKey(text)
-  // \p{L}\1{2,} one letter, then that same letter at least 2 more times
-  // Keep at most two of any Unicode letter repeated three or more times.
-  return key.replace(/(\p{L})\1{2,}/gu, "$1$1")
+  const key = normalizeKey(expandedText)
+  return collapseRepeatedLetters(key)
 }
 
 /** Best matches for `text` among `candidates` (lexicon terms and/or other suggestions), best first. */
