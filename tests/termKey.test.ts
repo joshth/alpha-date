@@ -41,25 +41,30 @@ test("Rizz has the key rizz", async () => {
 })
 
 test("a shared termKey across different terms is allowed (plain, not unique, index)", async () => {
-  await assert.doesNotReject(async () => {
-    const db = await getDb()
-    await db.insert(terms).values([
-      {
-        term: "Rizz",
-        termLower: "rizz",
-        termKey: "rizz",
-        definition: "test row",
-        source: "seed",
-        status: "published",
-      },
-      {
-        term: "rizzz",
-        termLower: "rizzz",
-        termKey: "rizz",
-        definition: "test row",
-        source: "seed",
-        status: "published",
-      },
-    ])
-  })
+  const db = await getDb()
+  await db.insert(terms).values([
+    {
+      term: "Yappulus",
+      termLower: "yappulus",
+      termKey: "yappulus",
+      definition: "test row",
+      source: "seed",
+      status: "published",
+    },
+    {
+      term: "yappulus!",
+      termLower: "yappulus!",
+      termKey: "yappulus",
+      definition: "test row",
+      source: "seed",
+      status: "published",
+    },
+  ])
+
+  const allRows = await db.select().from(terms)
+  const rows = allRows.filter((row) => row.term === "Yappulus" || row.term === "yappulus!")
+  assert.equal(rows.length, 2)
+  for (const row of rows) {
+    assert.equal(row.termKey, "yappulus")
+  }
 })
