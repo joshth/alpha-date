@@ -19,8 +19,26 @@ test("findLikelyMatches returns no result when no candidate shares the key", () 
   assert.deepEqual(findLikelyMatches("brainrot", ["mid"]), [])
 })
 
+test("findLikelyMatches excludes non-matching candidates", () => {
+  assert.deepEqual(findLikelyMatches("brainrot", ["mid", "Brain Rot"]), [
+    { candidate: "Brain Rot", score: 1, reason: "same_key" },
+  ])
+})
+
+test("findLikelyMatches keeps duplicate candidate records", () => {
+  assert.deepEqual(findLikelyMatches("brainrot", ["Brain Rot", "Brain Rot"]), [
+    { candidate: "Brain Rot", score: 1, reason: "same_key" },
+    { candidate: "Brain Rot", score: 1, reason: "same_key" },
+  ])
+})
+
 test("findLikelyMatches ignores input without a key", () => {
   assert.deepEqual(findLikelyMatches("!!!", ["Brain Rot", "???"]), [])
+  assert.deepEqual(findLikelyMatches("", ["Brain Rot", "???"]), [])
+})
+
+test("findLikelyMatches returns no result without candidates", () => {
+  assert.deepEqual(findLikelyMatches("brainrot", []), [])
 })
 
 test("findLikelyMatches skips candidates without a key", () => {
