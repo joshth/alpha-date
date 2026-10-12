@@ -1,6 +1,7 @@
 import { count } from "drizzle-orm"
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core"
 import { slangDatabase } from "@/lib/lexicon-data"
+import { normaliseSuggestion } from "@/lib/normalise"
 import * as schema from "./schema"
 import {
   HISTORY_DAYS,
@@ -47,6 +48,7 @@ export async function seedIfEmpty(db: Db, now = new Date()): Promise<void> {
     slangDatabase.map((t) => ({
       term: t.term,
       termLower: t.term.toLowerCase(),
+      termKey: normaliseSuggestion(t.term),
       pronunciation: t.pronunciation ?? null,
       definition: t.definition,
       examples: t.examples,
@@ -64,6 +66,7 @@ export async function seedIfEmpty(db: Db, now = new Date()): Promise<void> {
     SYNTHETIC_PENDING_TERMS.map((t) => ({
       term: t.term,
       termLower: t.term.toLowerCase(),
+      termKey: normaliseSuggestion(t.term),
       definition: t.definition,
       sensitivityRating: t.sensitivityRating,
       tags: ["auto-discovered", "unverified"],

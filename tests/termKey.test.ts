@@ -7,6 +7,8 @@ import { terms } from "@/lib/_stubs/schema"
 import { normaliseSuggestion } from "@/lib/normalise"
 import { slangDatabase } from "@/lib/lexicon-data"
 import { SYNTHETIC_PENDING_TERMS } from "@/lib/_stubs/fixtures/synthetic"
+import { toDiscoveredTerm } from "@/lib/discovery/discover"
+import { saveDiscoveredTerm } from "@/lib/terms-store"
 
 test("every seeded term has a termKey matching normaliseSuggestion(term)", async () => {
   const db = await getDb()
@@ -67,4 +69,14 @@ test("a shared termKey across different terms is allowed (plain, not unique, ind
   for (const row of rows) {
     assert.equal(row.termKey, "yappulus")
   }
+})
+
+test("saveDiscoveredTerm sets termKey via normaliseSuggestion", async () => {
+  const discovered = toDiscoveredTerm("Glonking", { isLegit: true, definition: "Doing something clumsily." })!
+  const saved = await saveDiscoveredTerm(discovered)
+  assert.ok(saved, "expected saveDiscoveredTerm to insert a row")
+
+  const db = await getDb()
+  const [row] = await db.select().from(terms).where(eq(terms.id, saved!.id))
+  assert.equal(row.termKey, normaliseSuggestion(discovered.term))
 })
