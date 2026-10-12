@@ -48,6 +48,24 @@ export function normaliseSuggestion(text: string): string {
 }
 
 /** Best matches for `text` among `candidates` (lexicon terms and/or other suggestions), best first. */
-export function findLikelyMatches(_text: string, _candidates: string[], _limit = 3): LikelyMatch[] {
-  throw new Error("findLikelyMatches: not implemented yet (Sprint 2)")
+export function findLikelyMatches(text: string, candidates: string[], _limit = 3): LikelyMatch[] {
+  const inputKey = normaliseSuggestion(text)
+
+  // Punctuation-only input must not match a punctuation-only candidate.
+  if (!inputKey) return []
+
+  const matches: LikelyMatch[] = []
+  for (const candidate of candidates) {
+    const candidateKey = normaliseSuggestion(candidate)
+
+    // Ignore candidates that normalise to an empty key.
+    if (!candidateKey) continue
+
+    // This slice returns only exact canonical-key matches; sorting and limiting come later.
+    if (candidateKey !== inputKey) continue
+
+    matches.push({ candidate, score: 1, reason: "same_key" })
+  }
+
+  return matches
 }
