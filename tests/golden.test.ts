@@ -14,8 +14,15 @@ test("every safety and discovery case has a consistent evaluation category", () 
   }
 })
 
-// Discovery cases must reach discovery, so the gate has to let them through
-// with the labelled sensitive topics (W18EDATE-27: expected safety outcome).
+test("every evaluation category has at least one case, so canot break", () => {
+  for (const category of EVAL_CATEGORIES) {
+    assert.ok(
+      golden.cases.some((c) => c.kind !== "dedup" && c.category === category),
+      `no cases for category ${category}`,
+    )
+  }
+})
+
 for (const c of golden.cases) {
   if (c.kind !== "discovery") continue
   test(`gate lets discovery case through: ${c.id}`, async () => {
