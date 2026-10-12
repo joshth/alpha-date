@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { CrisisCard } from "@/components/safety/crisis-card"
+import { SafetyResponse } from "@/components/safety/safety-response"
+import { safetyResponseMessage } from "@/lib/safety/responses"
+import type { SafetyVerdict } from "@/lib/safety/gate"
 import { HelpResources } from "@/components/safety/help-resources"
 import { searchTerm, suggestTerm } from "@/app/lab/actions"
 import type { SearchOutcome } from "@/lib/types"
@@ -45,6 +47,7 @@ function TermCard({ term, badge, note }: { term: SlangTerm; badge: string; note?
 function SuggestForm({ query }: { query: string }) {
   const [context, setContext] = useState("")
   const [message, setMessage] = useState<string | null>(null)
+  const [verdict, setVerdict] = useState<SafetyVerdict | null>(null)
   const [busy, setBusy] = useState(false)
   return (
     <form
@@ -52,9 +55,11 @@ function SuggestForm({ query }: { query: string }) {
       onSubmit={async (event) => {
         event.preventDefault()
         setBusy(true)
+        setVerdict(null)
         try {
           const result = await suggestTerm(query, context)
           setMessage(result.message)
+          setVerdict(result.data ?? null)
         } catch {
           setMessage("Could not reach the service. Please try again.")
         } finally {
@@ -72,7 +77,7 @@ function SuggestForm({ query }: { query: string }) {
       <Button type="submit" variant="secondary" disabled={busy}>
         Suggest &quot;{query}&quot;
       </Button>
-      {message && (
+      {verdict && message ? <SafetyResponse verdict={verdict} message={message} /> : message && (
         <p role="status" className="text-sm text-foreground">
           {message}
         </p>
@@ -121,16 +126,11 @@ export function SearchPanel() {
       </form>
 
       <div aria-live="polite" className="space-y-4">
-        {outcome?.kind === "safeguarding" && outcome.verdict.crisis && (
-          <CrisisCard crisis={outcome.verdict.crisis} categories={outcome.verdict.categories} />
+        {outcome?.kind === "safeguarding" && (
+          <SafetyResponse verdict={outcome.verdict} message={safetyResponseMessage(outcome.verdict, "search")} />
         )}
         {outcome?.kind === "refused" && (
-          <>
-            <p role="alert" className="text-foreground">
-              {outcome.message}
-            </p>
-            <HelpResources categories={outcome.verdict.categories.length ? outcome.verdict.categories : ["bullying_harassment"]} />
-          </>
+          <SafetyResponse verdict={outcome.verdict} message={outcome.message} />
         )}
         {outcome?.kind === "found" && <TermCard term={outcome.term} badge="In the lexicon" />}
         {outcome?.kind === "discovered" && <TermCard term={outcome.term} badge="AI-discovered" note={outcome.note} />}

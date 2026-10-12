@@ -1,4 +1,5 @@
 import "server-only"
+import { z } from "zod"
 import { isMockLlm, simulate } from "./llm"
 
 // STUDENT-FACING MODERATION STUB — the "free moderation endpoint" in the scope.
@@ -23,6 +24,13 @@ export interface ModerationResult {
   provider: string
   latencyMs: number
 }
+
+const responseSchema = z.object({
+  results: z.array(z.object({
+    flagged: z.boolean(),
+    categories: z.record(z.boolean()).refine((categories) => Object.keys(categories).length > 0),
+  })).length(1),
+})
 
 const MOCK_RULES: { pattern: RegExp; category: string }[] = [
   { pattern: /\b(make|build) (a )?(bomb|pipe bomb)\b/i, category: "illicit/violent" },
@@ -52,13 +60,12 @@ export async function moderate(text: string): Promise<ModerationResult> {
       signal: AbortSignal.timeout(2000),
     })
     if (!response.ok) throw new Error(`moderation HTTP ${response.status}`)
-    const body = (await response.json()) as { results?: { flagged: boolean; categories: Record<string, boolean> }[] }
-    const result = body.results?.[0]
-    if (!result) throw new Error("moderation: empty result")
+    const body = responseSchema.parse(await response.json())
+    const result = body.results[0]
     const categories = Object.entries(result.categories)
       .filter(([, on]) => on)
       .map(([name]) => name)
-    return { status: result.flagged ? "flagged" : "safe", categories, provider: "openai", latencyMs: Date.now() - started }
+    return { status: result.flagged || categories.length > 0 ? "flagged" : "safe", categories, provider: "openai", latencyMs: Date.now() - started }
   } catch {
     return { status: "unavailable", categories: [], provider: "openai", latencyMs: Date.now() - started }
   }
