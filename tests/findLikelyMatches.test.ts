@@ -36,7 +36,6 @@ test("findLikelyMatches ignores input without a key", () => {
   assert.deepEqual(findLikelyMatches("!!!", ["Brain Rot", "???"]), [])
   assert.deepEqual(findLikelyMatches("", ["Brain Rot", "???"]), [])
 })
-
 test("findLikelyMatches returns no result without candidates", () => {
   assert.deepEqual(findLikelyMatches("brainrot", []), [])
 })

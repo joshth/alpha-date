@@ -3,7 +3,7 @@ import { and, desc, eq } from "drizzle-orm"
 import type { SlangTerm } from "@/app/types"
 import { getDb } from "@/lib/_stubs/db"
 import { termEvents, terms } from "@/lib/_stubs/schema"
-import { normaliseSuggestion } from "@/lib/normalise"
+import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
 
 // Lexicon persistence (adapted from production lib/term-cache.ts).
 // Lifecycle: published (servable to everyone) | pending_review (needs a human)
@@ -64,6 +64,7 @@ export async function saveDiscoveredTerm(term: SlangTerm): Promise<TermRecord | 
       term: term.term,
       termLower: term.term.toLowerCase(),
       termKey: normaliseSuggestion(term.term),
+      keyVersion: NORMALISER_VERSION,
       definition: term.definition,
       examples: term.examples,
       originAndContext: term.originAndContext,

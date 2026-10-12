@@ -14,6 +14,10 @@
 
 import { normalizeKey } from "./similarity"
 
+// Increment whenever normaliseSuggestion's output changes,
+// so stored keys can be told apart from stale ones.
+export const NORMALISER_VERSION = 1
+
 const digitWords = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 const separatedSingleDigits = /^\s*\d(?:[\s-]+\d)+\s*$/
 

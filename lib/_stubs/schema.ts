@@ -31,6 +31,7 @@ export const terms = pgTable(
     term: text("term").notNull(),
     termLower: text("term_lower").notNull(),
     termKey: text("term_key").notNull(),
+    keyVersion: integer("key_version").notNull().default(1),
     pronunciation: text("pronunciation"),
     definition: text("definition").notNull(),
     examples: jsonb("examples").$type<string[]>().notNull().default([]),
