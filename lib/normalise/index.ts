@@ -25,7 +25,11 @@ export interface LikelyMatch {
 
 /** Canonical form used as the dedup key for a suggestion. */
 export function normaliseSuggestion(text: string): string {
-  return normalizeKey(text)
+  // Strip punctuation first so it cannot split a repeated-letter run.
+  const key = normalizeKey(text)
+
+  // Keep at most two of any Unicode letter repeated three or more times.
+  return key.replace(/(\p{L})\1{2,}/gu, "$1$1")
 }
 
 /** Best matches for `text` among `candidates` (lexicon terms and/or other suggestions), best first. */
