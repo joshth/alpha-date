@@ -102,6 +102,10 @@ export async function logTermEvent(termText: string, eventType: TermEventType): 
   const db = await getDb()
   await db.insert(termEvents).values({ termLower: termText.trim().toLowerCase().slice(0, 120), eventType })
 }
+// to track event interactions
+export async function countTermEvents(_eventType: string): Promise<number> {
+  return 0
+}
 
 export async function getTermEvents(termText: string): Promise<{ eventType: string; createdAt: Date }[]> {
   const db = await getDb()
