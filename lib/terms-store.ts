@@ -1,5 +1,5 @@
 import "server-only"
-import { and, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq, sql } from "drizzle-orm"
 import type { SlangTerm } from "@/app/types"
 import { getDb } from "@/lib/_stubs/db"
 import { termEvents, terms } from "@/lib/_stubs/schema"
@@ -10,7 +10,7 @@ import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
 // | rejected (never served, never regenerated-and-served).
 
 export type TermStatus = "published" | "pending_review" | "rejected"
-export type TermEventType = "search_hit" | "search_miss" | "llm_generated" | "view" | "prompt_generated"
+export type TermEventType = "search_hit" | "search_miss" | "llm_generated" | "view" | "prompt_generated" | "ai_call_avoided"
 
 type Row = typeof terms.$inferSelect
 
