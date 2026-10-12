@@ -23,6 +23,7 @@ test("every seeded term has a termKey matching normaliseSuggestion(term)", async
   }
 })
 
+
 test("no seeded row has an empty termKey", async () => {
   const db = await getDb()
   const rows = await db.select().from(terms)
