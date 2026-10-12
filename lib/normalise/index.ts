@@ -27,7 +27,7 @@ export interface LikelyMatch {
 export function normaliseSuggestion(text: string): string {
   // Strip punctuation first so it cannot split a repeated-letter run.
   const key = normalizeKey(text)
-
+  // \p{L}\1{2,} one letter, then that same letter at least 2 more times
   // Keep at most two of any Unicode letter repeated three or more times.
   return key.replace(/(\p{L})\1{2,}/gu, "$1$1")
 }
