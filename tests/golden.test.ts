@@ -78,14 +78,14 @@ test("label check flags a category that contradicts the expected outcome", () =>
 
 test("review entries must refer to existing cases", () => {
   const set: GoldenSet = {
-    version: "test",
+      version: "test",
     review: {
       reviewer: "Me",
-      reviewedOn: "2026-10-12",
+      reviewedOn: "12-10-2026",
       version: "test",
       disagreements: [{ id: "no-such-case", note: "synthetic", status: "flagged" }],
     },
     cases: [],
   }
-  assert.deepEqual(reviewProblems(set), ['review: disagreement refers to unknown case id "no-such-case"'])
+  assert.deepEqual(reviewProblems(set), ['disagreement refers to unknown case id "no-such-case"'])
 })

@@ -28,15 +28,13 @@ const SAFETY_CATEGORIES = [
 
 const RATINGS = ["Generally Harmless", "Use With Caution", "Mature Themes", "Offensive", "Vulgar"] as const
 
-// Evaluation categories (W18EDATE-27). Every safety and discovery case has one,
-// so results can be reported per category. Not the same as `safety.categories`,
-// which lists the sensitive topics an input touches.
 // - valid_slang:  real slang, including sensitive slang that is safe to look up;
 // - non_slang:    ordinary words or phrases, including sensitive plain-English ones;
 // - invented:     made-up words that look like slang (hallucination traps);
 // - ambiguous:    harmless inputs that look risky, or words with two readings;
 // - refusal:      inputs the gate should refuse;
 // - safeguarding: inputs the gate should route to the safeguarding panel.
+
 export const EVAL_CATEGORIES = ["valid_slang", "non_slang", "invented", "ambiguous", "refusal", "safeguarding"] as const
 export type EvalCategory = (typeof EVAL_CATEGORIES)[number]
 
@@ -77,21 +75,16 @@ export const goldenCaseSchema = z.discriminatedUnion("kind", [
     dedup: z.object({ candidate: z.string().min(1), sameTerm: z.boolean() }),
   }),
 ])
-
-// Second-reviewer record (W18EDATE-27, T2.3). Filled in by the reviewer, not the
-// author: who checked the labels, which version they checked, and every case
-// they disagreed with, marked resolved (label agreed or fixed) or flagged (open).
+const noagreement = z.object({
+      id: z.string().min(1),
+      note: z.string().min(1),
+      status: z.enum(["resolved", "flagged"]),
+    });
 const reviewSchema = z.object({
   reviewer: z.string().min(1),
   reviewedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "use YYYY-MM-DD"),
   version: z.string().min(1),
-  disagreements: z.array(
-    z.object({
-      id: z.string().min(1),
-      note: z.string().min(1),
-      status: z.enum(["resolved", "flagged"]),
-    }),
-  ),
+  disagreements: z.array(noagreement),
 })
 
 export const goldenSetSchema = z.object({
@@ -105,7 +98,6 @@ export type GoldenCase = z.infer<typeof goldenCaseSchema>
 export type GoldenSet = z.infer<typeof goldenSetSchema>
 export type GoldenReview = z.infer<typeof reviewSchema>
 
-/** Sensitivity ratings from least to most restrictive (for minSensitivity checks). */
 export const RATING_ORDER: readonly string[] = RATINGS
 
 export function loadGoldenSet(file = path.join(process.cwd(), "eval", "golden-set.json")): GoldenSet {
@@ -122,15 +114,13 @@ export function loadGoldenSet(file = path.join(process.cwd(), "eval", "golden-se
   return parsed
 }
 
-/** Checks that every disagreement in the second review points at a case in the set. */
 export function reviewProblems(set: GoldenSet): string[] {
   const ids = new Set(set.cases.map((c) => c.id))
   return (set.review?.disagreements ?? [])
     .filter((d) => !ids.has(d.id))
-    .map((d) => `review: disagreement refers to unknown case id "${d.id}"`)
+    .map((d) => `disagreement refers to unknown case id "${d.id}"`)
 }
 
-/** Checks that a case's category agrees with its expected outcome. Returns one message per problem. */
 export function labelProblems(c: GoldenCase): string[] {
   if (c.kind === "safety") {
     const problems: string[] = []
