@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { getSessionUser, isReviewer } from "@/lib/_stubs/auth"
 import { generateDiscoveryObject } from "@/lib/_stubs/llm"
-import { discoverTerm } from "@/lib/discovery/discover"
-import { MAX_INPUT_LENGTH, sanitizeUserText } from "@/lib/discovery/prompt"
+import { createSearchTerm } from "@/lib/search"
+import { sanitizeUserText } from "@/lib/discovery/prompt"
 import { recordSuggestion } from "@/lib/feedback"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
 import { safetyResponseMessage } from "@/lib/safety/responses"
@@ -14,45 +14,10 @@ import type { ActionResult, SearchOutcome } from "@/lib/types"
 // Pipeline: input → safety gate → lexicon lookup → AI discovery → stored for
 // review. Mirrors the order production uses; the gate always runs first.
 
+const runSearch = createSearchTerm({ checkInputSafety, getTermRecord, logTermEvent, generateDiscoveryObject, saveDiscoveredTerm })
+
 export async function searchTerm(raw: string): Promise<SearchOutcome> {
-  const query = sanitizeUserText(raw, MAX_INPUT_LENGTH)
-  if (!query) return { kind: "error", message: `Please enter a term (up to ${MAX_INPUT_LENGTH} characters).` }
-
-  const verdict = await checkInputSafety(query, "search")
-  if (verdict.action === "safeguarding") return { kind: "safeguarding", verdict }
-  if (verdict.action === "refuse") {
-    return { kind: "refused", verdict, message: safetyResponseMessage(verdict, "search") }
-  }
-
-  try {
-    const existing = await getTermRecord(query)
-    if (existing && existing.status === "published") {
-      await logTermEvent(query, "search_hit")
-      return { kind: "found", term: existing.term, verdict }
-    }
-    if (existing && existing.status === "pending_review") {
-      return { kind: "discovered", term: existing.term, verdict, note: "This term is waiting for human review." }
-    }
-    if (existing && existing.status === "rejected") {
-      await logTermEvent(query, "search_miss")
-      return { kind: "not_found", verdict, query }
-    }
-
-    await logTermEvent(query, "search_miss")
-    const discovered = await discoverTerm(query, generateDiscoveryObject)
-    if (!discovered) return { kind: "not_found", verdict, query }
-    const saved = await saveDiscoveredTerm(discovered.term)
-    await logTermEvent(query, "llm_generated")
-    return {
-      kind: "discovered",
-      term: saved?.term ?? discovered.term,
-      verdict,
-      note: "AI-generated and unverified. Saved for human review before anyone else sees it.",
-    }
-  } catch (error) {
-    console.error("searchTerm failed:", error instanceof Error ? error.message : error)
-    return { kind: "error", message: "Something went wrong looking that up. Please try again." }
-  }
+  return runSearch(raw)
 }
 
 export async function suggestTerm(rawTerm: string, rawContext?: string): Promise<ActionResult<SafetyVerdict>> {
