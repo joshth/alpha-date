@@ -30,6 +30,8 @@ export const terms = pgTable(
       .default(sql`gen_random_uuid()`),
     term: text("term").notNull(),
     termLower: text("term_lower").notNull(),
+    termKey: text("term_key").notNull(),
+    keyVersion: integer("key_version").notNull().default(1),
     pronunciation: text("pronunciation"),
     definition: text("definition").notNull(),
     examples: jsonb("examples").$type<string[]>().notNull().default([]),
@@ -51,7 +53,7 @@ export const terms = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("terms_term_lower_idx").on(t.termLower)],
+  (t) => [uniqueIndex("terms_term_lower_idx").on(t.termLower), index("terms_term_key_idx").on(t.termKey)],
 )
 
 // Anonymous usage analytics. Deliberately has NO user linkage — never add

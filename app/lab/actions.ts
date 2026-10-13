@@ -7,16 +7,17 @@ import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
-import { getTermRecord, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
+import { getAiCallsAvoided, getTermByKey, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
 import type { ActionResult, SearchOutcome } from "@/lib/types"
 
-// Pipeline: input → safety gate → lexicon lookup → AI discovery → stored for
-// review. Mirrors the order production uses; the gate always runs first.
-
-const runSearch = createSearchTerm({ checkInputSafety, getTermRecord, logTermEvent, generateDiscoveryObject, saveDiscoveredTerm })
+const runSearch = createSearchTerm({ checkInputSafety, getTermByKey, logTermEvent, generateDiscoveryObject, saveDiscoveredTerm })
 
 export async function searchTerm(raw: string): Promise<SearchOutcome> {
   return runSearch(raw)
+}
+
+export async function fetchAiCallsAvoided(): Promise<number> {
+  return getAiCallsAvoided()
 }
 
 const runSuggestion = createSuggestTerm({ checkInputSafety, recordSuggestion })
