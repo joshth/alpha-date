@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { CrisisCard } from "@/components/safety/crisis-card"
 import { HelpResources } from "@/components/safety/help-resources"
-import { searchTerm, suggestTerm } from "@/app/lab/actions"
+import { fetchAiCallsAvoided, searchTerm, suggestTerm } from "@/app/lab/actions"
 import type { SearchOutcome } from "@/lib/types"
 import type { SlangTerm } from "@/app/types"
 
@@ -81,16 +81,18 @@ function SuggestForm({ query }: { query: string }) {
   )
 }
 
-export function SearchPanel() {
+export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
   const [query, setQuery] = useState("")
   const [busy, setBusy] = useState(false)
   const [outcome, setOutcome] = useState<SearchOutcome | null>(null)
+  const [avoided, setAvoided] = useState(initialAvoided)
 
   const run = async (event: React.FormEvent) => {
     event.preventDefault()
     setBusy(true)
     try {
       setOutcome(await searchTerm(query))
+      setAvoided(await fetchAiCallsAvoided())
     } catch {
       setOutcome({ kind: "error", message: "Could not reach the service. Please try again." })
     } finally {
@@ -149,6 +151,9 @@ export function SearchPanel() {
           </p>
         )}
       </div>
+      <p aria-live="polite" className="text-xs text-muted-foreground">
+        AI calls avoided: {avoided}
+      </p>
     </div>
   )
 }

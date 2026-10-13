@@ -111,6 +111,10 @@ export async function logTermEvent(termText: string, eventType: TermEventType): 
   const db = await getDb()
   await db.insert(termEvents).values({ termLower: termText.trim().toLowerCase().slice(0, 120), eventType })
 }
+export async function getAiCallsAvoided(): Promise<number> {
+  return countTermEvents("ai_call_avoided")
+}
+
 export async function countTermEvents(eventType: TermEventType): Promise<number> {
   const db = await getDb()
   const rows = await db.select({ total: count() }).from(termEvents).where(eq(termEvents.eventType, eventType))

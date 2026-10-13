@@ -6,11 +6,15 @@ import { sanitizeUserText } from "@/lib/discovery/prompt"
 import { recordSuggestion } from "@/lib/feedback"
 import { runSearch } from "@/lib/search"
 import { checkInputSafety } from "@/lib/safety/gate"
-import { setTermStatus } from "@/lib/terms-store"
+import { getAiCallsAvoided, setTermStatus } from "@/lib/terms-store"
 import type { ActionResult, SearchOutcome } from "@/lib/types"
 
 export async function searchTerm(raw: string): Promise<SearchOutcome> {
   return runSearch(raw)
+}
+
+export async function fetchAiCallsAvoided(): Promise<number> {
+  return getAiCallsAvoided()
 }
 
 export async function suggestTerm(rawTerm: string, rawContext?: string): Promise<ActionResult> {
