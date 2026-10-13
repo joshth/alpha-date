@@ -2,8 +2,9 @@ import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import type { DiscoveryOutput } from "@/lib/discovery/prompt"
-import { runSearch } from "@/lib/search"
-import { getAiCallsAvoided } from "@/lib/terms-store"
+import { createSearchTerm } from "@/lib/search"
+import { checkInputSafety } from "@/lib/safety/gate"
+import { getAiCallsAvoided, getTermByKey, logTermEvent, saveDiscoveredTerm } from "@/lib/terms-store"
 
 function makeSpy() {
   const spy = {
@@ -14,6 +15,10 @@ function makeSpy() {
     },
   }
   return spy
+}
+
+function runSearch(query: string, generate: ReturnType<typeof makeSpy>["generate"]) {
+  return createSearchTerm({ checkInputSafety, getTermByKey, logTermEvent, generateDiscoveryObject: generate, saveDiscoveredTerm })(query)
 }
 
 // Demo start: the seed holds thousands of search/discovery events but none
