@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { CrisisCard } from "@/components/safety/crisis-card"
 import { HelpResources } from "@/components/safety/help-resources"
 import { fetchAiCallsAvoided, searchTerm, suggestTerm } from "@/app/lab/actions"
+import { AiCallsAvoidedBadge } from "@/components/search/ai-calls-avoided-badge"
 import type { SearchOutcome } from "@/lib/types"
 import type { SlangTerm } from "@/app/types"
 
@@ -151,9 +152,7 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
           </p>
         )}
       </div>
-      <p aria-live="polite" className="text-xs text-muted-foreground">
-        AI calls avoided: {avoided}
-      </p>
+      <AiCallsAvoidedBadge value={avoided} />
     </div>
   )
 }
