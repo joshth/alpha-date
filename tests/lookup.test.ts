@@ -4,8 +4,9 @@ import assert from "node:assert/strict"
 import { getDb } from "@/lib/_stubs/db"
 import { terms } from "@/lib/_stubs/schema"
 import type { DiscoveryOutput } from "@/lib/discovery/prompt"
-import { runSearch } from "@/lib/search"
-import { countTermEvents } from "@/lib/terms-store"
+import { createSearchTerm } from "@/lib/search"
+import { checkInputSafety } from "@/lib/safety/gate"
+import { countTermEvents, getTermByKey, logTermEvent, saveDiscoveredTerm } from "@/lib/terms-store"
 
 // Stands in for the real generate function passed to runSearch. Counting
 // calls lets a test assert whether the (expensive) model lookup was reached
@@ -19,6 +20,10 @@ function makeSpy() {
     },
   }
   return spy
+}
+
+function runSearch(query: string, generate: ReturnType<typeof makeSpy>["generate"]) {
+  return createSearchTerm({ checkInputSafety, getTermByKey, logTermEvent, generateDiscoveryObject: generate, saveDiscoveredTerm })(query)
 }
 
 test("Rizz is found by key lookup without calling the model", async () => {
