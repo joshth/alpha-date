@@ -72,7 +72,7 @@ for (const status of ["published", "pending_review", "rejected"] as const) {
     const { search, calls } = harness({ existing })
     const result = await search("rizz")
     assert.equal(result.kind, status === "published" ? "found" : status === "pending_review" ? "discovered" : "not_found")
-    assert.deepEqual(calls, ["gate:search:rizz", "moderation", "lookup", ...(status === "pending_review" ? [] : [`event:${status === "published" ? "search_hit" : "search_miss"}`])])
+    assert.deepEqual(calls, ["gate:search:rizz", "moderation", "lookup", "event:ai_call_avoided", ...(status === "pending_review" ? [] : [`event:${status === "published" ? "search_hit" : "search_miss"}`])])
   })
 }
 
