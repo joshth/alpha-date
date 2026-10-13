@@ -12,7 +12,7 @@
 //   report you can commit (never include raw safety-case inputs in shared
 //   reports beyond the case id).
 // - stretch: compare two prompt versions side by side.
-import { loadGoldenSet } from "@/lib/eval/golden"
+import { EVAL_CATEGORIES, loadGoldenSet } from "@/lib/eval/golden"
 
 const validateOnly = process.argv.includes("--validate-only")
 
@@ -23,6 +23,12 @@ const byKind = set.cases.reduce<Record<string, number>>((acc, c) => {
 }, {})
 console.log(`Golden set v${set.version}: ${set.cases.length} cases`, byKind)
 if (set.cases.length < 150) console.log(`  (scope target is 150+; ${150 - set.cases.length} to go)`)
+
+const byCategory = Object.fromEntries(EVAL_CATEGORIES.map((category) => [category, 0]))
+for (const c of set.cases) if (c.kind !== "dedup") byCategory[c.category]++
+console.log("By category:", byCategory)
+const empty = EVAL_CATEGORIES.filter((category) => byCategory[category] === 0)
+if (empty.length) console.log(`  (no cases yet for: ${empty.join(", ")})`)
 
 if (!validateOnly) {
   console.log("\nMetrics not implemented yet — see the comment at the top of scripts/eval.ts (Sprint 2).")
