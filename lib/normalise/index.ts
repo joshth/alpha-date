@@ -58,9 +58,23 @@ function stripCommonSuffix(key: string): string {
   return key
 }
 
-// "same_key" is an exact canonical-key match. "trigram" is a fuzzy match
-// gated by MIN_FUZZY_KEY_LENGTH and MATCH_THRESHOLD. "stem" is a fallback
-// for suffix variants trigram misses (see stripCommonSuffix above).
+// Fallback for suffix variants trigram misses (e.g. "glaze"/"glazing",
+// 0.40 trigram). startsWith (not stem equality) tolerates the silent-e
+// drop before "-ing". Stems must still clear MIN_FUZZY_KEY_LENGTH so
+// over-stripped short stems ("mass" -> "mas") can't false-positive.
+function hasStemOverlap(inputKey: string, candidateKey: string): boolean {
+  const inputStem = stripCommonSuffix(inputKey)
+  const candidateStem = stripCommonSuffix(candidateKey)
+  return (
+    (inputStem.length >= MIN_FUZZY_KEY_LENGTH && candidateKey.startsWith(inputStem)) ||
+    (candidateStem.length >= MIN_FUZZY_KEY_LENGTH && inputKey.startsWith(candidateStem))
+  )
+}
+
+// "same_key" is an exact canonical-key match. "trigram" and "stem" are both
+// fuzzy matches gated by MIN_FUZZY_KEY_LENGTH, blended into one score (see
+// LikelyMatch.score) and gated by MATCH_THRESHOLD; "stem" names the match
+// where the stem signal (stripCommonSuffix above) was needed to clear it.
 export type MatchReason = "same_key" | "trigram" | "stem"
 
 // Candidate/input keys shorter than this never get fuzzy-matched (trigram
@@ -72,10 +86,12 @@ export const MIN_FUZZY_KEY_LENGTH = 4
 export interface LikelyMatch {
   /** The existing lexicon term or suggestion that this one probably duplicates. */
   candidate: string
-  /** 0 means nothing alike, 1 means the same key, and anything between is a guess. Never merge on a guess. A reviewer decides. */
+  /** 0 means nothing alike, 1 means the same key, and anything between is a guess. Never merge on a guess. A reviewer decides. A blend of the signals below when reason isn't "same_key". */
   score: number
   /** Short machine-readable reason. See MatchReason. */
   reason: MatchReason
+  /** Raw signals behind a blended score: the trigram similarity and whether the stem fallback fired. Absent for same_key. */
+  signals?: { trigram: number; stem: boolean }
 }
 
 /** Canonical form used as the dedup key for a suggestion. */
@@ -113,22 +129,21 @@ export function findLikelyMatches(text: string, candidates: string[], _limit = D
     // threshold to save them.
     if (inputKey.length < MIN_FUZZY_KEY_LENGTH || candidateKey.length < MIN_FUZZY_KEY_LENGTH) continue
 
-    const score = trigramSimilarity(inputKey, candidateKey)
-    if (score >= MATCH_THRESHOLD) {
-      matches.push({ candidate, score, reason: "trigram" })
-      continue
-    }
+    // Blend trigram and stem into one score (noisy-OR): a stem match
+    // boosts a weak trigram score rather than being reported separately.
+    // Stays in 0-1, never lowers a trigram-only score, and stays below 1
+    // unless a signal is 1, so 1 remains reserved for same_key. Stem only
+    // ever applies as a fallback when trigram alone misses -- hasStemOverlap
+    // alone is too naive (a short key is trivially a "prefix" of almost any
+    // longer extension of it, e.g. "gyat"/"gyatt") to trust once trigram has
+    // already cleared the threshold on its own.
+    const trigram = trigramSimilarity(inputKey, candidateKey)
+    const stem = trigram < MATCH_THRESHOLD && hasStemOverlap(inputKey, candidateKey)
+    const score = stem ? 1 - (1 - trigram) * (1 - STEM_WEIGHT) : trigram
+    if (score < MATCH_THRESHOLD) continue
 
-    // Fallback for suffix variants trigram misses (e.g. "glaze"/"glazing",
-    // 0.40 trigram). startsWith (not stem equality) tolerates the silent-e
-    // drop before "-ing". Stems must still clear MIN_FUZZY_KEY_LENGTH so
-    // over-stripped short stems ("mass" -> "mas") can't false-positive.
-    const inputStem = stripCommonSuffix(inputKey)
-    const candidateStem = stripCommonSuffix(candidateKey)
-    const stemOverlap =
-      (inputStem.length >= MIN_FUZZY_KEY_LENGTH && candidateKey.startsWith(inputStem)) ||
-      (candidateStem.length >= MIN_FUZZY_KEY_LENGTH && inputKey.startsWith(candidateStem))
-    if (stemOverlap) matches.push({ candidate, score, reason: "stem" })
+    const reason: MatchReason = stem ? "stem" : "trigram"
+    matches.push({ candidate, score, reason, signals: { trigram, stem } })
   }
 
   return matches
