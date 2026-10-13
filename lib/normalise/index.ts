@@ -24,6 +24,9 @@ export const MATCH_SCORE_MIN = 0
 export const MATCH_SCORE_MAX = 1
 // Starting value, calibrated later in slice D; not used until then.
 export const MATCH_THRESHOLD = 0.5
+// Weight of the stem signal in the noisy-OR blend below. Starting value,
+// calibrated in slice E. Just a baseline as at 2026-10-13
+export const STEM_WEIGHT = 0.3
 // Default number of matches findLikelyMatches returns.
 export const DEFAULT_MATCH_LIMIT = 3
 

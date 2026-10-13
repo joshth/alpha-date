@@ -1,4 +1,4 @@
-import { findLikelyMatches, MATCH_SCORE_MAX, MATCH_THRESHOLD, MIN_FUZZY_KEY_LENGTH } from "@/lib/normalise"
+import { findLikelyMatches, MATCH_SCORE_MAX, MATCH_THRESHOLD, MIN_FUZZY_KEY_LENGTH, STEM_WEIGHT } from "@/lib/normalise"
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import goldenSet from "../eval/golden-set.json"
@@ -43,14 +43,55 @@ test("the fuzzy gate blocks keys shorter than MIN_FUZZY_KEY_LENGTH", () => {
 
 test("the stem fallback catches a suffix variant trigram misses", () => {
   // trigramSimilarity("glaze", "glazing") is ~0.40, below MATCH_THRESHOLD,
-  // but "glazing" strips to "glaz" and "glaze" starts with "glaz" --
-  // caught by the stem fallback instead of being a documented miss.
+  // but "glazing" strips to "glaz" and "glaze" starts with "glaz" -- the
+  // stem signal boosts the blended score over the threshold.
   const matches = findLikelyMatches("glaze", ["glazing"])
 
   assert.equal(matches.length, 1)
   assert.equal(matches[0].candidate, "glazing")
   assert.equal(matches[0].reason, "stem")
-  assert.ok(matches[0].score < MATCH_THRESHOLD)
+  assert.ok(matches[0].score >= MATCH_THRESHOLD)
+  assert.ok(Math.abs(matches[0].score - 0.58) < 0.01)
+})
+
+test("the stem signal boosts the score above the raw trigram signal", () => {
+  const [match] = findLikelyMatches("glaze", ["glazing"])
+
+  assert.ok(match.signals)
+  assert.ok(match.score > match.signals!.trigram)
+})
+
+test("signals expose the raw trigram score and whether stem fired", () => {
+  const [glaze] = findLikelyMatches("glaze", ["glazing"])
+  assert.equal(glaze.signals?.stem, true)
+  assert.ok(Math.abs(glaze.signals!.trigram - 0.4) < 0.01)
+
+  const [gyatt] = findLikelyMatches("gyat!!", ["Gyatt"])
+  assert.equal(gyatt.signals?.stem, false)
+  assert.equal(gyatt.score, gyatt.signals?.trigram)
+})
+
+test("the blended score never reaches MATCH_SCORE_MAX for a non-same_key pair", () => {
+  const probePairs: Array<[string, string]> = [
+    ["glaze", "glazing"],
+    ["drip", "dripping"],
+    ["cooked", "cooking"],
+    ["gooner", "gooning"],
+    ["simp", "simping"],
+    ["rizz", "rizzler"],
+    ["gyat!!", "gyatt"],
+  ]
+
+  for (const [input, candidate] of probePairs) {
+    const [match] = findLikelyMatches(input, [candidate])
+    assert.ok(match, `expected a match for ${input}/${candidate}`)
+    assert.ok(match.score < MATCH_SCORE_MAX)
+  }
+})
+
+test("STEM_WEIGHT is strictly between 0 and 1", () => {
+  assert.ok(STEM_WEIGHT > 0)
+  assert.ok(STEM_WEIGHT < 1)
 })
 
 test("the stem fallback's own length check blocks an over-stripped stem", () => {
