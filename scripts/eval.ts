@@ -12,11 +12,20 @@
 //   report you can commit (never include raw safety-case inputs in shared
 //   reports beyond the case id).
 // - stretch: compare two prompt versions side by side.
-import { EVAL_CATEGORIES, loadGoldenSet } from "@/lib/eval/golden"
+import { DEFAULT_GOLDEN_SET_PATH, EVAL_CATEGORIES, type GoldenSet, loadGoldenSet } from "@/lib/eval/golden"
 
 const validateOnly = process.argv.includes("--validate-only")
 
-const set = loadGoldenSet()
+const flagFile = process.argv.indexOf("--file")
+const file = flagFile >= 0 && process.argv[flagFile + 1] ? process.argv[flagFile + 1] : DEFAULT_GOLDEN_SET_PATH
+
+let set: GoldenSet
+try {
+  set = loadGoldenSet(file)
+} catch (error) {
+  console.error((error as Error).message)
+  process.exit(1)
+}
 const byKind = set.cases.reduce<Record<string, number>>((acc, c) => {
   acc[c.kind] = (acc[c.kind] ?? 0) + 1
   return acc

@@ -1,5 +1,6 @@
 import "./setup"
 import assert from "node:assert/strict"
+import path from "node:path"
 import { test } from "node:test"
 import { EVAL_CATEGORIES, type GoldenCase, type GoldenSet, labelProblems, loadGoldenSet, reviewProblems } from "@/lib/eval/golden"
 import { checkInputSafety } from "@/lib/safety/gate"
@@ -88,4 +89,19 @@ test("review entries must refer to existing cases", () => {
     cases: [],
   }
   assert.deepEqual(reviewProblems(set), ['disagreement refers to unknown case id "no-such-case"'])
+})
+
+test("a broken golden-set file fails with one clear message per problem", () => {
+  const file = path.join(process.cwd(), "tests", "fixtures", "golden-broken.json")
+  assert.throws(
+    () => loadGoldenSet(file),
+    (error: Error) => {
+      assert.match(error.message, /\(4 problems\)/)
+      assert.match(error.message, /missing-category \(cases\[1\]\): category: Required/)
+      assert.match(error.message, /ok-001: duplicate id/)
+      assert.match(error.message, /contradictory-label: category "invented" but isRealSlang is true/)
+      assert.match(error.message, /unknown-action \(cases\[4\]\): safety\.action: Invalid enum value/)
+      return true
+    },
+  )
 })

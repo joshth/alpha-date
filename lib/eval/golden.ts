@@ -100,20 +100,112 @@ export type GoldenReview = z.infer<typeof reviewSchema>
 
 export const RATING_ORDER: readonly string[] = RATINGS
 
-export function loadGoldenSet(file = path.join(process.cwd(), "eval", "golden-set.json")): GoldenSet {
-  const parsed = goldenSetSchema.parse(JSON.parse(readFileSync(file, "utf8")))
-  const seen = new Set<string>()
-  for (const c of parsed.cases) {
-    if (seen.has(c.id)) throw new Error(`Duplicate golden-set id: ${c.id}`)
-    seen.add(c.id)
+export const DEFAULT_GOLDEN_SET_PATH = path.join(
+  process.cwd(),
+  "eval",
+  "golden-set.json"
+);
+
+export function validateGoldenSet(
+  raw: unknown
+): { set: GoldenSet | null; problems: string[] } {
+  const result = goldenSetSchema.safeParse(raw);
+  const problems: string[] = [];
+
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      problems.push(describeIssue(raw, issue));
+    }
   }
-  const problems = parsed.cases.flatMap(labelProblems)
-  if (problems.length) throw new Error(`Inconsistent golden-set labels:\n  ${problems.join("\n  ")}`)
-  const reviewIssues = reviewProblems(parsed)
-  if (reviewIssues.length) throw new Error(`Invalid golden-set review:\n  ${reviewIssues.join("\n  ")}`)
-  return parsed
+
+  const cases = (raw as { cases?: unknown })?.cases;
+  const rawCases = Array.isArray(cases) ? cases : [];
+  const ids = new Set<string>();
+
+  for (const item of rawCases) {
+    const id = (item as { id?: unknown })?.id;
+
+    if (typeof id === "string" && id.length > 0) {
+      if (ids.has(id)) {
+        problems.push(`${id}: duplicate id`);
+      }
+
+      ids.add(id);
+    }
+
+    const caseResult = goldenCaseSchema.safeParse(item);
+
+    if (caseResult.success) {
+      const issues = labelProblems(caseResult.data);
+      problems.push(...issues);
+    }
+  }
+
+  if (result.success) {
+    const issues = reviewProblems(result.data);
+    problems.push(...issues.map((issue) => `review: ${issue}`));
+  }
+
+  if (!result.success || problems.length > 0) {
+    return { set: null, problems };
+  }
+
+  return { set: result.data, problems };
 }
 
+export function loadGoldenSet(
+  file = DEFAULT_GOLDEN_SET_PATH
+): GoldenSet {
+  let raw: unknown;
+
+  try {
+    const contents = readFileSync(file, "utf8");
+    raw = JSON.parse(contents);
+  } catch (error) {
+    throw new Error(
+      `Cannot read golden set ${file}: ${(error as Error).message}`
+    );
+  }
+
+   const result = validateGoldenSet(raw);
+
+  if (result.set === null) {
+    throw new Error(
+      `Invalid golden set ${file} (${result.problems.length} problems):\n  ` +
+        result.problems.join("\n  ")
+    );
+  }
+
+  return result.set;
+}
+
+function describeIssue(raw: unknown, issue: z.ZodIssue): string {
+  const pathParts = issue.path;
+
+  if (pathParts[0] === "cases" && typeof pathParts[1] === "number") {
+    const index = pathParts[1];
+    const remainingPath = pathParts.slice(2);
+    const cases = (raw as { cases?: { id?: unknown }[] })?.cases;
+    const item = cases?.[index];
+
+    const id =
+      typeof item?.id === "string" && item.id.length > 0
+        ? item.id
+        : "(no id)";
+
+    const field = remainingPath.length
+      ? remainingPath.join(".")
+      : "case";
+
+    return `${id} (cases[${index}]): ${field}: ${issue.message}`;
+  }
+
+  const field = pathParts.length > 0
+    ? pathParts.join(".")
+    : "file";
+
+  return `${field}: ${issue.message}`;
+}
 export function reviewProblems(set: GoldenSet): string[] {
   const ids = new Set(set.cases.map((c) => c.id))
   return (set.review?.disagreements ?? [])
