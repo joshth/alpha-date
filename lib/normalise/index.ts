@@ -12,7 +12,7 @@
 // respellings) — but beware over-merging distinct terms ("mid" vs "midd"?).
 // Measure merge precision with labelled pairs in the golden set.
 
-import { normalizeKey } from "./similarity"
+import { normalizeKey, trigramSimilarity } from "./similarity"
 
 // Increment whenever normaliseSuggestion's output changes,
 // so stored keys can be told apart from stale ones.
@@ -41,8 +41,30 @@ function collapseRepeatedLetters(text: string): string {
   return text.replace(/(\p{L})\1{2,}/gu, "$1$1")
 }
 
-// Slice D adds "trigram" once fuzzy matching lands.
-export type MatchReason = "same_key"
+// naive suffix list, no real morphology (doubled consonants,
+// irregular spelling) — revisit in slice E if more variants need it.
+// relevant to Australian/American/UK English lexicon.
+// has to be researched for cross cultural suffixes/grammar patterns
+// e.g. stems in Japanese  食べません would have stem ません
+const commonSuffixes = ["ing", "ed", "s"]
+
+function stripCommonSuffix(key: string): string {
+  for (const suffix of commonSuffixes) {
+    if (key.length > suffix.length && key.endsWith(suffix)) return key.slice(0, -suffix.length)
+  }
+  return key
+}
+
+// "same_key" is an exact canonical-key match. "trigram" is a fuzzy match
+// gated by MIN_FUZZY_KEY_LENGTH and MATCH_THRESHOLD. "stem" is a fallback
+// for suffix variants trigram misses (see stripCommonSuffix above).
+export type MatchReason = "same_key" | "trigram" | "stem"
+
+// Candidate/input keys shorter than this never get fuzzy-matched (trigram
+// or stem), even at high similarity — protects short keys like "mid",
+// "sus", "riz" from over-merging with longer unrelated terms. Revisit
+// alongside the MATCH_THRESHOLD sweep in slice E.
+export const MIN_FUZZY_KEY_LENGTH = 4
 
 export interface LikelyMatch {
   /** The existing lexicon term or suggestion that this one probably duplicates. */
@@ -77,10 +99,33 @@ export function findLikelyMatches(text: string, candidates: string[], _limit = D
     // Ignore candidates that normalise to an empty key.
     if (!candidateKey) continue
 
-    // This slice returns only exact canonical-key matches; sorting and limiting come later.
-    if (candidateKey !== inputKey) continue
+    if (candidateKey === inputKey) {
+      matches.push({ candidate, score: 1, reason: "same_key" })
+      continue
+    }
 
-    matches.push({ candidate, score: 1, reason: "same_key" })
+    // Short keys are too easy to over-merge on similarity alone
+    // ("mid" vs "midnight", "sus" vs "sussy baka") — skip both fuzzy
+    // signals below MIN_FUZZY_KEY_LENGTH rather than relying on a score
+    // threshold to save them.
+    if (inputKey.length < MIN_FUZZY_KEY_LENGTH || candidateKey.length < MIN_FUZZY_KEY_LENGTH) continue
+
+    const score = trigramSimilarity(inputKey, candidateKey)
+    if (score >= MATCH_THRESHOLD) {
+      matches.push({ candidate, score, reason: "trigram" })
+      continue
+    }
+
+    // Fallback for suffix variants trigram misses (e.g. "glaze"/"glazing",
+    // 0.40 trigram). startsWith (not stem equality) tolerates the silent-e
+    // drop before "-ing". Stems must still clear MIN_FUZZY_KEY_LENGTH so
+    // over-stripped short stems ("mass" -> "mas") can't false-positive.
+    const inputStem = stripCommonSuffix(inputKey)
+    const candidateStem = stripCommonSuffix(candidateKey)
+    const stemOverlap =
+      (inputStem.length >= MIN_FUZZY_KEY_LENGTH && candidateKey.startsWith(inputStem)) ||
+      (candidateStem.length >= MIN_FUZZY_KEY_LENGTH && inputKey.startsWith(candidateStem))
+    if (stemOverlap) matches.push({ candidate, score, reason: "stem" })
   }
 
   return matches

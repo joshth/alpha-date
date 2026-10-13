@@ -17,9 +17,9 @@ test("findLikelyMatches returns a trigram match for a close respelling", () => {
 test("same_key still wins and is not duplicated by a trigram entry", () => {
   // Identical keys must short-circuit to exactly one same_key entry,
   // never a second trigram entry for the same candidate.
-  const matches = findLikelyMatches("brainrott", ["Brain Rot"])
+  const matches = findLikelyMatches("aura farming", ["aurafarming"])
 
-  assert.deepEqual(matches, [{ candidate: "Brain Rot", score: 1, reason: "same_key" }])
+  assert.deepEqual(matches, [{ candidate: "aurafarming", score: 1, reason: "same_key" }])
 })
 
 test("golden-set dedup pairs labelled sameTerm:false stay unmatched", () => {
