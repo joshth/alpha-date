@@ -1,29 +1,40 @@
-// Evaluation harness entry point: `pnpm eval` (team-owned; Sprint 2).
-//
-// Shipped: golden-set loading and validation (`pnpm eval:validate`).
-// To build, per the approved scope:
-// - run discovery (lib/discovery/discover.ts) over every "discovery" case with
-//   the mock model (default) and optionally a real model (MOCK_LLM=false);
-// - run the safety gate (lib/safety/gate.ts) over every "safety" case;
-// - run normalisation (lib/normalise) over every "dedup" case;
-// - report precision, recall, hallucination rate, sensitivity mislabels,
-//   gate agreement (crisis recall must be 100%), merge precision/recall,
-//   latency and cost per run — as a table in the terminal plus a JSON/Markdown
-//   report you can commit (never include raw safety-case inputs in shared
-//   reports beyond the case id).
-// - stretch: compare two prompt versions side by side.
 import { loadGoldenSet } from "@/lib/eval/golden"
+import { evaluateSafety } from "@/lib/eval/safety"
+import { checkInputSafety, type SafetySurface } from "@/lib/safety/gate"
 
-const validateOnly = process.argv.includes("--validate-only")
+async function main() {
+  const args = process.argv.slice(2)
+  if (args.some((arg) => !["--validate-only", "--surface=search", "--surface=suggestion"].includes(arg))) {
+    throw new Error("Usage: pnpm eval [--validate-only] [--surface=search|suggestion]")
+  }
+  const surfaces = args.filter((arg) => arg.startsWith("--surface="))
+  if (surfaces.length > 1) throw new Error("Choose one evaluation surface.")
+  const surface = (surfaces[0]?.split("=")[1] ?? "search") as SafetySurface
+  const set = loadGoldenSet()
+  const byKind = set.cases.reduce<Record<string, number>>((counts, entry) => {
+    counts[entry.kind] = (counts[entry.kind] ?? 0) + 1
+    return counts
+  }, {})
+  console.log(`Golden set v${set.version}: ${set.cases.length} cases`, byKind)
+  if (set.cases.length < 150) console.log(`  (scope target is 150+; ${150 - set.cases.length} to go)`)
+  if (args.includes("--validate-only")) return
 
-const set = loadGoldenSet()
-const byKind = set.cases.reduce<Record<string, number>>((acc, c) => {
-  acc[c.kind] = (acc[c.kind] ?? 0) + 1
-  return acc
-}, {})
-console.log(`Golden set v${set.version}: ${set.cases.length} cases`, byKind)
-if (set.cases.length < 150) console.log(`  (scope target is 150+; ${150 - set.cases.length} to go)`)
-
-if (!validateOnly) {
-  console.log("\nMetrics not implemented yet — see the comment at the top of scripts/eval.ts (Sprint 2).")
+  process.env.MOCK_LLM = "true"
+  process.env.MOCK_MODERATION_LATENCY_MS = "0"
+  process.env.MOCK_MODERATION_FAILURE_RATE = "0"
+  console.log("\nSafety evaluation: deterministic mock moderation; no real-provider accuracy claim.")
+  console.log("Labels are compared as stored. Suggestion results use the same labels as search.")
+  const safety = await evaluateSafety(set.cases, checkInputSafety, surface)
+  console.table(safety.confusionMatrix.counts)
+  console.log(JSON.stringify({
+    datasetVersion: set.version,
+    configuration: { moderation: "mock", latencyMs: 0, failureRate: 0 },
+    safety,
+  }, null, 2))
+  console.log("\nDiscovery and dedup metrics remain pending in the shared evaluation harness.")
 }
+
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : "Evaluation failed.")
+  process.exitCode = 1
+})
