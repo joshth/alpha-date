@@ -15,6 +15,18 @@ export function isMockLlm(): boolean {
   return process.env.MOCK_LLM !== "false" || !process.env.OPENAI_API_KEY?.trim()
 }
 
+// What the discovery model is for this process, recorded in every eval report.
+export function discoveryModelConfig() {
+  const mock = isMockLlm()
+  return {
+    mock,
+    model: mock ? "mock" : process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
+    temperature: mock ? null : 0.3,
+    seed: null as number | null,
+    baseURL: null as string | null,
+  }
+}
+
 export class MockProviderFailure extends Error {
   constructor(what: string) {
     super(`Simulated ${what} failure`)

@@ -146,3 +146,24 @@ test("E0: two mock runs over the golden set give identical results", async () =>
   assert.equal(first.total, golden.cases.filter((c) => c.kind === "discovery").length)
   assert.equal(first.errorIds.length, 0)
 })
+
+test("reports carry dataset and config identifiers and mark mock runs", async () => {
+  const { reportBaseName, toMarkdown } = await import("@/lib/eval/report")
+  const report = await evaluateDiscovery(fixture, fakeModel([]))
+  const meta = {
+    datasetVersion: "9.9.9",
+    datasetFile: "eval/golden-set.json",
+    datasetSha256: "abcdef0123456789",
+    startedAt: "2026-10-18T05:00:00.000Z",
+    config: { mock: true, model: "mock", promptVersion: "prod-2026-09-27", temperature: null, seed: null, baseURL: null },
+  }
+  assert.equal(reportBaseName(meta), "2026-10-18T05-00-00-000-discovery-mock")
+  const markdown = toMarkdown(meta, report)
+  assert.match(markdown.split("\n")[0], /MOCK model \(not a real accuracy claim\)/)
+  assert.match(markdown, /v9\.9\.9, sha256 `abcdef012345`/)
+  assert.match(markdown, /prod-2026-09-27/)
+  assert.ok(!markdown.includes("SYNTHETIC-SAFETY-INPUT"))
+  const real = { ...meta, config: { ...meta.config, mock: false, model: "llama3.2:3b", temperature: 0.7, seed: 42 } }
+  assert.equal(reportBaseName(real), "2026-10-18T05-00-00-000-discovery-llama3.2_3b")
+  assert.match(toMarkdown(real, report), /temperature 0\.7; seed 42/)
+})

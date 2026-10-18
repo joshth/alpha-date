@@ -1,9 +1,10 @@
 // Evaluation harness entry point: `pnpm eval` (team-owned; Sprint 2).
 //
-// Shipped: golden-set loading and validation (`pnpm eval:validate`).
-// To build, per the approved scope:
-// - run discovery (lib/discovery/discover.ts) over every "discovery" case with
-//   the mock model (default) and optionally a real model (MOCK_LLM=false);
+// Shipped: golden-set loading and validation (`pnpm eval:validate`), and
+// discovery over every "discovery" case (lib/eval/discovery.ts) with the mock
+// model (default) or a real model (MOCK_LLM=false); `--report` writes a JSON
+// and Markdown report to eval/reports/.
+// Still to build, per the approved scope:
 // - run the safety gate (lib/safety/gate.ts) over every "safety" case;
 // - run normalisation (lib/normalise) over every "dedup" case;
 // - report precision, recall, hallucination rate, sensitivity mislabels,
@@ -12,9 +13,16 @@
 //   report you can commit (never include raw safety-case inputs in shared
 //   reports beyond the case id).
 // - stretch: compare two prompt versions side by side.
+import path from "node:path"
+import { discoveryModelConfig, generateDiscoveryObject } from "@/lib/_stubs/llm"
+import { DISCOVERY_PROMPT_VERSION } from "@/lib/discovery/prompt"
+import { evaluateDiscovery } from "@/lib/eval/discovery"
 import { DEFAULT_GOLDEN_SET_PATH, EVAL_CATEGORIES, type GoldenSet, loadGoldenSet } from "@/lib/eval/golden"
+import { formatRate } from "@/lib/eval/metrics"
+import { type RunMeta, sha256File, writeReport } from "@/lib/eval/report"
 
 const validateOnly = process.argv.includes("--validate-only")
+const writeReportFiles = process.argv.includes("--report")
 
 const flagFile = process.argv.indexOf("--file")
 const file = flagFile >= 0 && process.argv[flagFile + 1] ? process.argv[flagFile + 1] : DEFAULT_GOLDEN_SET_PATH
@@ -52,6 +60,45 @@ if (empty.length) console.log(`  (no cases yet for: ${empty.join(", ")})`)
     );
   }
 
+async function runDiscovery() {
+  // The mock's simulated latency and outages are opt-in here, so a plain
+  // `pnpm eval` is fast and repeatable; set them explicitly to test outages.
+  process.env.MOCK_LLM_LATENCY_MS ??= "0"
+  process.env.MOCK_LLM_FAILURE_RATE ??= "0"
+
+  const meta: RunMeta = {
+    datasetVersion: set.version,
+    datasetFile: path.relative(process.cwd(), file),
+    datasetSha256: sha256File(file),
+    startedAt: new Date().toISOString(),
+    config: { ...discoveryModelConfig(), promptVersion: DISCOVERY_PROMPT_VERSION },
+  }
+  console.log(
+    `\nDiscovery evaluation: ${meta.config.mock ? "MOCK model, deterministic; not a real accuracy claim" : meta.config.model}` +
+      ` (prompt ${meta.config.promptVersion})`,
+  )
+  const discovery = await evaluateDiscovery(set.cases, generateDiscoveryObject)
+  console.table({
+    "model accepted": { "real slang": discovery.confusion.truePositive, "not slang": discovery.confusion.falsePositive },
+    "model rejected": { "real slang": discovery.confusion.falseNegative, "not slang": discovery.confusion.trueNegative },
+  })
+  console.log(`Precision:             ${formatRate(discovery.precision)}`)
+  console.log(`Recall:                ${formatRate(discovery.recall)}`)
+  console.log(`H1 hallucination rate: ${formatRate(discovery.hallucinationRate)}  [${discovery.hallucinatedIds.join(", ")}]`)
+  console.log(`False-accept rate:     ${formatRate(discovery.falseAcceptRate)}`)
+  console.log(`Sensitivity mislabels: ${formatRate(discovery.sensitivityMislabelRate)}  [${discovery.sensitivityMislabelIds.join(", ")}]`)
+  console.log(`Calls: ${discovery.calls}; provider errors: ${discovery.errorIds.length}; mean latency ${discovery.latency.meanMs?.toFixed(1)} ms`)
+
+  if (writeReportFiles) {
+    const written = writeReport(path.join(process.cwd(), "eval", "reports"), meta, discovery)
+    console.log(`\nReport written: ${path.relative(process.cwd(), written.json)} and ${path.relative(process.cwd(), written.markdown)}`)
+  }
+  console.log("\nStill to come (Sprint 2): settings sweep (W18EDATE-66), cost per run (W18EDATE-69), dedup metrics.")
+}
+
 if (!validateOnly) {
-  console.log("\nMetrics not implemented yet — see the comment at the top of scripts/eval.ts (Sprint 2).")
+  runDiscovery().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : "Evaluation failed.")
+    process.exitCode = 1
+  })
 }
