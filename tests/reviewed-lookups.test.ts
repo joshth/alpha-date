@@ -101,16 +101,16 @@ test("figurative wording never suppresses explicit crisis intent in either order
   let calls = 0
   const gate = createInputSafetyGate(async () => { calls++; return result("safe") })
   for (const input of REVIEWED_SAFE_LOOKUPS) {
-    for (const risk of [
-      "i want to kill myself",
-      "i will shoot up my school",
+    for (const [risk, crisis] of [
+      ["i want to kill myself", "self_harm"],
+      ["i will shoot up my school", "harm_to_others"],
     ] as const) {
       for (const combined of [`${input}; ${risk}`, `${risk}; ${input}`]) {
         for (const surface of surfaces) {
           assert.equal(isReviewedSafeLookup(combined), false)
           const verdict = await gate(combined, surface)
           assert.equal(verdict.action, "safeguarding")
-          assert.notEqual(verdict.crisis, null)
+          assert.equal(verdict.crisis, crisis)
           assert.equal(verdict.decidedBy, "rules")
         }
       }
