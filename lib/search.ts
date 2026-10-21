@@ -1,3 +1,4 @@
+import { prepareSafetyInput } from "@/lib/safety/input"
 import { discoverTerm } from "@/lib/discovery/discover"
 import { MAX_INPUT_LENGTH, sanitizeUserText } from "@/lib/discovery/prompt"
 import { safetyResponseMessage } from "@/lib/safety/responses"
@@ -19,7 +20,7 @@ export function createSearchTerm(dependencies: SearchDependencies) {
     const query = sanitizeUserText(raw, MAX_INPUT_LENGTH)
     if (!query) return { kind: "error", message: `Please enter a term (up to ${MAX_INPUT_LENGTH} characters).` }
 
-    const verdict = await dependencies.checkInputSafety(query, "search")
+    const verdict = await dependencies.checkInputSafety(prepareSafetyInput(raw), "search")
     if (verdict.action === "safeguarding") return { kind: "safeguarding", verdict }
     if (verdict.action === "refuse") {
       return { kind: "refused", verdict, message: safetyResponseMessage(verdict, "search") }
