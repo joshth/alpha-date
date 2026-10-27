@@ -1,5 +1,5 @@
-import { assessSafety } from "@/lib/safety/classify"
 import type { ModerationResult } from "@/lib/_stubs/moderation"
+import { createOutputSafetyCheck } from "@/lib/safety/output"
 import { discoverySchema } from "./prompt"
 import type { GenerateDiscovery } from "./discover"
 
@@ -7,6 +7,7 @@ export function createSafeDiscovery(
   generate: GenerateDiscovery,
   moderate: (text: string) => Promise<ModerationResult>,
 ): GenerateDiscovery {
+  const checkOutput = createOutputSafetyCheck(moderate)
   return async (input) => {
     let raw
     try {
@@ -22,20 +23,7 @@ export function createSafeDiscovery(
     const text = [result.definition, ...(result.examples ?? []), result.originAndContext, result.commonSentiment]
       .filter((part): part is string => typeof part === "string" && part.length > 0)
       .join("\n")
-    if (assessSafety(text).crisis) throw new Error("Generated result failed its safety check.")
-
-    let moderation
-    try {
-      moderation = await moderate(text)
-    } catch {
-      throw new Error("Generated result safety check is unavailable.")
-    }
-    if (!moderation || moderation.status === "unavailable") {
-      throw new Error("Generated result safety check is unavailable.")
-    }
-    if (moderation.status !== "safe" || !Array.isArray(moderation.categories) || moderation.categories.length > 0) {
-      throw new Error("Generated result failed its safety check.")
-    }
+    await checkOutput(text)
     return result
   }
 }

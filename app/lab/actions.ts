@@ -5,6 +5,7 @@ import { getSessionUser, isReviewer } from "@/lib/_stubs/auth"
 import { generateDiscoveryObject } from "@/lib/_stubs/llm"
 import { moderate } from "@/lib/_stubs/moderation"
 import { createSafeDiscovery } from "@/lib/discovery/safe-discovery"
+import { createSafeTermLookup } from "@/lib/safety/safe-term-lookup"
 import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
@@ -16,7 +17,8 @@ import type { ActionResult, SearchOutcome } from "@/lib/types"
 // review. Mirrors the order production uses; the gate always runs first.
 
 const generateSafeDiscovery = createSafeDiscovery(generateDiscoveryObject, moderate)
-const runSearch = createSearchTerm({ checkInputSafety, getTermRecord, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
+const getSafeTermRecord = createSafeTermLookup(getTermRecord, moderate)
+const runSearch = createSearchTerm({ checkInputSafety, getTermRecord: getSafeTermRecord, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
 
 export async function searchTerm(raw: string): Promise<SearchOutcome> {
   return runSearch(raw)
