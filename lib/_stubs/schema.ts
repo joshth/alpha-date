@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm"
+import type { SafetyEvent } from "@/lib/safety/events"
 import { bigint, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
 
 // STUDENT-FACING STUB SCHEMA. Only the three tables this slice touches, with
@@ -95,4 +96,14 @@ export const termFeedback = pgTable(
     uniqueIndex("term_feedback_term_idx").on(t.suggestedTerm),
     index("term_feedback_status_idx").on(t.status),
   ],
+)
+
+export const safetyEvents = pgTable(
+  "safety_events",
+  {
+    outcome: text("outcome", { enum: ["safe", "refuse", "safeguarding", "gentle_support"] }).notNull(),
+    categories: jsonb("categories").$type<SafetyEvent["categories"]>().notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("safety_events_recorded_at_idx").on(t.recordedAt)],
 )
