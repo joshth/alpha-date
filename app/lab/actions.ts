@@ -8,6 +8,7 @@ import { createSafeDiscovery } from "@/lib/discovery/safe-discovery"
 import { createSafeTermLookup } from "@/lib/safety/safe-term-lookup"
 import { createTrackedSafetyGate } from "@/lib/safety/events"
 import { recordSafetyEvent } from "@/lib/safety/event-store"
+import { readSafetyActivity, type SafetyActivity } from "@/lib/safety/activity"
 import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
@@ -48,4 +49,10 @@ export async function reviewTerm(id: string, decision: "published" | "rejected")
     console.error("reviewTerm failed:", error instanceof Error ? error.message : error)
     return { success: false, message: "Could not save the review decision." }
   }
+}
+
+export async function getSafetyActivity(from: string, to: string): Promise<SafetyActivity> {
+  const user = await getSessionUser()
+  if (!user || !isReviewer(user)) throw new Error("Reviewer access required.")
+  return readSafetyActivity({ from, to })
 }
