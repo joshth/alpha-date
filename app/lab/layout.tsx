@@ -12,6 +12,7 @@ const NAV = [
   { href: "/lab", label: "Dashboard" },
   { href: "/lab/search", label: "Search" },
   { href: "/lab/review", label: "Review queue" },
+  { href: "/lab/safety-activity", label: "Safety activity" },
 ]
 
 export default async function LabLayout({ children }: { children: React.ReactNode }) {
