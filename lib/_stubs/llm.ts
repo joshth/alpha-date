@@ -10,20 +10,17 @@ import { mockDiscovery } from "./fixtures/mock-discovery"
 //   (see fixtures/mock-discovery.ts). MOCK_LLM_LATENCY_MS and
 //   MOCK_LLM_FAILURE_RATE simulate latency and outages.
 // - Real: MOCK_LLM=false plus YOUR OWN OPENAI_API_KEY (with a spend cap).
-// - Local (discovery only): MOCK_LLM=false plus LLM_BASE_URL pointing at an
-//   OpenAI-compatible server such as Ollama (http://localhost:11434/v1). No key
-//   is needed and moderation stays on the mock, so experiments with a local
-//   model never change the safety gate.
-//
-// Discovery settings for the evaluation sweeps (W18EDATE-66). Unset, they
-// match production: gpt-4o-mini at temperature 0.3, no seed.
-// - LLM_MODEL (overrides OPENAI_MODEL), LLM_TEMPERATURE (0 to 2), LLM_SEED (integer).
 
 export function isMockLlm(): boolean {
   return process.env.MOCK_LLM !== "false" || !process.env.OPENAI_API_KEY?.trim()
 }
 
 export const DEFAULT_DISCOVERY_TEMPERATURE = 0.3
+
+export interface TokenUsage {
+  promptTokens: number
+  completionTokens: number
+}
 
 export function isMockDiscovery(): boolean {
   return process.env.MOCK_LLM !== "false" || (!process.env.OPENAI_API_KEY?.trim() && !process.env.LLM_BASE_URL?.trim())
@@ -65,7 +62,10 @@ export async function simulate(latencyVar: string, failureVar: string, defaultLa
   if (failureRate > 0 && Math.random() < failureRate) throw new MockProviderFailure(what)
 }
 
-export async function generateDiscoveryObject(input: { prompt: string; searchTerm: string }): Promise<DiscoveryOutput> {
+export async function generateDiscoveryObject(
+  input: { prompt: string; searchTerm: string },
+  onUsage?: (usage: TokenUsage) => void,
+): Promise<DiscoveryOutput> {
   const config = discoveryModelConfig()
   if (config.mock) {
     await simulate("MOCK_LLM_LATENCY_MS", "MOCK_LLM_FAILURE_RATE", 300, "AI provider")
@@ -78,16 +78,14 @@ export async function generateDiscoveryObject(input: { prompt: string; searchTer
     ...(config.baseURL ? { baseURL: config.baseURL } : {}),
     apiKey: process.env.OPENAI_API_KEY?.trim() || "local",
   })
-  const { object } = await generateObject({
+  const { object, usage } = await generateObject({
     model: provider.chat(config.model),
-    // Production (no base URL) keeps the SDK default, which asks for a tool
-    // call. Many small local models can't call tools reliably, so a local
-    // server is asked for plain JSON instead; the schema still validates it.
     ...(config.baseURL ? { mode: "json" as const } : {}),
     schema: discoverySchema,
     prompt: input.prompt,
     temperature: config.temperature ?? DEFAULT_DISCOVERY_TEMPERATURE,
     ...(config.seed !== null ? { seed: config.seed } : {}),
   })
+  onUsage?.({ promptTokens: usage.promptTokens, completionTokens: usage.completionTokens })
   return object
 }

@@ -68,8 +68,9 @@ test("invalid temperature or seed is rejected with a clear message", async () =>
   }
 })
 
-test("the configured model, temperature and seed reach an OpenAI-compatible server", async () => {
+test("the configured model, temperature and seed reach an OpenAI-compatible server, and its token usage comes back", async () => {
   const requests: Array<{ url?: string; body: Record<string, unknown> }> = []
+  const usages: Array<{ promptTokens: number; completionTokens: number }> = []
   const server = createServer((req, res) => {
     let raw = ""
     req.on("data", (chunk) => (raw += chunk))
@@ -100,7 +101,10 @@ test("the configured model, temperature and seed reach an OpenAI-compatible serv
     await withEnv(
       { MOCK_LLM: "false", LLM_BASE_URL: `http://127.0.0.1:${port}/v1`, LLM_MODEL: "fake-local", LLM_TEMPERATURE: "1.3", LLM_SEED: "7" },
       async () => {
-        const output = await generateDiscoveryObject({ prompt: "Is <user_input>vemble</user_input> slang?", searchTerm: "vemble" })
+        const output = await generateDiscoveryObject(
+          { prompt: "Is <user_input>vemble</user_input> slang?", searchTerm: "vemble" },
+          (usage) => usages.push(usage),
+        )
         assert.deepEqual(output, { isLegit: false })
       },
     )
@@ -113,4 +117,5 @@ test("the configured model, temperature and seed reach an OpenAI-compatible serv
   assert.equal(requests[0].body.temperature, 1.3)
   assert.equal(requests[0].body.seed, 7)
   assert.deepEqual(requests[0].body.response_format, { type: "json_object" })
+  assert.deepEqual(usages, [{ promptTokens: 10, completionTokens: 5 }])
 })
