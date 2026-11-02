@@ -34,6 +34,7 @@ export interface DiscoveryCaseResult {
   isRealSlang: boolean
   accepted: boolean | null
   outcome: Outcome
+  definition: string | null
   rating: string | null
   minSensitivity: string | null
   sensitivityMislabel: boolean
@@ -72,11 +73,13 @@ export async function evaluateDiscovery(
   for (const entry of labelled) {
     const started = now()
     let accepted: boolean | null = null
+    let definition: string | null = null
     let rating: string | null = null
     let error: string | null = null
     try {
       const found = await discoverTerm(entry.input, generate, buildPrompt)
       accepted = found !== null
+      definition = found?.term.definition ?? null
       rating = found?.term.sensitivityRating ?? null
     } catch (caught) {
       error = caught instanceof Error ? caught.message : "Discovery failed."
@@ -90,6 +93,7 @@ export async function evaluateDiscovery(
       isRealSlang: entry.discovery.isRealSlang,
       accepted,
       outcome: accepted === null ? "error" : outcomeFor(entry.discovery.isRealSlang, accepted),
+      definition,
       rating,
       minSensitivity,
       sensitivityMislabel: accepted === true && ranksBelow(rating, minSensitivity),
