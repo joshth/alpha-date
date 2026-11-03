@@ -12,7 +12,7 @@ try {
 
 const result = spawnSync(cmd.cmd, cmd.args, { cwd: cmd.cwd, env: cmd.env as NodeJS.ProcessEnv, stdio: "inherit" })
 if (result.error) {
-  console.error(`Could not run ${cmd.cmd}: ${result.error.message}. Set SIRS_DIR to your SIRS-gen-alpha checkout.`)
+  console.error(`Could not run ${cmd.cmd}: ${result.error.message}. Create the sirs/.venv first (see README), or set SIRS_DIR.`)
   process.exit(1)
 }
 process.exit(result.status ?? 1)
