@@ -38,6 +38,13 @@ test("aura:plot without terms prints usage and exits 1", () => {
   assert.match(result.stderr, /Usage: pnpm aura:plot/)
 })
 
+test("the SIRS plotter and the data it reads are vendored in sirs/", () => {
+  for (const file of ["src/sirs/plot_term.py", "data/terms.csv", "data/processed/trends_weekly.parquet",
+    "results/fits_main.json", "requirements.txt"]) {
+    assert.ok(existsSync(path.join("sirs", file)), `missing sirs/${file}`)
+  }
+})
+
 const live = plotCommand(["bussin"])
 const sirsReady = existsSync(live.cmd) && existsSync(path.join(live.cwd, "src/sirs/plot_term.py"))
 
