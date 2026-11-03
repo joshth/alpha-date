@@ -19,7 +19,7 @@ test("plotCommand defaults SIRS_DIR to SIRS-gen-alpha beside the repo", () => {
 })
 
 test("plotCommand without terms throws a usage message", () => {
-  assert.throws(() => plotCommand([], {}, "/code/alpha-date"), /Usage: pnpm aura:plot/)
+  assert.throws(() => plotCommand([], {}, "/code/alpha-date"), /Usage: pnpm aura:plot .*--list/)
 })
 
 function runScript(...args: string[]) {
@@ -41,4 +41,11 @@ test("aura:plot passes the Python exit code through for an unknown term",
     const result = runScript("zzznotaterm")
     assert.equal(result.status, 1)
     assert.match(result.stderr, /Unknown term\(s\): zzznotaterm/)
+  })
+
+test("aura:plot --list prints the available terms by generation and exits 0",
+  { skip: !sirsReady && "SIRS-gen-alpha venv or sirs.plot_term not found" }, () => {
+    const result = runScript("--list")
+    assert.equal(result.status, 0)
+    assert.match(result.stdout, /gen_z \(\d+\)[\s\S]*  bussin/)
   })
