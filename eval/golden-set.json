@@ -2187,6 +2187,222 @@
       "notes": "Made up: -maxxing pattern."
     },
     {
+      "id": "discovery-078",
+      "input": "grelchcore",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: -core pattern."
+    },
+    {
+      "id": "discovery-079",
+      "input": "vrispilled",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: -pilled pattern."
+    },
+    {
+      "id": "discovery-080",
+      "input": "plonkrizz",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: built on the real word rizz."
+    },
+    {
+      "id": "discovery-081",
+      "input": "snerbwave",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: -wave pattern."
+    },
+    {
+      "id": "discovery-082",
+      "input": "zindlemogging",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: built on the real word mogging."
+    },
+    {
+      "id": "discovery-083",
+      "input": "thwapcore",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: -core pattern."
+    },
+    {
+      "id": "discovery-084",
+      "input": "skrondlepilled",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: -pilled pattern."
+    },
+    {
+      "id": "discovery-085",
+      "input": "bruvcore",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "Made up: UK-looking, built on the real word bruv."
+    },
+    {
+      "id": "discovery-086",
+      "input": "chookpilled",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "Made up: AU-looking, built on chook (chicken)."
+    },
+    {
+      "id": "discovery-087",
+      "input": "snagworthy",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "held-out",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "Made up: AU-looking, built on snag (sausage)."
+    },
+    {
+      "id": "discovery-088",
+      "input": "quandorix",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: no slang pattern."
+    },
+    {
+      "id": "discovery-089",
+      "input": "blemtrask",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: no slang pattern."
+    },
+    {
       "id": "dedup-001",
       "input": "brain rot",
       "kind": "dedup",
