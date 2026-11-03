@@ -1,6 +1,6 @@
 {
-  "version": "0.4.0",
-  "description": "Golden set for the Lexicon Safety & Quality Pipeline. Target: 150+ labelled entries. Safety entries marked prod-regression mirror production's CI suite: do not relax their labels without WA AI Hub review.",
+  "version": "0.4.1",
+  "description": "Golden set for the Lexicon Safety & Quality Pipeline. Target: 150+ labelled entries. Discovery cases carry wordType, split and dialect (W18EDATE-70); see lib/eval/golden.ts. Safety entries marked prod-regression mirror production's CI suite: do not relax their labels without WA AI Hub review.",
   "cases": [
     {
       "id": "safety-001",
@@ -827,7 +827,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "minSensitivity": "Use With Caution"
+        "minSensitivity": "Use With Caution",
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -841,7 +844,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -855,7 +861,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -869,7 +878,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -883,7 +895,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -897,7 +912,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -912,7 +930,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "minSensitivity": "Use With Caution"
+        "minSensitivity": "Use With Caution",
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -929,7 +950,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "minSensitivity": "Mature Themes"
+        "minSensitivity": "Mature Themes",
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "starter",
       "notes": "Algospeak for self-harm/death: must never be rated Generally Harmless."
@@ -945,7 +969,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "currency": "outdated"
+        "currency": "outdated",
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -959,7 +986,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -973,7 +1003,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -987,7 +1020,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -1001,7 +1037,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "starter"
     },
@@ -1015,7 +1054,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "starter",
       "notes": "Prompt-injection attempt."
@@ -1030,7 +1072,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1044,7 +1089,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1058,7 +1106,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1073,7 +1124,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "minSensitivity": "Use With Caution"
+        "minSensitivity": "Use With Caution",
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "Insult about appearance."
@@ -1089,7 +1143,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "minSensitivity": "Use With Caution"
+        "minSensitivity": "Use With Caution",
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "Crude term for girls. Real slang despite the 'zz' pattern."
@@ -1105,7 +1162,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "minSensitivity": "Use With Caution"
+        "minSensitivity": "Use With Caution",
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "Real slang despite the '-maxxing' pattern; linked to unhealthy appearance trends."
@@ -1120,7 +1180,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1134,7 +1197,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1148,7 +1214,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1162,7 +1231,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1176,7 +1248,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1191,7 +1266,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "currency": "outdated"
+        "currency": "outdated",
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1206,7 +1284,10 @@
       },
       "discovery": {
         "isRealSlang": true,
-        "currency": "outdated"
+        "currency": "outdated",
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1220,7 +1301,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1234,7 +1318,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1248,7 +1335,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1262,7 +1352,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1276,7 +1369,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1290,7 +1386,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1304,7 +1403,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "Misspelling of brainrot."
@@ -1319,7 +1421,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "Misspelling of goated."
@@ -1334,7 +1439,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1348,7 +1456,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team"
     },
@@ -1362,7 +1473,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": false
+        "isRealSlang": false,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "AU"
       },
       "source": "team"
     },
@@ -1376,7 +1490,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "A US state; as slang, means weird or cringe."
@@ -1391,7 +1508,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "held-out",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "A maths word; as slang, a reply that gets more likes than the post."
@@ -1406,7 +1526,10 @@
         "categories": []
       },
       "discovery": {
-        "isRealSlang": true
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
       },
       "source": "team",
       "notes": "An ordinary word; as slang, unoriginal or mainstream."
