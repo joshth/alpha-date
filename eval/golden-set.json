@@ -1,6 +1,6 @@
 {
-  "version": "0.4.1",
-  "description": "Golden set for the Lexicon Safety & Quality Pipeline. Target: 150+ labelled entries. Discovery cases carry wordType, split and dialect (W18EDATE-70); see lib/eval/golden.ts. Safety entries marked prod-regression mirror production's CI suite: do not relax their labels without WA AI Hub review.",
+  "version": "0.5.0",
+  "description": "Golden set for the Lexicon Safety & Quality Pipeline. Target: 160+ labelled entries (W18EDATE-28). Discovery cases carry wordType, split and dialect (W18EDATE-70); see lib/eval/golden.ts. Safety entries marked prod-regression mirror production's CI suite: do not relax their labels without WA AI Hub review.",
   "cases": [
     {
       "id": "safety-001",
@@ -2401,6 +2401,150 @@
       },
       "source": "team",
       "notes": "Made up: no slang pattern."
+    },
+    {
+      "id": "discovery-090",
+      "input": "frovlen",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: no slang pattern."
+    },
+    {
+      "id": "discovery-091",
+      "input": "yuppleth",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: no slang pattern."
+    },
+    {
+      "id": "discovery-092",
+      "input": "mipplot",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: no slang pattern."
+    },
+    {
+      "id": "discovery-093",
+      "input": "zantroke",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-random",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: no slang pattern."
+    },
+    {
+      "id": "discovery-094",
+      "input": "footpath",
+      "kind": "discovery",
+      "category": "non_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "Ordinary AU/UK word for a sidewalk."
+    },
+    {
+      "id": "discovery-095",
+      "input": "queue",
+      "kind": "discovery",
+      "category": "non_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "Ordinary word."
+    },
+    {
+      "id": "discovery-096",
+      "input": "sidewalk",
+      "kind": "discovery",
+      "category": "non_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Ordinary US word."
+    },
+    {
+      "id": "discovery-097",
+      "input": "skibbidi",
+      "kind": "discovery",
+      "category": "non_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Misspelling of skibidi."
     },
     {
       "id": "dedup-001",

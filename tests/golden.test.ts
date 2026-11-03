@@ -130,6 +130,14 @@ test("every discovery case is tagged with word type, split and dialect (W18EDATE
   }
 })
 
+test("the golden set has 160+ cases and every word type, split and dialect is used (W18EDATE-28)", () => {
+  assert.ok(golden.cases.length >= 160, `${golden.cases.length} cases`)
+  const discovery = golden.cases.filter((c) => c.kind === "discovery")
+  for (const wordType of WORD_TYPES) assert.ok(discovery.some((c) => c.discovery.wordType === wordType), wordType)
+  for (const split of SPLITS) assert.ok(discovery.some((c) => c.discovery.split === split), split)
+  for (const dialect of DIALECTS) assert.ok(discovery.some((c) => c.discovery.dialect === dialect), dialect)
+})
+
 test("the held-out split comes from the id hash, is stable and holds out roughly 30%", () => {
   assert.equal(splitFor("discovery-001"), splitFor("discovery-001"))
   const ids = Array.from({ length: 2000 }, (_, i) => `case-${i}`)

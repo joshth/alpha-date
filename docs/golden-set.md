@@ -163,6 +163,8 @@ Every input, each dedup `candidate` for email addresses, phone numbers, web addr
 
 Result: no personal data in golden set.
 
+Version 0.5.0 (3 November 2026) adds 56 discovery cases (`discovery-042` to `discovery-097`, all `team`): public slang from the US, UK and Australia, ordinary words, and made-up strings. The same scan found no matches. Second review of these labels: see section 4 and `pnpm eval:validate`.
+
 Test strings are safety phrases of self-harm and violence. For shared reports or slides, use the safety case id, not the text, for the safety cases.
 
 ## 6. Adding a case
