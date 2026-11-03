@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { meterDiscovery, pricingFor, runTiming, summariseCost } from "@/lib/eval/cost"
 import { evaluateDiscovery } from "@/lib/eval/discovery"
-import type { GoldenCase } from "@/lib/eval/golden"
+import { type GoldenCase, splitFor } from "@/lib/eval/golden"
 import { toMarkdown } from "@/lib/eval/report"
 
 const mockConfig = { mock: true, model: "mock", baseURL: null }
@@ -17,7 +17,7 @@ test("reports show cost and time, and say when tokens are estimated", async () =
       kind: "discovery",
       category: "invented",
       safety: { action: "safe", categories: [] },
-      discovery: { isRealSlang: false },
+      discovery: { isRealSlang: false, wordType: "invented-random", split: splitFor("d-1"), dialect: "US" },
     },
   ]
   const meter = meterDiscovery(async () => ({ isLegit: false }))

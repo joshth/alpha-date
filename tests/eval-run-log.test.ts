@@ -6,7 +6,7 @@ import path from "node:path"
 import { test } from "node:test"
 import { formatDuration, meterDiscovery, PLANNED_SWEEP_CALLS, pricingFor, projectRunTime, runTiming, summariseCost } from "@/lib/eval/cost"
 import { evaluateDiscovery } from "@/lib/eval/discovery"
-import type { GoldenCase } from "@/lib/eval/golden"
+import { type GoldenCase, splitFor } from "@/lib/eval/golden"
 import { callLog, type RunMeta, reportBaseName, toMarkdown, writeReport } from "@/lib/eval/report"
 
 const safe = { action: "safe" as const, categories: [] }
@@ -17,7 +17,7 @@ const discovery = (id: string, input: string, isRealSlang: boolean): GoldenCase 
   kind: "discovery",
   category: isRealSlang ? "valid_slang" : "invented",
   safety: safe,
-  discovery: { isRealSlang },
+  discovery: { isRealSlang, wordType: isRealSlang ? "real-new" : "invented-plausible", split: splitFor(id), dialect: "US" },
 })
 
 // rizz is accepted with provider token counts, vemble is rejected, downone

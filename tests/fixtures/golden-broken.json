@@ -1,6 +1,6 @@
 {
   "version": "test",
-  "description": "Deliberately broken golden set for tests/golden.test.ts (W18EDATE-27, T2.4). Each broken case has exactly one problem.",
+  "description": "Deliberately broken golden set for tests/golden.test.ts (W18EDATE-27, T2.4; tags W18EDATE-70). Each broken case has exactly one problem.",
   "cases": [
     {
       "id": "ok-001",
@@ -8,7 +8,7 @@
       "kind": "discovery",
       "category": "valid_slang",
       "safety": { "action": "safe", "categories": [] },
-      "discovery": { "isRealSlang": true },
+      "discovery": { "isRealSlang": true, "wordType": "real-new", "split": "dev", "dialect": "US" },
       "source": "test"
     },
     {
@@ -16,7 +16,7 @@
       "input": "sigma",
       "kind": "discovery",
       "safety": { "action": "safe", "categories": [] },
-      "discovery": { "isRealSlang": true },
+      "discovery": { "isRealSlang": true, "wordType": "new-sense", "split": "dev", "dialect": "US" },
       "source": "test"
     },
     {
@@ -25,7 +25,7 @@
       "kind": "discovery",
       "category": "valid_slang",
       "safety": { "action": "safe", "categories": [] },
-      "discovery": { "isRealSlang": true },
+      "discovery": { "isRealSlang": true, "wordType": "real-new", "split": "dev", "dialect": "US" },
       "source": "test"
     },
     {
@@ -34,7 +34,7 @@
       "kind": "discovery",
       "category": "invented",
       "safety": { "action": "safe", "categories": [] },
-      "discovery": { "isRealSlang": true },
+      "discovery": { "isRealSlang": true, "wordType": "invented-plausible", "split": "dev", "dialect": "US" },
       "source": "test"
     },
     {
@@ -43,6 +43,33 @@
       "kind": "safety",
       "category": "refusal",
       "safety": { "action": "block", "categories": [] },
+      "source": "test"
+    },
+    {
+      "id": "untagged",
+      "input": "mewing",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": { "action": "safe", "categories": [] },
+      "discovery": { "isRealSlang": true, "split": "dev", "dialect": "US" },
+      "source": "test"
+    },
+    {
+      "id": "bad-dialect",
+      "input": "arvo",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": { "action": "safe", "categories": [] },
+      "discovery": { "isRealSlang": true, "wordType": "real-old", "split": "held-out", "dialect": "NZ" },
+      "source": "test"
+    },
+    {
+      "id": "wrong-split",
+      "input": "vemble",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": { "action": "safe", "categories": [] },
+      "discovery": { "isRealSlang": false, "wordType": "invented-random", "split": "held-out", "dialect": "US" },
       "source": "test"
     }
   ]

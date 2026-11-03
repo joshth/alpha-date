@@ -4,7 +4,7 @@ import { test } from "node:test"
 import type { GenerateDiscovery } from "@/lib/discovery/discover"
 import type { DiscoveryOutput } from "@/lib/discovery/prompt"
 import { evaluateDiscovery } from "@/lib/eval/discovery"
-import { type GoldenCase, loadGoldenSet } from "@/lib/eval/golden"
+import { type GoldenCase, loadGoldenSet, splitFor } from "@/lib/eval/golden"
 import { rate, wilsonInterval } from "@/lib/eval/metrics"
 import { mockDiscovery } from "@/lib/_stubs/fixtures/mock-discovery"
 
@@ -24,7 +24,13 @@ const discovery = (
   kind: "discovery",
   category,
   safety: safe,
-  discovery: { isRealSlang: category === "valid_slang", ...(minSensitivity ? { minSensitivity } : {}) },
+  discovery: {
+    isRealSlang: category === "valid_slang",
+    ...(minSensitivity ? { minSensitivity } : {}),
+    wordType: category === "valid_slang" ? "real-new" : category === "invented" ? "invented-plausible" : "real-old",
+    split: splitFor(id),
+    dialect: "US",
+  },
 })
 
 // Hand-computed fixture. What the fake model does with each input:

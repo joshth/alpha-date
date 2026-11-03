@@ -2,7 +2,19 @@ import "./setup"
 import assert from "node:assert/strict"
 import path from "node:path"
 import { test } from "node:test"
-import { EVAL_CATEGORIES, type GoldenCase, type GoldenSet, labelProblems, loadGoldenSet, reviewProblems } from "@/lib/eval/golden"
+import {
+  DIALECTS,
+  EVAL_CATEGORIES,
+  type GoldenCase,
+  type GoldenSet,
+  HELD_OUT_SHARE,
+  labelProblems,
+  loadGoldenSet,
+  reviewProblems,
+  SPLITS,
+  splitFor,
+  WORD_TYPES,
+} from "@/lib/eval/golden"
 import { checkInputSafety } from "@/lib/safety/gate"
 
 const golden = loadGoldenSet()
@@ -51,7 +63,7 @@ test("label check flags a category that contradicts the expected outcome", () =>
     kind: "discovery",
     category: "invented",
     safety: { action: "safe", categories: [] },
-    discovery: { isRealSlang: true },
+    discovery: { isRealSlang: true, wordType: "invented-plausible", split: "held-out", dialect: "US" },
   }
   const discoveryAsRefusal: GoldenCase = {
     id: "bad-3",
@@ -60,7 +72,7 @@ test("label check flags a category that contradicts the expected outcome", () =>
     kind: "discovery",
     category: "refusal",
     safety: { action: "safe", categories: [] },
-    discovery: { isRealSlang: false },
+    discovery: { isRealSlang: false, wordType: "real-old", split: "dev", dialect: "US" },
   }
   const blockedDiscovery: GoldenCase = {
     id: "bad-4",
@@ -69,7 +81,7 @@ test("label check flags a category that contradicts the expected outcome", () =>
     kind: "discovery",
     category: "non_slang",
     safety: { action: "refuse", categories: [] },
-    discovery: { isRealSlang: false },
+    discovery: { isRealSlang: false, wordType: "real-old", split: "held-out", dialect: "US" },
   }
   assert.equal(labelProblems(safeguardingAsSlang).length, 1)
   assert.equal(labelProblems(inventedButReal).length, 1)
@@ -96,12 +108,53 @@ test("a broken golden-set file fails with one clear message per problem", () => 
   assert.throws(
     () => loadGoldenSet(file),
     (error: Error) => {
-      assert.match(error.message, /\(4 problems\)/)
+      assert.match(error.message, /\(7 problems\)/)
       assert.match(error.message, /missing-category \(cases\[1\]\): category: Required/)
       assert.match(error.message, /ok-001: duplicate id/)
       assert.match(error.message, /contradictory-label: category "invented" but isRealSlang is true/)
       assert.match(error.message, /unknown-action \(cases\[4\]\): safety\.action: Invalid enum value/)
+      assert.match(error.message, /untagged \(cases\[5\]\): discovery\.wordType: Required/)
+      assert.match(error.message, /bad-dialect \(cases\[6\]\): discovery\.dialect: Invalid enum value/)
+      assert.match(error.message, /wrong-split: split must be "dev" \(from splitFor\(id\)\), not "held-out"/)
       return true
     },
   )
+})
+
+test("every discovery case is tagged with word type, split and dialect (W18EDATE-70)", () => {
+  for (const c of golden.cases) {
+    if (c.kind !== "discovery") continue
+    assert.ok(WORD_TYPES.includes(c.discovery.wordType), c.id)
+    assert.ok(SPLITS.includes(c.discovery.split), c.id)
+    assert.ok(DIALECTS.includes(c.discovery.dialect), c.id)
+  }
+})
+
+test("the held-out split comes from the id hash, is stable and holds out roughly 30%", () => {
+  assert.equal(splitFor("discovery-001"), splitFor("discovery-001"))
+  const ids = Array.from({ length: 2000 }, (_, i) => `case-${i}`)
+  const share = ids.filter((id) => splitFor(id) === "held-out").length / ids.length
+  assert.ok(Math.abs(share - HELD_OUT_SHARE) < 0.04, `held-out share ${share}`)
+})
+
+test("word type must agree with the category and the real-slang label", () => {
+  const base = {
+    id: "real-1",
+    input: "synthetic test",
+    source: "test",
+    kind: "discovery" as const,
+    safety: { action: "safe" as const, categories: [] },
+  }
+  const inventedTaggedReal: GoldenCase = {
+    ...base,
+    category: "invented",
+    discovery: { isRealSlang: false, wordType: "real-new", split: "dev", dialect: "US" },
+  }
+  const slangTaggedInvented: GoldenCase = {
+    ...base,
+    category: "valid_slang",
+    discovery: { isRealSlang: true, wordType: "invented-random", split: "dev", dialect: "UK" },
+  }
+  assert.deepEqual(labelProblems(inventedTaggedReal), ['real-1: category "invented" but wordType "real-new"'])
+  assert.deepEqual(labelProblems(slangTaggedInvented), ['real-1: isRealSlang is true but wordType "invented-random"'])
 })

@@ -7,7 +7,7 @@ import { test } from "node:test"
 import type { GenerateDiscovery } from "@/lib/discovery/discover"
 import { summariseCost } from "@/lib/eval/cost"
 import { evaluateDiscovery } from "@/lib/eval/discovery"
-import type { GoldenCase } from "@/lib/eval/golden"
+import { type GoldenCase, splitFor } from "@/lib/eval/golden"
 import {
   DEFAULT_TEMPERATURES,
   parseSweepArgs,
@@ -28,7 +28,12 @@ const discovery = (id: string, category: "valid_slang" | "invented"): GoldenCase
   kind: "discovery",
   category,
   safety: safe,
-  discovery: { isRealSlang: category === "valid_slang" },
+  discovery: {
+    isRealSlang: category === "valid_slang",
+    wordType: category === "valid_slang" ? "real-new" : "invented-plausible",
+    split: splitFor(id),
+    dialect: "US",
+  },
 })
 
 // 4 real slang words and 4 made-up ones.
