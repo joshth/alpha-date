@@ -1753,6 +1753,223 @@
       "notes": "Go outside; get off the internet."
     },
     {
+      "id": "discovery-054",
+      "input": "bussin",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Really good, usually food."
+    },
+    {
+      "id": "discovery-055",
+      "input": "tweaking",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Acting irrationally or overreacting."
+    },
+    {
+      "id": "discovery-056",
+      "input": "lock in",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Focus hard on a task."
+    },
+    {
+      "id": "discovery-057",
+      "input": "demure",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "2024 'very demure, very mindful' trend: modest, composed."
+    },
+    {
+      "id": "discovery-058",
+      "input": "jit",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "A young or inexperienced person."
+    },
+    {
+      "id": "discovery-059",
+      "input": "ate",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Did something really well ('she ate')."
+    },
+    {
+      "id": "discovery-060",
+      "input": "zesty",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "minSensitivity": "Use With Caution",
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Flamboyant; can carry a homophobic stereotype."
+    },
+    {
+      "id": "discovery-061",
+      "input": "peak",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: unfortunate or bad ('that's peak'); newer use also means great."
+    },
+    {
+      "id": "discovery-062",
+      "input": "bare",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: a lot of, very."
+    },
+    {
+      "id": "discovery-063",
+      "input": "peng",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: attractive or good."
+    },
+    {
+      "id": "discovery-064",
+      "input": "innit",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: isn't it; a tag for agreement."
+    },
+    {
+      "id": "discovery-065",
+      "input": "mandem",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: a group of male friends."
+    },
+    {
       "id": "dedup-001",
       "input": "brain rot",
       "kind": "dedup",
