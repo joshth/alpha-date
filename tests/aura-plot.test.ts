@@ -14,8 +14,8 @@ test("plotCommand runs sirs.plot_term with the SIRS venv and src on PYTHONPATH",
   assert.equal(cmd.env.PYTHONPATH, "/x/sirs/src")
 })
 
-test("plotCommand defaults SIRS_DIR to SIRS-gen-alpha beside the repo", () => {
-  assert.equal(plotCommand(["bussin"], {}, "/code/alpha-date").cwd, "/code/SIRS-gen-alpha")
+test("plotCommand defaults SIRS_DIR to the sirs folder inside the repo", () => {
+  assert.equal(plotCommand(["bussin"], {}, "/code/alpha-date").cwd, "/code/alpha-date/sirs")
 })
 
 test("plotCommand without terms throws a usage message", () => {
