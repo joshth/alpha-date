@@ -41,7 +41,7 @@ export function createInputSafetyGate(moderator: (text: string) => Promise<Moder
         reason: "moderation_unavailable",
       }
     }
-    return decideSafetyVerdict(assessment, result)
+    return decideSafetyVerdict(assessment, result, text)
   }
 }
 

@@ -1,6 +1,8 @@
 import "server-only"
 import { mkdirSync } from "node:fs"
 import path from "node:path"
+import { and, eq } from "drizzle-orm"
+import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core"
 import * as schema from "./schema"
 import { seedIfEmpty } from "./seed"
@@ -17,12 +19,24 @@ export type Db = PgDatabase<PgQueryResultHKT, typeof schema>
 
 const globalForDb = globalThis as unknown as { __alphaDateDb?: Promise<Db> }
 
+export async function backfillTermKeys(db: Db): Promise<void> {
+  const rows = await db.select({ id: schema.terms.id, term: schema.terms.term }).from(schema.terms)
+    .where(eq(schema.terms.termKey, ""))
+  for (const row of rows) {
+    const key = normaliseSuggestion(row.term)
+    if (!key) continue
+    await db.update(schema.terms).set({ termKey: key, keyVersion: NORMALISER_VERSION })
+      .where(and(eq(schema.terms.id, row.id), eq(schema.terms.termKey, "")))
+  }
+}
+
 async function connect(): Promise<Db> {
   const url = process.env.DATABASE_URL?.trim()
   if (url) {
     const { neon } = await import("@neondatabase/serverless")
     const { drizzle } = await import("drizzle-orm/neon-http")
     const db = drizzle(neon(url), { schema }) as unknown as Db
+    await backfillTermKeys(db)
     await seedIfEmpty(db)
     return db
   }
@@ -37,6 +51,7 @@ async function connect(): Promise<Db> {
   const client = new PGlite(dataDir)
   const db = drizzle(client, { schema })
   await migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") })
+  await backfillTermKeys(db as unknown as Db)
   if (process.env.SKIP_SEED !== "true") await seedIfEmpty(db as unknown as Db)
   return db as unknown as Db
 }
