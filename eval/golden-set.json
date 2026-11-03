@@ -1535,6 +1535,224 @@
       "notes": "An ordinary word; as slang, unoriginal or mainstream."
     },
     {
+      "id": "discovery-042",
+      "input": "skibidi",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "From the Skibidi Toilet videos (2023); used as a nonsense intensifier."
+    },
+    {
+      "id": "discovery-043",
+      "input": "gyatt",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "minSensitivity": "Use With Caution",
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Exclamation about a curvy body; sexualised, so not harmless."
+    },
+    {
+      "id": "discovery-044",
+      "input": "mewing",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Jawline tongue-posture trend; often a 'stop talking' hand sign."
+    },
+    {
+      "id": "discovery-045",
+      "input": "mogging",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Outshining someone in looks."
+    },
+    {
+      "id": "discovery-046",
+      "input": "delulu",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Delusional, usually about a crush."
+    },
+    {
+      "id": "discovery-047",
+      "input": "ick",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "A sudden turn-off about someone."
+    },
+    {
+      "id": "discovery-048",
+      "input": "six seven",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "2025 meme phrase ('6 7') with no fixed meaning; a training cut-off test."
+    },
+    {
+      "id": "discovery-049",
+      "input": "clanker",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "minSensitivity": "Use With Caution",
+        "wordType": "real-new",
+        "split": "held-out",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "2025 put-down for robots or AI; used as a mock slur."
+    },
+    {
+      "id": "discovery-050",
+      "input": "unc",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-new",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Someone acting old (from 'uncle')."
+    },
+    {
+      "id": "discovery-051",
+      "input": "pick me",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Someone who seeks approval by putting others down."
+    },
+    {
+      "id": "discovery-052",
+      "input": "npc",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Someone acting without thought, like a game character."
+    },
+    {
+      "id": "discovery-053",
+      "input": "touch grass",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Go outside; get off the internet."
+    },
+    {
       "id": "dedup-001",
       "input": "brain rot",
       "kind": "dedup",
