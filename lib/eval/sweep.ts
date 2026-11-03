@@ -94,3 +94,170 @@ export async function withDiscoverySetting<T>(setting: SweepSetting, repeat: num
   }
 }
 
+export interface SweepRun {
+  setting: SweepSetting
+  repeat: number
+  config: RunConfig
+  discovery: DiscoveryEvaluation
+  cost: CostSummary
+  timing: RunTiming
+}
+
+export interface SweepRow {
+  setting: SweepSetting
+  runs: number
+  hallucinationRate: Rate
+  hallucinationRange: [number, number] | null
+  precision: Rate
+  recall: Rate
+  falseAcceptRate: Rate
+  sensitivityMislabelRate: Rate
+  errors: number
+  costPer1000CallsUsd: number | null
+  meanLatencyMs: number | null
+  acceptable: boolean
+}
+
+export interface SweepSummary {
+  rule: { maxH1: number; minRecall: number }
+  rows: SweepRow[]
+  recommended: SweepRow | null
+  closest: SweepRow | null
+}
+
+function pooled(runs: readonly SweepRun[], pick: (d: DiscoveryEvaluation) => Rate): Rate {
+  return rate(
+    runs.reduce((sum, r) => sum + pick(r.discovery).numerator, 0),
+    runs.reduce((sum, r) => sum + pick(r.discovery).denominator, 0),
+  )
+}
+
+function mean(values: readonly (number | null)[]): number | null {
+  const known = values.filter((v): v is number => v !== null)
+  return known.length === 0 ? null : known.reduce((sum, v) => sum + v, 0) / known.length
+}
+
+const sameSetting = (a: SweepSetting, b: SweepSetting) => a.model === b.model && a.temperature === b.temperature
+const orUnknown = (value: number | null) => value ?? Number.POSITIVE_INFINITY
+
+export function summariseSweep(runs: readonly SweepRun[], rule: { maxH1: number; minRecall: number }): SweepSummary {
+  const settings: SweepSetting[] = []
+  for (const run of runs) if (!settings.some((s) => sameSetting(s, run.setting))) settings.push(run.setting)
+
+  const rows = settings.map((setting): SweepRow => {
+    const mine = runs.filter((r) => sameSetting(r.setting, setting))
+    const hallucinationRate = pooled(mine, (d) => d.hallucinationRate)
+    const recall = pooled(mine, (d) => d.recall)
+    const perRun = mine.map((r) => r.discovery.hallucinationRate.value).filter((v): v is number => v !== null)
+    return {
+      setting,
+      runs: mine.length,
+      hallucinationRate,
+      hallucinationRange: perRun.length ? [Math.min(...perRun), Math.max(...perRun)] : null,
+      precision: pooled(mine, (d) => d.precision),
+      recall,
+      falseAcceptRate: pooled(mine, (d) => d.falseAcceptRate),
+      sensitivityMislabelRate: pooled(mine, (d) => d.sensitivityMislabelRate),
+      errors: mine.reduce((sum, r) => sum + r.discovery.errorIds.length, 0),
+      costPer1000CallsUsd: mean(mine.map((r) => r.cost.costPer1000CallsUsd)),
+      meanLatencyMs: mean(mine.map((r) => r.discovery.latency.meanMs)),
+      acceptable:
+        hallucinationRate.value !== null &&
+        hallucinationRate.value <= rule.maxH1 &&
+        recall.value !== null &&
+        recall.value >= rule.minRecall,
+    }
+  })
+
+  const recommended =
+    [...rows]
+      .filter((r) => r.acceptable)
+      .sort(
+        (a, b) =>
+          orUnknown(a.costPer1000CallsUsd) - orUnknown(b.costPer1000CallsUsd) ||
+          orUnknown(a.meanLatencyMs) - orUnknown(b.meanLatencyMs),
+      )[0] ?? null
+  const closest = recommended
+    ? null
+    : ([...rows].sort(
+        (a, b) =>
+          orUnknown(a.hallucinationRate.value) - orUnknown(b.hallucinationRate.value) ||
+          (b.recall.value ?? -1) - (a.recall.value ?? -1),
+      )[0] ?? null)
+  return { rule, rows, recommended, closest }
+}
+
+const pct = (x: number) => `${(x * 100).toFixed(1)}%`
+const settingLabel = (s: SweepSetting, mock: boolean) => `${mock ? "mock, as " : ""}${s.model} @ ${s.temperature}`
+
+export function sweepMarkdown(
+  meta: { datasetVersion: string; datasetSha256: string; startedAt: string; promptVersion: string; mock: boolean },
+  summary: SweepSummary,
+): string {
+  const label = (s: SweepSetting) => settingLabel(s, meta.mock)
+  const lines = [
+    `# Settings sweep: ${meta.mock ? "MOCK model (checks the sweep runs; not a real result)" : "discovery model comparison"}`,
+    "",
+    `- Dataset: golden set v${meta.datasetVersion}, sha256 \`${meta.datasetSha256.slice(0, 12)}\``,
+    `- Prompt: \`${meta.promptVersion}\``,
+    `- Started: ${meta.startedAt}`,
+    `- Rule: acceptable when H1 ≤ ${pct(summary.rule.maxH1)} and recall ≥ ${pct(summary.rule.minRecall)}; ` +
+      "then cheapest per 1,000 calls, then fastest.",
+    meta.mock
+      ? "- The mock ignores model and temperature, so every row is the same by design."
+      : "- Local models are weaker than the production model, so these absolute rates will not transfer; compare the rows with each other.",
+    "",
+    "| Setting | Runs | H1 made-up accepted (pooled) | H1 per-run range | Precision | Recall | Mislabels | Errors | Cost / 1,000 calls | Mean latency | Acceptable |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...summary.rows.map(
+      (r) =>
+        `| ${[
+        label(r.setting),
+        r.runs,
+        formatRate(r.hallucinationRate),
+        r.hallucinationRange ? `${pct(r.hallucinationRange[0])}–${pct(r.hallucinationRange[1])}` : "n/a",
+        formatRate(r.precision),
+        formatRate(r.recall),
+        formatRate(r.sensitivityMislabelRate),
+        r.errors,
+        formatUsd(r.costPer1000CallsUsd),
+        r.meanLatencyMs === null ? "n/a" : `${r.meanLatencyMs.toFixed(0)} ms`,
+          r.acceptable ? "yes" : "no",
+        ].join(" | ")} |`,
+    ),
+    "",
+    "Pooled intervals count every repeat as a separate draw of the same words, so they are narrower than a fresh set of words would give.",
+    "",
+    "## Decision summary (W18EDATE-72)",
+    "",
+    summary.recommended
+      ? `Recommended: **${label(summary.recommended.setting)}**: H1 ${formatRate(summary.recommended.hallucinationRate)}, ` +
+        `recall ${formatRate(summary.recommended.recall)}, ${formatUsd(summary.recommended.costPer1000CallsUsd)} per 1,000 calls.`
+      : `No setting meets the rule. Closest: **${summary.closest ? label(summary.closest.setting) : "none"}**` +
+        (summary.closest
+          ? `: H1 ${formatRate(summary.closest.hallucinationRate)}, recall ${formatRate(summary.closest.recall)}.`
+          : "."),
+    "",
+    "H2 (wrong meanings for real slang) needs human labels of the saved answers (W18EDATE-71, Sprint 3) and is not in this table.",
+    "",
+  ]
+  return lines.join("\n")
+}
+
+type SweepMeta = Parameters<typeof sweepMarkdown>[0]
+
+export function sweepBaseName(meta: SweepMeta, summary: SweepSummary): string {
+  const stamp = meta.startedAt.replace(/[:.]/g, "-").replace(/Z$/, "")
+  const models = meta.mock ? "mock" : [...new Set(summary.rows.map((r) => r.setting.model))].join("+")
+  return `${stamp}-sweep-${models.replace(/[^a-z0-9.+-]+/gi, "_")}`
+}
+
+
+export function writeSweepReport(dir: string, meta: SweepMeta, summary: SweepSummary, runs: readonly SweepRun[]) {
+  mkdirSync(dir, { recursive: true })
+  const base = path.join(dir, sweepBaseName(meta, summary))
+  const markdownText = sweepMarkdown(meta, summary)
+  writeFileSync(`${base}.json`, `${JSON.stringify({ ...meta, summary, runs }, null, 2)}\n`)
+  writeFileSync(`${base}.md`, markdownText)
+  return { json: `${base}.json`, markdown: `${base}.md`, markdownText }
+}
