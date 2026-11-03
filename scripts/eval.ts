@@ -1,22 +1,44 @@
-import { loadGoldenSet } from "@/lib/eval/golden"
+import { EVAL_CATEGORIES, loadGoldenSet } from "@/lib/eval/golden"
 import { evaluateSafety } from "@/lib/eval/safety"
 import { checkInputSafety, type SafetySurface } from "@/lib/safety/gate"
 
 async function main() {
   const args = process.argv.slice(2)
-  if (args.some((arg) => !["--validate-only", "--surface=search", "--surface=suggestion"].includes(arg))) {
-    throw new Error("Usage: pnpm eval [--validate-only] [--surface=search|suggestion]")
+  const usage = "Usage: pnpm eval [--validate-only] [--file <path>] [--surface=search|suggestion]"
+  let file: string | undefined
+  let surface: SafetySurface = "search"
+  let selectedSurface = false
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === "--validate-only") continue
+    if (arg === "--file") {
+      if (file !== undefined || !args[i + 1] || args[i + 1].startsWith("--")) throw new Error(usage)
+      file = args[++i]
+    } else if (arg === "--surface=search" || arg === "--surface=suggestion") {
+      if (selectedSurface) throw new Error("Choose one evaluation surface.")
+      selectedSurface = true
+      surface = arg === "--surface=search" ? "search" : "suggestion"
+    } else {
+      throw new Error(usage)
+    }
   }
-  const surfaces = args.filter((arg) => arg.startsWith("--surface="))
-  if (surfaces.length > 1) throw new Error("Choose one evaluation surface.")
-  const surface = (surfaces[0]?.split("=")[1] ?? "search") as SafetySurface
-  const set = loadGoldenSet()
+  const set = loadGoldenSet(file)
   const byKind = set.cases.reduce<Record<string, number>>((counts, entry) => {
     counts[entry.kind] = (counts[entry.kind] ?? 0) + 1
     return counts
   }, {})
   console.log(`Golden set v${set.version}: ${set.cases.length} cases`, byKind)
   if (set.cases.length < 150) console.log(`  (scope target is 150+; ${150 - set.cases.length} to go)`)
+  const byCategory = Object.fromEntries(EVAL_CATEGORIES.map(category => [category, 0]))
+  for (const entry of set.cases) if (entry.kind !== "dedup") byCategory[entry.category]++
+  console.log("By category:", byCategory)
+  const empty = EVAL_CATEGORIES.filter(category => byCategory[category] === 0)
+  if (empty.length) console.log(`  (no cases yet for: ${empty.join(", ")})`)
+  const review = set.review
+  console.log(review
+    ? `Second review: v${review.version} by ${review.reviewer} on ${review.reviewedOn}; ${review.disagreements.length} disagreements (${review.disagreements.filter(d => d.status === "flagged").length} still flagged)`
+    : "Second review: not yet reviewed!")
+  if (review && review.version !== set.version) console.log(`(review is for v${review.version}; the set is now v${set.version})`)
   if (args.includes("--validate-only")) return
 
   process.env.MOCK_LLM = "true"

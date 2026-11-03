@@ -115,7 +115,7 @@ for (const surface of ["search", "suggestion"] as const satisfies SafetySurface[
       if (surface === "search") {
         const search = createSearchTerm({
           checkInputSafety: gate,
-          getTermRecord: async () => { calls.push("lookup"); return null },
+          getTermByKey: async () => { calls.push("lookup"); return null },
           logTermEvent: async () => { calls.push("usage") },
           generateDiscoveryObject: async () => { calls.push("discovery"); return { isLegit: false } },
           saveDiscoveredTerm: async () => { assert.fail("No term should be saved") },

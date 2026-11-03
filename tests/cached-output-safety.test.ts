@@ -117,7 +117,7 @@ function flow(record: TermRecord | null, outputModerator = moderate, blockedInpu
   }, async (text) => { calls.push("generated_check"); return outputModerator(text) })
   const search = createSearchTerm({
     checkInputSafety: async (text, surface) => { calls.push("input_gate"); return gate(text, surface) },
-    getTermRecord: lookup,
+    getTermByKey: lookup,
     logTermEvent: async (_query, event) => { calls.push(event) },
     generateDiscoveryObject: generate,
     saveDiscoveredTerm: async () => { calls.push("term_write"); return null },
@@ -141,7 +141,7 @@ for (const status of ["published", "pending_review"] as const) {
   test(`clear ${status} content is screened before its existing response/event path`, async () => {
     const h = flow(stored({}, status))
     assert.equal((await h.search("rizz")).kind, status === "published" ? "found" : "discovered")
-    assert.deepEqual(h.calls, ["input_gate", "lookup", "cached_check", ...(status === "published" ? ["search_hit"] : [])])
+    assert.deepEqual(h.calls, ["input_gate", "lookup", "cached_check", "ai_call_avoided", ...(status === "published" ? ["search_hit"] : [])])
   })
 }
 

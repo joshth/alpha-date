@@ -46,7 +46,7 @@ test("corrected self-harm verdict blocks search dependencies and suggestion stor
   })
   const blocked = async () => { calls.push("downstream"); throw new Error("must not reach storage") }
   const search = createSearchTerm({
-    checkInputSafety: gate, getTermRecord: blocked, logTermEvent: blocked,
+    checkInputSafety: gate, getTermByKey: blocked, logTermEvent: blocked,
     generateDiscoveryObject: blocked, saveDiscoveredTerm: blocked,
   })
   const suggestion = createSuggestTerm({ checkInputSafety: gate, recordSuggestion: blocked })

@@ -21,7 +21,7 @@ function harness(unavailable = false) {
   }
   const search = createSearchTerm({
     checkInputSafety: check,
-    getTermRecord: async (query) => { calls.push("lookup"); lookups.push(query); return null },
+    getTermByKey: async (query) => { calls.push("lookup"); lookups.push(query); return null },
     logTermEvent: async () => { calls.push("event") },
     generateDiscoveryObject: async () => { calls.push("discovery"); return { isLegit: false } },
     saveDiscoveredTerm: async () => { calls.push("save"); return null },
@@ -136,7 +136,8 @@ test("emoji at each UTF-16 limit is kept intact", async () => {
   const query = "😀".repeat(60)
   assert.equal((await h.search(query)).kind, "not_found")
   assert.equal((await h.suggest("😀".repeat(50), "😀".repeat(250))).success, true)
-  assert.deepEqual(h.lookups, [query])
+  assert.equal(h.screened[0], query)
+  assert.deepEqual(h.lookups, [""])
   assert.deepEqual(h.saved, [{ term: "😀".repeat(50), context: "😀".repeat(250) }])
 })
 
@@ -163,7 +164,7 @@ test("large whitespace groups produce a bounded safety payload and canonical loo
   const input = "rizz" + " \r\n\t".repeat(10000) + "ordinary"
   assert.equal((await h.search(input)).kind, "not_found")
   assert.deepEqual(h.screened, ["rizz\nordinary"])
-  assert.deepEqual(h.lookups, ["rizz ordinary"])
+  assert.deepEqual(h.lookups, ["rizzordinary"])
 })
 
 test("screening retains line breaks while stored suggestion text stays canonical", async () => {

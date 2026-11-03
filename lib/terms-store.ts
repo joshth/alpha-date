@@ -1,15 +1,16 @@
 import "server-only"
-import { and, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq, sql } from "drizzle-orm"
 import type { SlangTerm } from "@/app/types"
 import { getDb } from "@/lib/_stubs/db"
 import { termEvents, terms } from "@/lib/_stubs/schema"
+import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
 
 // Lexicon persistence (adapted from production lib/term-cache.ts).
 // Lifecycle: published (servable to everyone) | pending_review (needs a human)
 // | rejected (never served, never regenerated-and-served).
 
 export type TermStatus = "published" | "pending_review" | "rejected"
-export type TermEventType = "search_hit" | "search_miss" | "llm_generated" | "view" | "prompt_generated"
+export type TermEventType = "search_hit" | "search_miss" | "llm_generated" | "view" | "prompt_generated" | "ai_call_avoided"
 
 type Row = typeof terms.$inferSelect
 
@@ -48,6 +49,15 @@ export async function getTermRecord(termText: string): Promise<TermRecord | null
   return rows[0] ? toRecord(rows[0]) : null
 }
 
+/** Looks up a term by its normalised key, preferring published over pending_review over rejected, then the oldest row. */
+export async function getTermByKey(key: string): Promise<TermRecord | null> {
+  if (!key) return null
+  const db = await getDb()
+  const statusRank = sql`case ${terms.status} when 'published' then 0 when 'pending_review' then 1 when 'rejected' then 2 else 3 end`
+  const rows = await db.select().from(terms).where(eq(terms.termKey, key)).orderBy(statusRank, terms.createdAt).limit(1)
+  return rows[0] ? toRecord(rows[0]) : null
+}
+
 export async function listPublishedTermNames(): Promise<string[]> {
   const db = await getDb()
   const rows = await db.select({ term: terms.term }).from(terms).where(eq(terms.status, "published"))
@@ -62,6 +72,8 @@ export async function saveDiscoveredTerm(term: SlangTerm): Promise<TermRecord | 
     .values({
       term: term.term,
       termLower: term.term.toLowerCase(),
+      termKey: normaliseSuggestion(term.term),
+      keyVersion: NORMALISER_VERSION,
       definition: term.definition,
       examples: term.examples,
       originAndContext: term.originAndContext,
@@ -98,6 +110,15 @@ export async function setTermStatus(id: string, status: "published" | "rejected"
 export async function logTermEvent(termText: string, eventType: TermEventType): Promise<void> {
   const db = await getDb()
   await db.insert(termEvents).values({ termLower: termText.trim().toLowerCase().slice(0, 120), eventType })
+}
+export async function getAiCallsAvoided(): Promise<number> {
+  return countTermEvents("ai_call_avoided")
+}
+
+export async function countTermEvents(eventType: TermEventType): Promise<number> {
+  const db = await getDb()
+  const rows = await db.select({ total: count() }).from(termEvents).where(eq(termEvents.eventType, eventType))
+  return rows[0].total
 }
 
 export async function getTermEvents(termText: string): Promise<{ eventType: string; createdAt: Date }[]> {

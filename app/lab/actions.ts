@@ -13,7 +13,7 @@ import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
-import { getTermRecord, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
+import { getAiCallsAvoided, getTermByKey, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
 import type { ActionResult, SearchOutcome } from "@/lib/types"
 
 // Pipeline: input → safety gate → lexicon lookup → AI discovery → stored for
@@ -21,11 +21,15 @@ import type { ActionResult, SearchOutcome } from "@/lib/types"
 
 const trackedInputSafety = createTrackedSafetyGate(checkInputSafety, recordSafetyEvent)
 const generateSafeDiscovery = createSafeDiscovery(generateDiscoveryObject, moderate)
-const getSafeTermRecord = createSafeTermLookup(getTermRecord, moderate)
-const runSearch = createSearchTerm({ checkInputSafety: trackedInputSafety, getTermRecord: getSafeTermRecord, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
+const getSafeTermByKey = createSafeTermLookup(getTermByKey, moderate)
+const runSearch = createSearchTerm({ checkInputSafety: trackedInputSafety, getTermByKey: getSafeTermByKey, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
 
 export async function searchTerm(raw: string): Promise<SearchOutcome> {
   return runSearch(raw)
+}
+
+export async function fetchAiCallsAvoided(): Promise<number> {
+  return getAiCallsAvoided()
 }
 
 const runSuggestion = createSuggestTerm({ checkInputSafety: trackedInputSafety, recordSuggestion })

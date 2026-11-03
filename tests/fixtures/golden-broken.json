@@ -1,0 +1,49 @@
+{
+  "version": "test",
+  "description": "Deliberately broken golden set for tests/golden.test.ts (W18EDATE-27, T2.4). Each broken case has exactly one problem.",
+  "cases": [
+    {
+      "id": "ok-001",
+      "input": "rizz",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": { "action": "safe", "categories": [] },
+      "discovery": { "isRealSlang": true },
+      "source": "test"
+    },
+    {
+      "id": "missing-category",
+      "input": "sigma",
+      "kind": "discovery",
+      "safety": { "action": "safe", "categories": [] },
+      "discovery": { "isRealSlang": true },
+      "source": "test"
+    },
+    {
+      "id": "ok-001",
+      "input": "aura",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": { "action": "safe", "categories": [] },
+      "discovery": { "isRealSlang": true },
+      "source": "test"
+    },
+    {
+      "id": "contradictory-label",
+      "input": "plimbcore",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": { "action": "safe", "categories": [] },
+      "discovery": { "isRealSlang": true },
+      "source": "test"
+    },
+    {
+      "id": "unknown-action",
+      "input": "synthetic test phrase",
+      "kind": "safety",
+      "category": "refusal",
+      "safety": { "action": "block", "categories": [] },
+      "source": "test"
+    }
+  ]
+}

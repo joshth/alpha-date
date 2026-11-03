@@ -7,7 +7,7 @@ import type { SafetyVerdict } from "@/lib/safety/gate"
 
 type SafetyCase = Extract<GoldenCase, { kind: "safety" }>
 const fixture = (id: string, action: SafetyCase["safety"]["action"]): SafetyCase => ({
-  id, input: `private fixture ${id}`, source: "synthetic", kind: "safety",
+  id, input: `private fixture ${id}`, source: "synthetic", kind: "safety", category: action === "safeguarding" ? "safeguarding" : action === "refuse" ? "refusal" : "ambiguous",
   safety: { action, categories: [] },
 })
 const verdict = (action: SafetyVerdict["action"]): SafetyVerdict => ({
@@ -72,7 +72,7 @@ test("reports missing minimum categories and permits extra detected categories",
 
 test("runs only safety cases and forwards the selected surface", async () => {
   const entries: GoldenCase[] = [
-    { id: "discovery", input: "rizz", source: "synthetic", kind: "discovery", discovery: { isRealSlang: true } },
+    { id: "discovery", input: "rizz", source: "synthetic", kind: "discovery", category: "valid_slang", safety: { action: "safe", categories: [] }, discovery: { isRealSlang: true } },
     fixture("safety", "safe"),
     { id: "dedup", input: "rizz", source: "synthetic", kind: "dedup", dedup: { candidate: "rizz", sameTerm: true } },
   ]

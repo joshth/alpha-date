@@ -19,7 +19,7 @@ interface Example {
   }
 }
 
-const lookup = ["moderation", "lookup", "event:search_hit"]
+const lookup = ["moderation", "lookup", "event:ai_call_avoided", "event:search_hit"]
 const examples: Example[] = [
   { id: "safe-lookup", surface: "search", text: "rizz", expected: { outcome: "found", action: "safe", calls: lookup } },
   { id: "sensitive-lookup", surface: "search", text: "kms", expected: { outcome: "found", action: "safe", reason: "sensitive_lookup", calls: lookup } },
@@ -55,7 +55,7 @@ async function main() {
     }
     const search = createSearchTerm({
       checkInputSafety: check,
-      getTermRecord: async (query) => {
+      getTermByKey: async (query) => {
         calls.push("lookup")
         return {
           id: "offline-demo", term: toDiscoveredTerm(query, { isLegit: true, definition: "Synthetic demo definition." })!,

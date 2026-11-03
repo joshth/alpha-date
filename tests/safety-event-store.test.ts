@@ -112,7 +112,7 @@ test("timeout configuration rejects invalid bounds", () => {
 
 test("live search and suggestion actions record clear outcomes in the database", async () => {
   const db = await reset()
-  await db.insert(terms).values({ term: "rizz", termLower: "rizz", definition: "Synthetic definition.", status: "published" })
+  await db.insert(terms).values({ term: "rizz", termLower: "rizz", termKey: "rizz", definition: "Synthetic definition.", status: "published" })
   assert.equal((await searchTerm("rizz")).kind, "found")
   assert.equal((await suggestTerm("ordinary-fixture", "Synthetic context.")).success, true)
   const rows = await db.select().from(safetyEvents)

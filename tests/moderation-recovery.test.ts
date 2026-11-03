@@ -13,7 +13,7 @@ function harness() {
     calls,
     search: createSearchTerm({
       checkInputSafety: gate,
-      getTermRecord: async () => { calls.push("lookup"); return null },
+      getTermByKey: async () => { calls.push("lookup"); return null },
       logTermEvent: async (_query, event) => { calls.push(event) },
       generateDiscoveryObject: async () => {
         calls.push("discovery")

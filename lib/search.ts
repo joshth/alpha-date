@@ -1,15 +1,16 @@
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { discoverTerm } from "@/lib/discovery/discover"
 import { MAX_INPUT_LENGTH, sanitizeUserText } from "@/lib/discovery/prompt"
+import { normaliseSuggestion } from "@/lib/normalise"
 import { safetyResponseMessage } from "@/lib/safety/responses"
 import type { checkInputSafety } from "@/lib/safety/gate"
 import type { generateDiscoveryObject } from "@/lib/_stubs/llm"
-import type { getTermRecord, logTermEvent, saveDiscoveredTerm } from "@/lib/terms-store"
+import type { getTermByKey, logTermEvent, saveDiscoveredTerm } from "@/lib/terms-store"
 import type { SearchOutcome } from "@/lib/types"
 
 interface SearchDependencies {
   checkInputSafety: typeof checkInputSafety
-  getTermRecord: typeof getTermRecord
+  getTermByKey: typeof getTermByKey
   logTermEvent: typeof logTermEvent
   generateDiscoveryObject: typeof generateDiscoveryObject
   saveDiscoveredTerm: typeof saveDiscoveredTerm
@@ -27,7 +28,8 @@ export function createSearchTerm(dependencies: SearchDependencies) {
     }
 
     try {
-      const existing = await dependencies.getTermRecord(query)
+      const existing = await dependencies.getTermByKey(normaliseSuggestion(query))
+      if (existing) await dependencies.logTermEvent(query, "ai_call_avoided")
       if (existing && existing.status === "published") {
         await dependencies.logTermEvent(query, "search_hit")
         return { kind: "found", term: existing.term, verdict }

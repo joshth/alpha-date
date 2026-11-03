@@ -19,7 +19,7 @@ function harness(options: { status?: ModerationResult["status"]; categories?: st
       calls.push(`gate:${surface}:${query}`)
       return gate(query, surface)
     },
-    getTermRecord: async () => { calls.push("lookup"); return options.existing ?? null },
+    getTermByKey: async () => { calls.push("lookup"); return options.existing ?? null },
     logTermEvent: async (_query, event) => { calls.push(`event:${event}`) },
     generateDiscoveryObject: async () => {
       calls.push("discovery")
@@ -72,7 +72,7 @@ for (const status of ["published", "pending_review", "rejected"] as const) {
     const { search, calls } = harness({ existing })
     const result = await search("rizz")
     assert.equal(result.kind, status === "published" ? "found" : status === "pending_review" ? "discovered" : "not_found")
-    assert.deepEqual(calls, ["gate:search:rizz", "moderation", "lookup", ...(status === "pending_review" ? [] : [`event:${status === "published" ? "search_hit" : "search_miss"}`])])
+    assert.deepEqual(calls, ["gate:search:rizz", "moderation", "lookup", "event:ai_call_avoided", ...(status === "pending_review" ? [] : [`event:${status === "published" ? "search_hit" : "search_miss"}`])])
   })
 }
 

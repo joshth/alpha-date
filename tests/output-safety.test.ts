@@ -109,7 +109,7 @@ function flow(raw: DiscoveryOutput, outputModerator: (text: string) => Promise<M
   })
   const search = createSearchTerm({
     checkInputSafety: async (text, surface) => { calls.push("input_gate"); return gate(text, surface) },
-    getTermRecord: async () => {
+    getTermByKey: async () => {
       calls.push("lookup")
       return cached ? { id: "fixture", term: toDiscoveredTerm("rizz", profile)!, status: "published", source: "test", createdAt: "2026-10-26T00:00:00Z" } : null
     },
@@ -166,5 +166,5 @@ test("blocked input skips generation and the output check", async () => {
 test("an existing published lookup does not generate or moderate a new profile", async () => {
   const h = flow(profile, moderate, false, true)
   assert.equal((await h.search("rizz")).kind, "found")
-  assert.deepEqual(h.calls, ["input_gate", "lookup", "search_hit"])
+  assert.deepEqual(h.calls, ["input_gate", "lookup", "ai_call_avoided", "search_hit"])
 })

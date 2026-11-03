@@ -5,7 +5,11 @@
 // "6-7", "6 7" and "67" (or "Touch-Grass" and "touch grass") share a key.
 // Unicode-aware, so non-Latin input still yields a key.
 export function normalizeKey(text: string): string {
-  return text.toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "").replace(/[^\p{L}\p{N}]/gu, "")
+return text
+  .toLowerCase()                         // "Brain Rot!" → "brain rot!"
+  .normalize("NFKD")                     // "café" → "cafe" + accent mark
+  .replace(/\p{M}/gu, "")                // remove that accent mark → "cafe"
+  .replace(/[^\p{L}\p{N}]/gu, "")        // remove non-letters/digits → "brainrot"
 }
 
 function trigrams(text: string): Set<string> {
