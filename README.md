@@ -45,6 +45,7 @@ Copy `.env.example` to `.env.local` to change any of these (see comments in that
 | `pnpm eval:validate` | Validate `eval/golden-set.json` and print counts |
 | `pnpm eval` | Evaluation harness (**yours to build** — see `scripts/eval.ts`) |
 | `pnpm aura:plot bussin "goofy ahh" [--out chart.png]` | Chart each term's SIRS lifecycle curve coloured by Aura stage (opens a window, or saves with `--out`). Needs a SIRS-gen-alpha checkout with its `.venv` beside this repo, or `SIRS_DIR` pointing to one |
+| `pnpm aura:plot --list` | Print every term `aura:plot` accepts, grouped by generation |
 | `pnpm db:generate` | Generate a SQL migration after editing `lib/_stubs/schema.ts` |
 | `pnpm db:migrate` | Apply migrations to `DATABASE_URL` (your own hosted Postgres only) |
 | `pnpm db:reset` | Delete the local PGlite database |
