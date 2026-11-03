@@ -1970,6 +1970,223 @@
       "notes": "UK: a group of male friends."
     },
     {
+      "id": "discovery-066",
+      "input": "gassed",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "held-out",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: excited or overhyped."
+    },
+    {
+      "id": "discovery-067",
+      "input": "wasteman",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "minSensitivity": "Use With Caution",
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: an insult for a useless person."
+    },
+    {
+      "id": "discovery-068",
+      "input": "roadman",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "UK"
+      },
+      "source": "team",
+      "notes": "UK: a street-wise young man."
+    },
+    {
+      "id": "discovery-069",
+      "input": "eshay",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "AU: a youth subculture, and a greeting within it."
+    },
+    {
+      "id": "discovery-070",
+      "input": "arvo",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "AU: afternoon."
+    },
+    {
+      "id": "discovery-071",
+      "input": "servo",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "AU: service station."
+    },
+    {
+      "id": "discovery-072",
+      "input": "deadset",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "AU: truly, honestly."
+    },
+    {
+      "id": "discovery-073",
+      "input": "heaps",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "dev",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "AU: very, a lot ('heaps good')."
+    },
+    {
+      "id": "discovery-074",
+      "input": "devo",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "held-out",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "AU: devastated."
+    },
+    {
+      "id": "discovery-075",
+      "input": "cooked",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "new-sense",
+        "split": "held-out",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "In trouble, or exhausted; very common in AU."
+    },
+    {
+      "id": "discovery-076",
+      "input": "chockers",
+      "kind": "discovery",
+      "category": "valid_slang",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": true,
+        "wordType": "real-old",
+        "split": "dev",
+        "dialect": "AU"
+      },
+      "source": "team",
+      "notes": "AU: completely full."
+    },
+    {
+      "id": "discovery-077",
+      "input": "flumbmaxxing",
+      "kind": "discovery",
+      "category": "invented",
+      "safety": {
+        "action": "safe",
+        "categories": []
+      },
+      "discovery": {
+        "isRealSlang": false,
+        "wordType": "invented-plausible",
+        "split": "dev",
+        "dialect": "US"
+      },
+      "source": "team",
+      "notes": "Made up: -maxxing pattern."
+    },
+    {
       "id": "dedup-001",
       "input": "brain rot",
       "kind": "dedup",
