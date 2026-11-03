@@ -3,7 +3,8 @@
 // Shipped: golden-set loading and validation (`pnpm eval:validate`), and
 // discovery over every "discovery" case (lib/eval/discovery.ts) with the mock
 // model (default) or a real model (MOCK_LLM=false); `--report` writes a JSON
-// and Markdown report to eval/reports/.
+// and Markdown report to eval/reports/. `--sweep` runs every model ×
+// temperature with repeats and writes the results grid (lib/eval/sweep.ts).
 // Still to build, per the approved scope:
 // - run the safety gate (lib/safety/gate.ts) over every "safety" case;
 // - run normalisation (lib/normalise) over every "dedup" case;
@@ -30,9 +31,18 @@ import { evaluateDiscovery } from "@/lib/eval/discovery"
 import { DEFAULT_GOLDEN_SET_PATH, EVAL_CATEGORIES, type GoldenSet, loadGoldenSet } from "@/lib/eval/golden"
 import { formatRate } from "@/lib/eval/metrics"
 import { type RunMeta, sha256File, writeReport } from "@/lib/eval/report"
+import {
+  parseSweepArgs,
+  type SweepRun,
+  summariseSweep,
+  sweepSettings,
+  withDiscoverySetting,
+  writeSweepReport,
+} from "@/lib/eval/sweep"
 
 const validateOnly = process.argv.includes("--validate-only")
 const writeReportFiles = process.argv.includes("--report")
+const sweep = process.argv.includes("--sweep")
 
 const flagFile = process.argv.indexOf("--file")
 const file = flagFile >= 0 && process.argv[flagFile + 1] ? process.argv[flagFile + 1] : DEFAULT_GOLDEN_SET_PATH
@@ -77,12 +87,9 @@ if (empty.length) console.log(`  (no cases yet for: ${empty.join(", ")})`)
     );
   }
 
-async function runDiscovery() {
-  // The mock's simulated latency and outages are opt-in here, so a plain
-  // `pnpm eval` is fast and repeatable; set them explicitly to test outages.
-  process.env.MOCK_LLM_LATENCY_MS ??= "0"
-  process.env.MOCK_LLM_FAILURE_RATE ??= "0"
+// One discovery run with whatever model settings are in the environment now:
 
+async function runDiscoveryOnce() {
   const meta: RunMeta = {
     datasetVersion: set.version,
     datasetFile: path.relative(process.cwd(), file),
@@ -90,10 +97,6 @@ async function runDiscovery() {
     startedAt: new Date().toISOString(),
     config: { ...discoveryModelConfig(), promptVersion: DISCOVERY_PROMPT_VERSION },
   }
-  console.log(
-    `\nDiscovery evaluation: ${meta.config.mock ? "MOCK model, deterministic; not a real accuracy claim" : meta.config.model}` +
-      ` (prompt ${meta.config.promptVersion})`,
-  )
   const pricing = pricingFor(meta.config)
   const meter = meterDiscovery(generateDiscoveryObject)
   const startedMs = performance.now()
@@ -101,8 +104,19 @@ async function runDiscovery() {
   if (caseLimit) meta.caseLimit = caseLimit
   const discovery = await evaluateDiscovery(cases, meter.generate)
   meta.finishedAt = new Date().toISOString()
-  meta.timing = runTiming(startedMs, performance.now(), discovery.calls)
-  meta.cost = summariseCost(meter.calls, pricing)
+  const timing = runTiming(startedMs, performance.now(), discovery.calls)
+  const cost = summariseCost(meter.calls, pricing)
+  meta.timing = timing
+  meta.cost = cost
+  return { meta, timing, cost, pricing, discovery, calls: meter.calls }
+}
+
+async function runDiscovery() {
+  const { meta, timing, cost, pricing, discovery, calls } = await runDiscoveryOnce()
+  console.log(
+    `\nDiscovery evaluation: ${meta.config.mock ? "MOCK model, deterministic; not a real accuracy claim" : meta.config.model}` +
+      ` (prompt ${meta.config.promptVersion})`,
+  )
   console.table({
     "model accepted": { "real slang": discovery.confusion.truePositive, "not slang": discovery.confusion.falsePositive },
     "model rejected": { "real slang": discovery.confusion.falseNegative, "not slang": discovery.confusion.trueNegative },
@@ -115,16 +129,15 @@ async function runDiscovery() {
   console.log(
     `Calls: ${discovery.calls}; provider errors: ${discovery.errorIds.length}; ` +
       `latency mean ${discovery.latency.meanMs?.toFixed(1)} ms, p95 ${discovery.latency.p95Ms?.toFixed(1)} ms; ` +
-      `run took ${(meta.timing.wallClockMs / 1000).toFixed(1)} s`,
+      `run took ${(timing.wallClockMs / 1000).toFixed(1)} s`,
   )
   console.log(
-    `Tokens (${meta.cost.tokenSource}): ${meta.cost.promptTokens} in + ${meta.cost.completionTokens} out; ` +
-      `cost ${formatUsd(meta.cost.costUsd)}, ${formatUsd(meta.cost.costPer1000CallsUsd)} per 1,000 calls ` +
+    `Tokens (${cost.tokenSource}): ${cost.promptTokens} in + ${cost.completionTokens} out; ` +
+      `cost ${formatUsd(cost.costUsd)}, ${formatUsd(cost.costPer1000CallsUsd)} per 1,000 calls ` +
       `(${pricing?.source ?? "no price known; set LLM_PRICE_INPUT_PER_MTOK and LLM_PRICE_OUTPUT_PER_MTOK"})`,
   )
 
   if (caseLimit) {
-    const timing = meta.timing
     const at = (calls: number) => formatDuration(projectRunTime(timing, discovery.calls, calls))
     console.log(
       `Timing test (${discovery.calls} calls): ${at(1)} per call, so 1,000 calls take about ${at(1000)} ` +
@@ -133,15 +146,53 @@ async function runDiscovery() {
   }
 
   if (writeReportFiles) {
-    const written = writeReport(path.join(process.cwd(), "eval", "reports"), meta, discovery, meter.calls)
+    const written = writeReport(path.join(process.cwd(), "eval", "reports"), meta, discovery, calls)
     const shown = [written.json, written.markdown, written.log].map((f) => path.relative(process.cwd(), f))
     console.log(`\nReport written: ${shown.join(", ")} (the .calls.jsonl file is the one-line-per-call run log)`)
   }
-  console.log("\nStill to come (Sprint 2): settings sweep (W18EDATE-66), dedup metrics.")
+  console.log("\nStill to come: the real-model sweep results (W18EDATE-66), dedup metrics.")
+}
+
+// `pnpm eval --sweep`: every model × temperature, `--repeats` times each, then
+// the results grid and decision summary. Always writes its report.
+async function runSweep() {
+  const options = parseSweepArgs(process.argv, discoveryModelConfig().model)
+  const settings = sweepSettings(options)
+  const startedAt = new Date().toISOString()
+  console.log(`\nSweep: ${settings.length} settings × ${options.repeats} repeats = ${settings.length * options.repeats} runs`)
+  const runs: SweepRun[] = []
+  for (const setting of settings) {
+    for (let repeat = 0; repeat < options.repeats; repeat++) {
+      const { meta, timing, cost, discovery } = await withDiscoverySetting(setting, repeat, runDiscoveryOnce)
+      runs.push({ setting, repeat, config: meta.config, discovery, cost, timing })
+      console.log(
+        `  ${setting.model} @ ${setting.temperature} #${repeat + 1}: H1 ${formatRate(discovery.hallucinationRate)}; ` +
+          `recall ${formatRate(discovery.recall)}; ${(timing.wallClockMs / 1000).toFixed(1)} s`,
+      )
+    }
+  }
+  const summary = summariseSweep(runs, options)
+  const written = writeSweepReport(
+    path.join(process.cwd(), "eval", "reports"),
+    {
+      datasetVersion: set.version,
+      datasetSha256: sha256File(file),
+      startedAt,
+      promptVersion: DISCOVERY_PROMPT_VERSION,
+      mock: runs.every((r) => r.config.mock),
+    },
+    summary,
+    runs,
+  )
+  console.log(`\n${written.markdownText}`)
+  console.log(`Report written: ${path.relative(process.cwd(), written.json)} and ${path.relative(process.cwd(), written.markdown)}`)
 }
 
 if (!validateOnly) {
-  runDiscovery().catch((error: unknown) => {
+
+  process.env.MOCK_LLM_LATENCY_MS ??= "0"
+  process.env.MOCK_LLM_FAILURE_RATE ??= "0"
+  ;(sweep ? runSweep() : runDiscovery()).catch((error: unknown) => {
     console.error(error instanceof Error ? error.message : "Evaluation failed.")
     process.exitCode = 1
   })
