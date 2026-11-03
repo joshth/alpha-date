@@ -161,7 +161,11 @@ export function assessSafety(text: string | null | undefined): SafetyAssessment 
     crisis = "self_harm"
     categories.add("suicide_self_harm")
   }
-  if (any(HARM_OTHERS_INTENT, t)) {
+  // When self-harm is already detected, require a complete threat within a clause.
+  const threatInputs = crisis === "self_harm"
+    ? (text ?? "").split(/[.!?;,\r\n]+/).map(normalizeForSafety)
+    : [t]
+  if (threatInputs.some((clause) => any(HARM_OTHERS_INTENT, clause))) {
     crisis = "harm_to_others"
     categories.add("violence_threat")
   }

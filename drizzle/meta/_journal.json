@@ -8,6 +8,27 @@
       "when": 1790906868973,
       "tag": "0000_orange_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791840703191,
+      "tag": "0001_tense_raider",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791845978702,
+      "tag": "0002_careless_kronos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793239460941,
+      "tag": "0003_safety_events",
+      "breakpoints": true
     }
   ]
 }

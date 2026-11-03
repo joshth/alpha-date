@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm"
+import type { SafetyEvent } from "@/lib/safety/events"
 import { bigint, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
 
 // STUDENT-FACING STUB SCHEMA. Only the three tables this slice touches, with
@@ -30,6 +31,8 @@ export const terms = pgTable(
       .default(sql`gen_random_uuid()`),
     term: text("term").notNull(),
     termLower: text("term_lower").notNull(),
+    termKey: text("term_key").notNull(),
+    keyVersion: integer("key_version").notNull().default(1),
     pronunciation: text("pronunciation"),
     definition: text("definition").notNull(),
     examples: jsonb("examples").$type<string[]>().notNull().default([]),
@@ -51,7 +54,7 @@ export const terms = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("terms_term_lower_idx").on(t.termLower)],
+  (t) => [uniqueIndex("terms_term_lower_idx").on(t.termLower), index("terms_term_key_idx").on(t.termKey)],
 )
 
 // Anonymous usage analytics. Deliberately has NO user linkage — never add
@@ -95,4 +98,14 @@ export const termFeedback = pgTable(
     uniqueIndex("term_feedback_term_idx").on(t.suggestedTerm),
     index("term_feedback_status_idx").on(t.status),
   ],
+)
+
+export const safetyEvents = pgTable(
+  "safety_events",
+  {
+    outcome: text("outcome", { enum: ["safe", "refuse", "safeguarding", "gentle_support"] }).notNull(),
+    categories: jsonb("categories").$type<SafetyEvent["categories"]>().notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("safety_events_recorded_at_idx").on(t.recordedAt)],
 )

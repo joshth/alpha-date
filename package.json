@@ -13,6 +13,7 @@
     "test": "tsx --conditions=react-server --test tests/*.test.ts",
     "eval": "tsx --conditions=react-server scripts/eval.ts",
     "eval:validate": "tsx --conditions=react-server scripts/eval.ts --validate-only",
+    "aura:plot": "tsx scripts/aura-plot.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:reset": "node -e \"require('fs').rmSync('.data',{recursive:true,force:true})\""
@@ -30,6 +31,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.454.0",
+    "motion": "^14.1.0",
     "next": "15.5.15",
     "react": "19.2.0",
     "react-dom": "19.2.0",

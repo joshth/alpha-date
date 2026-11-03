@@ -1,8 +1,10 @@
 import { SearchPanel } from "@/components/search/search-panel"
+import { getAiCallsAvoided } from "@/lib/terms-store"
 
 export const metadata = { title: "Search" }
 
-export default function SearchPage() {
+export default async function SearchPage() {
+  const initialAvoided = await getAiCallsAvoided()
   return (
     <div className="space-y-6">
       <div>
@@ -11,7 +13,7 @@ export default function SearchPage() {
           Try a known term (Rizz), a new one (brainrot), a made-up word (zorbleflux), or a sensitive lookup (kms).
         </p>
       </div>
-      <SearchPanel />
+      <SearchPanel initialAvoided={initialAvoided} />
     </div>
   )
 }
