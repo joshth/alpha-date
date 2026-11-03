@@ -33,8 +33,8 @@ test("aura:plot without terms prints usage and exits 1", () => {
   assert.match(result.stderr, /Usage: pnpm aura:plot/)
 })
 
-const sirsDir = path.resolve(process.env.SIRS_DIR ?? "../SIRS-gen-alpha")
-const sirsReady = existsSync(path.join(sirsDir, ".venv/bin/python")) && existsSync(path.join(sirsDir, "src/sirs/plot_term.py"))
+const live = plotCommand(["bussin"])
+const sirsReady = existsSync(live.cmd) && existsSync(path.join(live.cwd, "src/sirs/plot_term.py"))
 
 test("aura:plot passes the Python exit code through for an unknown term",
   { skip: !sirsReady && "SIRS-gen-alpha venv or sirs.plot_term not found" }, () => {
