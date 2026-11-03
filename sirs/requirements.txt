@@ -1,0 +1,9 @@
+# Runtime deps for python -m sirs.plot_term (Python 3.12). Trimmed from SIRS-gen-alpha's requirements.txt.
+numpy==2.5.4
+pandas==3.1.0
+scipy==1.18.1
+statsmodels==0.15.0
+matplotlib==3.11.2
+dtaidistance==2.5.1
+pyarrow==26.0.0
+pytest==9.2.0

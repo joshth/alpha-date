@@ -14,8 +14,13 @@ test("plotCommand runs sirs.plot_term with the SIRS venv and src on PYTHONPATH",
   assert.equal(cmd.env.PYTHONPATH, "/x/sirs/src")
 })
 
-test("plotCommand defaults SIRS_DIR to SIRS-gen-alpha beside the repo", () => {
-  assert.equal(plotCommand(["bussin"], {}, "/code/alpha-date").cwd, "/code/SIRS-gen-alpha")
+test("plotCommand uses the Windows venv python on win32", () => {
+  const cmd = plotCommand(["bussin"], { SIRS_DIR: "/x/sirs" }, "/code/alpha-date", "win32")
+  assert.equal(cmd.cmd, path.join("/x/sirs", ".venv", "Scripts", "python.exe"))
+})
+
+test("plotCommand defaults SIRS_DIR to the sirs folder inside the repo", () => {
+  assert.equal(plotCommand(["bussin"], {}, "/code/alpha-date").cwd, "/code/alpha-date/sirs")
 })
 
 test("plotCommand without terms throws a usage message", () => {
@@ -33,8 +38,15 @@ test("aura:plot without terms prints usage and exits 1", () => {
   assert.match(result.stderr, /Usage: pnpm aura:plot/)
 })
 
-const sirsDir = path.resolve(process.env.SIRS_DIR ?? "../SIRS-gen-alpha")
-const sirsReady = existsSync(path.join(sirsDir, ".venv/bin/python")) && existsSync(path.join(sirsDir, "src/sirs/plot_term.py"))
+test("the SIRS plotter and the data it reads are vendored in sirs/", () => {
+  for (const file of ["src/sirs/plot_term.py", "data/terms.csv", "data/processed/trends_weekly.parquet",
+    "results/fits_main.json", "requirements.txt"]) {
+    assert.ok(existsSync(path.join("sirs", file)), `missing sirs/${file}`)
+  }
+})
+
+const live = plotCommand(["bussin"])
+const sirsReady = existsSync(live.cmd) && existsSync(path.join(live.cwd, "src/sirs/plot_term.py"))
 
 test("aura:plot passes the Python exit code through for an unknown term",
   { skip: !sirsReady && "SIRS-gen-alpha venv or sirs.plot_term not found" }, () => {
