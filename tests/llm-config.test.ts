@@ -116,6 +116,12 @@ test("the configured model, temperature and seed reach an OpenAI-compatible serv
   assert.equal(requests[0].body.model, "fake-local")
   assert.equal(requests[0].body.temperature, 1.3)
   assert.equal(requests[0].body.seed, 7)
-  assert.deepEqual(requests[0].body.response_format, { type: "json_object" })
+  // The schema goes to the server to enforce and into the system prompt.
+  const format = requests[0].body.response_format as { type: string; json_schema: { schema: { required: string[] } } }
+  assert.equal(format.type, "json_schema")
+  assert.deepEqual(format.json_schema.schema.required, ["isLegit"])
+  const [system] = requests[0].body.messages as Array<{ role: string; content: string }>
+  assert.equal(system.role, "system")
+  assert.match(system.content, /^JSON schema:\n\{.*"isLegit"/)
   assert.deepEqual(usages, [{ promptTokens: 10, completionTokens: 5 }])
 })

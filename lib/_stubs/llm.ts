@@ -72,15 +72,27 @@ export async function generateDiscoveryObject(
     return mockDiscovery(input.searchTerm)
   }
 
-  const { generateObject } = await import("ai")
+  const { generateObject, zodSchema } = await import("ai")
   const { createOpenAI } = await import("@ai-sdk/openai")
   const provider = createOpenAI({
     ...(config.baseURL ? { baseURL: config.baseURL } : {}),
     apiKey: process.env.OPENAI_API_KEY?.trim() || "local",
   })
+  // Local servers get the schema twice: as `response_format: json_schema`,
+  // which Ollama enforces while generating, and in the system prompt.
+  // - Schema only in the prompt: llama3.2 often echoed the schema back instead
+  //   of answering (2 of 3 calls failed, 3 Nov 2026).
+  // - Schema only enforced: it answered "not slang" for every word, even "rizz".
   const { object, usage } = await generateObject({
-    model: provider.chat(config.model),
-    ...(config.baseURL ? { mode: "json" as const } : {}),
+    model: config.baseURL ? provider.chat(config.model, { structuredOutputs: true }) : provider.chat(config.model),
+    ...(config.baseURL
+      ? {
+          mode: "json" as const,
+          system:
+            `JSON schema:\n${JSON.stringify(zodSchema(discoverySchema).jsonSchema)}\n` +
+            "You MUST answer with a JSON object that matches the JSON schema above.",
+        }
+      : {}),
     schema: discoverySchema,
     prompt: input.prompt,
     temperature: config.temperature ?? DEFAULT_DISCOVERY_TEMPERATURE,
