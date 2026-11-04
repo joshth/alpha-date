@@ -90,7 +90,8 @@ def dtw_scatter(ev: pd.DataFrame, track: str, variant: str, path, title: str = "
 def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
     """Noise-free fitted curves coloured by stage."""
     colors = {"emerging": "C2", "peaking": "C1", "declining": "C3", "parent_territory": "C0"}
-    fig, axes = plt.subplots(1, len(terms), figsize=(3.6 * len(terms), 2.8), squeeze=False)
+    fig, axes = plt.subplots(1, len(terms), figsize=(3.6 * len(terms), 2.8), squeeze=False,
+                             layout="constrained")
     for ax, term in zip(axes[0], terms):
         c = curves[term]
         weeks = pd.date_range(c["start"], c["end"], freq="7D")
@@ -109,9 +110,8 @@ def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
         ax.xaxis.set_major_locator(loc)
         ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
         ax.grid(color="0.92", lw=0.6, zorder=0)
-    fig.legend(*axes[0][0].get_legend_handles_labels(), loc="upper center", ncols=4, frameon=False,
+    fig.legend(*axes[0][0].get_legend_handles_labels(), loc="outside upper center", ncols=4, frameon=False,
                fontsize=8, markerscale=1.5)
-    fig.tight_layout(rect=(0, 0, 1, 0.88))
     if path is not None:
         fig.savefig(path, dpi=110)
     return fig
