@@ -45,3 +45,8 @@ def test_axes_use_compact_date_ticks_a_light_grid_and_a_plain_y_label():
         assert isinstance(ax.xaxis.get_major_formatter(), ConciseDateFormatter)
         assert any(g.get_visible() for g in ax.yaxis.get_gridlines())
         assert ax.get_ylabel() == "Share of peak interest"
+
+
+def test_figure_uses_constrained_layout_so_it_relays_out_on_resize():
+    from matplotlib.layout_engine import ConstrainedLayoutEngine
+    assert isinstance(_figure().get_layout_engine(), ConstrainedLayoutEngine)
