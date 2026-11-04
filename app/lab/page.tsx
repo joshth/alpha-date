@@ -61,6 +61,16 @@ export default function LabDashboard() {
             <CardDescription>AI-discovered terms awaiting review, and missing-term suggestions.</CardDescription>
           </CardHeader>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle asChild>
+              <h2 className="text-lg">
+                <Link href="/lab/safety-activity" className="hover:text-primary hover:underline">Safety activity</Link>
+              </h2>
+            </CardTitle>
+            <CardDescription>View anonymous safety decisions, allowed and stopped totals, and UTC date filters.</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
 
       <section aria-labelledby="roadmap-heading">

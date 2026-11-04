@@ -3,6 +3,11 @@
 import { generateDiscoveryObject } from "@/lib/_stubs/llm"
 import { loadGoldenSet } from "@/lib/eval/golden"
 import { checkInputSafety } from "@/lib/safety/gate"
+import { moderate } from "@/lib/_stubs/moderation"
+import { createTrackedSafetyGate } from "@/lib/safety/events"
+import { recordSafetyEvent } from "@/lib/safety/event-store"
+import { createSafeDiscovery } from "@/lib/discovery/safe-discovery"
+import { createSafeTermLookup } from "@/lib/safety/safe-term-lookup"
 import { createSearchTerm } from "@/lib/search"
 import { getTermByKey, logTermEvent, saveDiscoveredTerm } from "@/lib/terms-store"
 import type { SearchOutcome } from "@/lib/types"
@@ -10,13 +15,17 @@ import type { SearchOutcome } from "@/lib/types"
 export type StageId = "safety" | "lookup" | "discovery" | "store"
 export interface Stage { id: StageId; state: "pass" | "stop" | "warn" | "skip"; detail: string }
 
+const trackedSafety = createTrackedSafetyGate(checkInputSafety, recordSafetyEvent)
+const safeLookup = createSafeTermLookup(getTermByKey, moderate)
+const safeDiscovery = createSafeDiscovery(generateDiscoveryObject, moderate)
+
 // Same createSearchTerm as /lab/search; each dependency is wrapped to record what it did.
 export async function traceSearch(raw: string): Promise<{ stages: Stage[]; outcome: SearchOutcome }> {
   const seen: Partial<Record<StageId, Stage>> = {}
   const run = createSearchTerm({
     logTermEvent,
     checkInputSafety: async (text, surface) => {
-      const v = await checkInputSafety(text, surface)
+      const v = await trackedSafety(text, surface)
       seen.safety = {
         id: "safety", state: v.action === "safe" ? "pass" : "stop",
         detail: v.action === "safe" ? "safe" : v.action === "refuse" ? "refused" : "help links shown",
@@ -24,7 +33,7 @@ export async function traceSearch(raw: string): Promise<{ stages: Stage[]; outco
       return v
     },
     getTermByKey: async (key) => {
-      const t = await getTermByKey(key)
+      const t = await safeLookup(key)
       seen.lookup = {
         id: "lookup", state: "pass",
         detail: t ? (t.status === "published" ? `in the lexicon, no AI call (key ${key})` : `already ${t.status.replace("_", " ")}`) : `not found (key ${key})`,
@@ -32,7 +41,7 @@ export async function traceSearch(raw: string): Promise<{ stages: Stage[]; outco
       return t
     },
     generateDiscoveryObject: async (i) => {
-      const o = await generateDiscoveryObject(i)
+      const o = await safeDiscovery(i)
       seen.discovery = o.isLegit && o.definition
         ? { id: "discovery", state: "pass", detail: "AI says real slang" }
         : { id: "discovery", state: "stop", detail: "AI finds no slang" }

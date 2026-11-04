@@ -18,8 +18,8 @@ function dependencies(readSafetyActivity = async (_period: { from: string; to: s
 test("default view requests the last 24 hours in UTC", async () => {
   const calls: unknown[] = []
   const load = createSafetyActivityView(dependencies(async period => { calls.push(period); return activity }))
-  assert.deepEqual(await load({}), { status: "ready", from: "2026-11-01T12:00:00", to: "2026-11-02T12:00:00", activity })
-  assert.deepEqual(calls, [{ from: "2026-11-01T12:00:00Z", to: "2026-11-02T12:00:00Z" }])
+  assert.deepEqual(await load({}), { status: "ready", from: "2026-11-01T12:00:00", to: "2026-11-02T12:00:01", activity })
+  assert.deepEqual(calls, [{ from: "2026-11-01T12:00:00Z", to: "2026-11-02T12:00:01Z" }])
 })
 
 for (const [name, from, to, expected] of [
@@ -125,3 +125,15 @@ test("invalid filter values are escaped in rendered markup", () => {
   assert.doesNotMatch(markup, /<script>/)
   assert.match(markup, /&lt;script&gt;/)
 })
+
+for (const instant of ["2026-11-02T12:00:00.000Z", "2026-11-02T12:00:00.999Z"]) {
+  test(`default exclusive end includes a newly recorded event at ${instant}`, async () => {
+    const now = new Date(instant)
+    const load = createSafetyActivityView({ ...dependencies(async period => {
+      assert.ok(Date.parse(period.to) > now.getTime())
+      assert.ok(Date.parse(period.to) - now.getTime() <= 1000)
+      return activity
+    }), now: () => now })
+    assert.equal((await load({})).status, "ready")
+  })
+}

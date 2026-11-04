@@ -23,7 +23,7 @@ export function createSafetyActivityView(dependencies = {
     const defaults = params.from === undefined && params.to === undefined
     const from = defaults ? new Date(current.getTime() - 86400000).toISOString().slice(0, 19) :
       typeof params.from === "string" ? params.from : ""
-    const to = defaults ? current.toISOString().slice(0, 19) : typeof params.to === "string" ? params.to : ""
+    const to = defaults ? new Date(current.getTime() + 1000).toISOString().slice(0, 19) : typeof params.to === "string" ? params.to : ""
     if (!localTimestamp.test(from) || !localTimestamp.test(to)) {
       return { status: "error", from, to, message: "Choose a start and end time in UTC." }
     }
