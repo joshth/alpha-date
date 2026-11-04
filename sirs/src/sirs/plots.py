@@ -98,7 +98,8 @@ def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
         labs = label_fn(c, weeks)
         tm = (weeks - c["onset"]).days.values / 7.0
         I = np.interp(tm, c["sim"]["t"], c["sim"]["I"], left=1e-3) / c["i_peak"]
-        ax.plot(weeks, I, color="0.75", lw=1, zorder=1)
+        staged = np.isin(labs, list(colors))
+        ax.plot(weeks[staged], I[staged], color="0.75", lw=1, zorder=1)
         for s, col in colors.items():
             m = labs == s
             ax.scatter(weeks[m], I[m], s=14, color=col, label=s.replace("_", " ").capitalize(),
