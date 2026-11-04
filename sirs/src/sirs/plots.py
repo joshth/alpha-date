@@ -99,12 +99,14 @@ def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
         ax.plot(weeks, I, color="0.75", lw=1, zorder=1)
         for s, col in colors.items():
             m = labs == s
-            ax.scatter(weeks[m], I[m], s=14, color=col, label=s, edgecolors="white", linewidths=0.3, zorder=2)
+            ax.scatter(weeks[m], I[m], s=14, color=col, label=s.replace("_", " ").capitalize(),
+                       edgecolors="white", linewidths=0.3, zorder=2)
         ax.set_title(f"{term} ({c['generation']})", fontsize=8)
         ax.set_ylabel("I / I_peak", fontsize=7)
         ax.tick_params(labelsize=6)
-    axes[0][0].legend(fontsize=6, markerscale=3)
-    fig.tight_layout()
+    fig.legend(*axes[0][0].get_legend_handles_labels(), loc="upper center", ncols=4, frameon=False,
+               fontsize=8, markerscale=1.5)
+    fig.tight_layout(rect=(0, 0, 1, 0.88))
     if path is not None:
         fig.savefig(path, dpi=110)
     return fig
