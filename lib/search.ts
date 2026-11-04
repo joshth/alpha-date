@@ -22,6 +22,7 @@ export function createSearchTerm(dependencies: SearchDependencies) {
     if (!query) return { kind: "error", message: `Please enter a term (up to ${MAX_INPUT_LENGTH} characters).` }
 
     const verdict = await dependencies.checkInputSafety(prepareSafetyInput(raw), "search")
+    if (verdict.action === "gentle_support") return { kind: "gentle_support", verdict, message: safetyResponseMessage(verdict, "search") }
     if (verdict.action === "safeguarding") return { kind: "safeguarding", verdict }
     if (verdict.action === "refuse") {
       return { kind: "refused", verdict, message: safetyResponseMessage(verdict, "search") }

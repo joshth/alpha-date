@@ -1,8 +1,9 @@
 import { assessSafety, type CrisisKind, type SafetyCategory } from "@/lib/safety/classify"
 import { moderate, type ModerationResult } from "@/lib/_stubs/moderation"
 import { decideSafetyVerdict } from "@/lib/safety/policy"
+import { assessContextualSafety } from "@/lib/safety/context"
 
-export type SafetyAction = "safe" | "refuse" | "safeguarding"
+export type SafetyAction = "safe" | "gentle_support" | "refuse" | "safeguarding"
 
 export interface SafetyVerdict {
   action: SafetyAction
@@ -17,7 +18,7 @@ export interface SafetyVerdict {
 export type SafetySurface = "search" | "suggestion"
 
 export function createInputSafetyGate(moderator: (text: string) => Promise<ModerationResult>) {
-  return async (text: string, _surface: SafetySurface = "search"): Promise<SafetyVerdict> => {
+  return async (text: string, surface: SafetySurface = "search"): Promise<SafetyVerdict> => {
     const assessment = assessSafety(text)
     if (assessment.crisis) {
       return {
@@ -27,6 +28,11 @@ export function createInputSafetyGate(moderator: (text: string) => Promise<Moder
         decidedBy: "rules",
         reason: `crisis:${assessment.crisis}`,
       }
+    }
+
+    const contextual = assessContextualSafety(text)
+    if (contextual && contextual.action !== "gentle_support") {
+      return { ...contextual, categories: [...new Set([...assessment.categories, ...contextual.categories])] }
     }
 
     let result: ModerationResult
@@ -41,7 +47,14 @@ export function createInputSafetyGate(moderator: (text: string) => Promise<Moder
         reason: "moderation_unavailable",
       }
     }
-    return decideSafetyVerdict(assessment, result, text)
+    const verdict = decideSafetyVerdict(assessment, result, text)
+    // Provider flags and outages take priority over a gentle response.
+    if (verdict.action !== "safe") return verdict
+    if (contextual) return { ...contextual, categories: verdict.categories }
+    if (surface === "suggestion" && verdict.categories.length > 0) {
+      return { ...verdict, action: "refuse", decidedBy: "rules", reason: "sensitive_suggestion" }
+    }
+    return verdict
   }
 }
 

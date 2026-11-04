@@ -129,6 +129,9 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
       </form>
 
       <div aria-live="polite" className="space-y-4">
+        {outcome?.kind === "gentle_support" && (
+          <SafetyResponse verdict={outcome.verdict} message={outcome.message} />
+        )}
         {outcome?.kind === "safeguarding" && (
           <SafetyResponse verdict={outcome.verdict} message={safetyResponseMessage(outcome.verdict, "search")} />
         )}
@@ -143,7 +146,7 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
             {outcome.message}
           </p>
         )}
-        {sensitive && outcome.kind !== "safeguarding" && outcome.kind !== "refused" && (
+        {sensitive && outcome.kind !== "safeguarding" && outcome.kind !== "refused" && outcome.kind !== "gentle_support" && (
           <HelpResources categories={outcome.verdict.categories} />
         )}
         {outcome && "verdict" in outcome && (

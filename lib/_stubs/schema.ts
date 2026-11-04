@@ -100,6 +100,18 @@ export const termFeedback = pgTable(
   ],
 )
 
+// Synthetic reference fixtures, separate from public terms and anonymous events.
+// Never insert user searches into this table. Actions are expected demo labels.
+export const safetyExamples = pgTable("safety_examples", {
+  id: text("id").primaryKey(),
+  phrase: text("phrase").notNull(),
+  expectedAction: text("expected_action").notNull(),
+  categories: jsonb("categories").$type<string[]>().notNull().default([]),
+  crisis: text("crisis"),
+  rationale: text("rationale").notNull(),
+  source: text("source").notNull().default("synthetic-context-v1"),
+})
+
 export const safetyEvents = pgTable(
   "safety_events",
   {

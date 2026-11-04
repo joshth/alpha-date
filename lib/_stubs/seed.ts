@@ -3,6 +3,7 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core"
 import { slangDatabase } from "@/lib/lexicon-data"
 import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
 import * as schema from "./schema"
+import { SAFETY_EXAMPLES } from "@/lib/safety/examples"
 import {
   HISTORY_DAYS,
   SYNTHETIC_PENDING_TERMS,
@@ -41,6 +42,11 @@ function poisson(mean: number, rand: () => number): number {
 }
 
 export async function seedIfEmpty(db: Db, now = new Date()): Promise<void> {
+  // Additive and idempotent for existing demo databases; no reset is needed.
+  await db.insert(schema.safetyExamples).values(SAFETY_EXAMPLES.map((example) => ({
+    id: example.id, phrase: example.phrase, expectedAction: example.action,
+    categories: example.categories, crisis: example.crisis, rationale: example.rationale,
+  }))).onConflictDoNothing()
   const [{ value }] = await db.select({ value: count() }).from(schema.terms)
   if (value > 0) return
 

@@ -15,6 +15,17 @@ import { recordSuggestion } from "@/lib/feedback"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
 import { getAiCallsAvoided, getTermByKey, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
 import type { ActionResult, SearchOutcome } from "@/lib/types"
+import { assessSafety } from "@/lib/safety/classify"
+import { sanitizeUserText } from "@/lib/discovery/prompt"
+
+// Compare without lexicon lookup, discovery, analytics or suggestion writes.
+export async function compareSafetyInput(raw: string) {
+  const user = await getSessionUser()
+  if (!user || !isReviewer(user)) throw new Error("Reviewer access required.")
+  const text = sanitizeUserText(raw, 120)
+  if (!text) throw new Error("Enter a phrase to compare.")
+  return { baseline: assessSafety(text), gate: await checkInputSafety(text, "search") }
+}
 
 // Pipeline: input → safety gate → lexicon lookup → AI discovery → stored for
 // review. Mirrors the order production uses; the gate always runs first.

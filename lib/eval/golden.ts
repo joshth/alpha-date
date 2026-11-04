@@ -56,7 +56,7 @@ export const goldenCaseSchema = z.discriminatedUnion("kind", [
     ...base,
     kind: z.literal("safety"),
     category: z.enum(EVAL_CATEGORIES),
-    safety: expectedSafety,
+    safety: expectedSafety.extend({ action: z.enum(["safe", "gentle_support", "refuse", "safeguarding"]) }),
   }),
   z.object({
     ...base,
