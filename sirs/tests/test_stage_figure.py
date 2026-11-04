@@ -36,3 +36,12 @@ def test_one_shared_legend_with_readable_stage_names_sits_outside_the_panels():
     assert all(ax.get_legend() is None for ax in fig.axes)
     assert len(fig.legends) == 1
     assert [t.get_text() for t in fig.legends[0].get_texts()] == ["Emerging", "Peaking", "Declining", "Parent territory"]
+
+
+def test_axes_use_compact_date_ticks_a_light_grid_and_a_plain_y_label():
+    from matplotlib.dates import ConciseDateFormatter
+    fig = _figure()
+    for ax in fig.axes[:2]:
+        assert isinstance(ax.xaxis.get_major_formatter(), ConciseDateFormatter)
+        assert any(g.get_visible() for g in ax.yaxis.get_gridlines())
+        assert ax.get_ylabel() == "Share of peak interest"
