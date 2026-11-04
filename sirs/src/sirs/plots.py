@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -89,21 +90,52 @@ def dtw_scatter(ev: pd.DataFrame, track: str, variant: str, path, title: str = "
 def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
     """Noise-free fitted curves coloured by stage."""
     colors = {"emerging": "C2", "peaking": "C1", "declining": "C3", "parent_territory": "C0"}
-    fig, axes = plt.subplots(1, len(terms), figsize=(3.6 * len(terms), 2.8), squeeze=False)
+    fig, axes = plt.subplots(1, len(terms), figsize=(3.6 * len(terms), 2.8), squeeze=False,
+                             layout="constrained")
     for ax, term in zip(axes[0], terms):
         c = curves[term]
         weeks = pd.date_range(c["start"], c["end"], freq="7D")
         labs = label_fn(c, weeks)
         tm = (weeks - c["onset"]).days.values / 7.0
         I = np.interp(tm, c["sim"]["t"], c["sim"]["I"], left=1e-3) / c["i_peak"]
+        staged = np.isin(labs, list(colors))
+        ax.plot(weeks[staged], I[staged], color="0.75", lw=1, zorder=1)
         for s, col in colors.items():
             m = labs == s
-            ax.scatter(weeks[m], I[m], s=3, color=col, label=s)
+            ax.scatter(weeks[m], I[m], s=14, color=col, label=s.replace("_", " ").capitalize(),
+                       edgecolors="white", linewidths=0.3, zorder=2)
         ax.set_title(f"{term} ({c['generation']})", fontsize=8)
-        ax.set_ylabel("I / I_peak", fontsize=7)
+        ax.set_ylabel("Share of peak interest", fontsize=7)
         ax.tick_params(labelsize=6)
-    axes[0][0].legend(fontsize=6, markerscale=3)
-    fig.tight_layout()
+        loc = mdates.AutoDateLocator()
+        ax.xaxis.set_major_locator(loc)
+        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+        ax.grid(color="0.92", lw=0.6, zorder=0)
+    fig.legend(*axes[0][0].get_legend_handles_labels(), loc="outside upper center", ncols=4, frameon=False,
+               fontsize=8, markerscale=1.5)
+    base_w, base_h = fig.get_size_inches()
+
+    def _rescale(_event=None):
+        w, h = fig.get_size_inches()
+        # ponytail: clamp 0.85-2.5x so tiny/huge windows stay legible; widen if needed
+        k = min(max(min(w / base_w, h / base_h), 0.85), 2.5)
+        for ax in fig.axes:
+            ax.title.set_fontsize(8 * k)
+            ax.yaxis.label.set_fontsize(7 * k)
+            ax.tick_params(labelsize=6 * k)
+            for c in ax.collections:
+                if hasattr(c, "set_sizes"):
+                    c.set_sizes([14 * k * k])
+            for ln in ax.lines:
+                ln.set_linewidth(1 * k)
+        leg = fig.legends[0]
+        for t in leg.get_texts():
+            t.set_fontsize(8 * k)
+        for hd in leg.legend_handles:
+            if hasattr(hd, "set_sizes"):
+                hd.set_sizes([14 * 1.5**2 * k * k])
+
+    fig.canvas.mpl_connect("resize_event", _rescale)
     if path is not None:
         fig.savefig(path, dpi=110)
     return fig
