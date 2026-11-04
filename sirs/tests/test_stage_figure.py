@@ -50,3 +50,26 @@ def test_axes_use_compact_date_ticks_a_light_grid_and_a_plain_y_label():
 def test_figure_uses_constrained_layout_so_it_relays_out_on_resize():
     from matplotlib.layout_engine import ConstrainedLayoutEngine
     assert isinstance(_figure().get_layout_engine(), ConstrainedLayoutEngine)
+
+
+def _resize(fig, scale):
+    from matplotlib.backend_bases import ResizeEvent
+    w, h = fig.get_size_inches()
+    fig.set_size_inches(w * scale, h * scale)
+    fig.canvas.callbacks.process("resize_event", ResizeEvent("resize_event", fig.canvas))
+
+
+def _sizes(fig):
+    ax = fig.axes[0]
+    dot = next(c for c in ax.collections if isinstance(c, PathCollection))
+    return (ax.title.get_fontsize(), ax.yaxis.label.get_fontsize(), ax.xaxis.get_ticklabels()[0].get_fontsize(),
+            dot.get_sizes()[0], fig.legends[0].get_texts()[0].get_fontsize())
+
+
+def test_text_dots_and_legend_grow_when_the_window_grows_and_stop_shrinking_at_a_floor():
+    fig = _figure()
+    before = _sizes(fig)
+    _resize(fig, 2)
+    assert all(after > b for after, b in zip(_sizes(fig), before))
+    _resize(fig, 0.1)
+    assert all(small >= 0.7 * b for small, b in zip(_sizes(fig), before))
