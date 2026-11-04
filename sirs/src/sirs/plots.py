@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -102,8 +103,12 @@ def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
             ax.scatter(weeks[m], I[m], s=14, color=col, label=s.replace("_", " ").capitalize(),
                        edgecolors="white", linewidths=0.3, zorder=2)
         ax.set_title(f"{term} ({c['generation']})", fontsize=8)
-        ax.set_ylabel("I / I_peak", fontsize=7)
+        ax.set_ylabel("Share of peak interest", fontsize=7)
         ax.tick_params(labelsize=6)
+        loc = mdates.AutoDateLocator()
+        ax.xaxis.set_major_locator(loc)
+        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+        ax.grid(color="0.92", lw=0.6, zorder=0)
     fig.legend(*axes[0][0].get_legend_handles_labels(), loc="upper center", ncols=4, frameon=False,
                fontsize=8, markerscale=1.5)
     fig.tight_layout(rect=(0, 0, 1, 0.88))
