@@ -73,3 +73,14 @@ def test_text_dots_and_legend_grow_when_the_window_grows_and_stop_shrinking_at_a
     assert all(after > b for after, b in zip(_sizes(fig), before))
     _resize(fig, 0.1)
     assert all(small >= 0.7 * b for small, b in zip(_sizes(fig), before))
+
+
+def test_curve_line_only_spans_the_staged_weeks_so_pre_emergence_does_not_stretch_the_axis():
+    def half_pre(c, weeks):
+        labs = _labels(c, weeks)
+        labs[: len(weeks) // 2] = "pre_emergence"
+        return labs
+    fig = stage_example_figure({"a": _curve("gen_z")}, ["a"], half_pre)
+    ax = fig.axes[0]
+    staged = sum(len(c.get_offsets()) for c in ax.collections if isinstance(c, PathCollection))
+    assert len(ax.lines[0].get_xdata()) == staged
