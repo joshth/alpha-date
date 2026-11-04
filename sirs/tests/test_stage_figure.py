@@ -29,3 +29,10 @@ def test_stage_dots_are_large_and_drawn_over_the_curve_line():
         dots = [c for c in ax.collections if isinstance(c, PathCollection)]
         assert dots and all(min(c.get_sizes()) >= 12 for c in dots)
         assert len(ax.lines) == 1
+
+
+def test_one_shared_legend_with_readable_stage_names_sits_outside_the_panels():
+    fig = _figure()
+    assert all(ax.get_legend() is None for ax in fig.axes)
+    assert len(fig.legends) == 1
+    assert [t.get_text() for t in fig.legends[0].get_texts()] == ["Emerging", "Peaking", "Declining", "Parent territory"]
