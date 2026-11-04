@@ -112,6 +112,29 @@ def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
         ax.grid(color="0.92", lw=0.6, zorder=0)
     fig.legend(*axes[0][0].get_legend_handles_labels(), loc="outside upper center", ncols=4, frameon=False,
                fontsize=8, markerscale=1.5)
+    base_w, base_h = fig.get_size_inches()
+
+    def _rescale(_event=None):
+        w, h = fig.get_size_inches()
+        # ponytail: clamp 0.85-2.5x so tiny/huge windows stay legible; widen if needed
+        k = min(max(min(w / base_w, h / base_h), 0.85), 2.5)
+        for ax in fig.axes:
+            ax.title.set_fontsize(8 * k)
+            ax.yaxis.label.set_fontsize(7 * k)
+            ax.tick_params(labelsize=6 * k)
+            for c in ax.collections:
+                if hasattr(c, "set_sizes"):
+                    c.set_sizes([14 * k * k])
+            for ln in ax.lines:
+                ln.set_linewidth(1 * k)
+        leg = fig.legends[0]
+        for t in leg.get_texts():
+            t.set_fontsize(8 * k)
+        for hd in leg.legend_handles:
+            if hasattr(hd, "set_sizes"):
+                hd.set_sizes([14 * 1.5**2 * k * k])
+
+    fig.canvas.mpl_connect("resize_event", _rescale)
     if path is not None:
         fig.savefig(path, dpi=110)
     return fig
