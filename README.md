@@ -44,9 +44,23 @@ Copy `.env.example` to `.env.local` to change any of these (see comments in that
 | `pnpm test` | Unit tests (`node:test` via tsx; in-memory database, instant mocks) |
 | `pnpm eval:validate` | Validate `eval/golden-set.json` and print counts |
 | `pnpm eval` | Evaluation harness (**yours to build** — see `scripts/eval.ts`) |
+| `pnpm aura:plot bussin "goofy ahh" [--out chart.png]` | Chart each term's SIRS lifecycle curve coloured by Aura stage (opens a window, or saves with `--out`). Runs the SIRS plotter vendored in `sirs/`; needs its Python venv (below) |
+| `pnpm aura:plot --list` | Print every term `aura:plot` accepts, grouped by generation |
 | `pnpm db:generate` | Generate a SQL migration after editing `lib/_stubs/schema.ts` |
 | `pnpm db:migrate` | Apply migrations to `DATABASE_URL` (your own hosted Postgres only) |
 | `pnpm db:reset` | Delete the local PGlite database |
+
+`aura:plot` needs a Python 3.12 venv in `sirs/`, made once:
+
+```sh
+# macOS / Linux
+uv venv --python 3.12 sirs/.venv && uv pip install --python sirs/.venv/bin/python -r sirs/requirements.txt
+# Windows (PowerShell)
+py -3.12 -m venv sirs\.venv; sirs\.venv\Scripts\pip install -r sirs\requirements.txt
+```
+
+On macOS, if `aura:plot` fails with "The compiled dtaidistance C library is not available", rebuild that one package
+from source (needs `brew install libomp`): `uv pip install --python sirs/.venv/bin/python --reinstall --no-binary dtaidistance dtaidistance==2.5.1`.
 
 ## What already works (baseline)
 
