@@ -45,6 +45,32 @@ const sydneyClock = new Intl.DateTimeFormat("en-AU", {
   hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23", timeZoneName: "longOffset",
 })
 
+function sydneyTimestamp(now: Date): string {
+  const parts = Object.fromEntries(sydneyClock.formatToParts(now).map(part => [part.type, part.value]))
+  const milliseconds = String(now.getUTCMilliseconds()).padStart(3, "0")
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}.${milliseconds}${parts.timeZoneName.slice(3)}`
+}
+
+export const safetyIncidentSchema = z.object({
+  referenceId: referenceSchema,
+  query: inputSchema.shape.query,
+  surface: inputSchema.shape.surface,
+  crisis: inputSchema.shape.verdict.shape.crisis,
+  categories: safetyEventSchema.shape.categories,
+  recordedAtUtc: z.string().datetime(),
+  recordedAtSydney: z.string().datetime({ offset: true }),
+  localTimezone: z.literal("Australia/Sydney"),
+  triageLevel: inputSchema.shape.triageLevel,
+  status: z.enum(["open", "closed"]),
+  alertStatus: z.enum(["pending", "not_required"]),
+}).strict().refine(record => record.triageLevel === "moderation_only"
+  ? record.crisis === null && record.status === "closed" && record.alertStatus === "not_required"
+  : record.status === "open" && record.alertStatus === "pending", "Invalid incident workflow state.")
+  .refine(record => {
+    const utc = new Date(record.recordedAtUtc)
+    return Number.isFinite(utc.getTime()) && record.recordedAtSydney === sydneyTimestamp(utc)
+  }, "Invalid incident timestamps.")
+
 export function createSafetyIncident(input: IncidentInput, now = new Date(), referenceId = `INC-${randomUUID()}`): SafetyIncident {
   const parsed = inputSchema.safeParse(input)
   if (!parsed.success || !referenceSchema.safeParse(referenceId).success || !Number.isFinite(now.getTime())) {
@@ -56,12 +82,10 @@ export function createSafetyIncident(input: IncidentInput, now = new Date(), ref
     throw new Error("An explicit crisis cannot be closed as moderation-only.")
   }
   // Triage is supplied by the caller until the client's institutional rules are agreed.
-  const parts = Object.fromEntries(sydneyClock.formatToParts(now).map(part => [part.type, part.value]))
-  const milliseconds = String(now.getUTCMilliseconds()).padStart(3, "0")
   return {
     referenceId, query, surface, crisis: verdict.crisis, categories: [...new Set(verdict.categories)],
     recordedAtUtc: now.toISOString(),
-    recordedAtSydney: `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}.${milliseconds}${parts.timeZoneName.slice(3)}`,
+    recordedAtSydney: sydneyTimestamp(now),
     localTimezone: "Australia/Sydney", triageLevel,
     status: closed ? "closed" : "open", alertStatus: closed ? "not_required" : "pending",
   }

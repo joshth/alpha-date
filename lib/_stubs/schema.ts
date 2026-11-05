@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm"
+import type { SafetyIncident } from "@/lib/safety/incidents"
 import type { SafetyEvent } from "@/lib/safety/events"
 import { bigint, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
 
@@ -120,4 +121,22 @@ export const safetyEvents = pgTable(
     recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
   },
   (t) => [index("safety_events_recorded_at_idx").on(t.recordedAt)],
+)
+
+export const safetyIncidents = pgTable(
+  "safety_incidents",
+  {
+    referenceId: text("reference_id").primaryKey(),
+    query: text("query_text").notNull(),
+    surface: text("surface").$type<SafetyIncident["surface"]>().notNull(),
+    crisis: text("crisis").$type<SafetyIncident["crisis"]>(),
+    categories: jsonb("categories").$type<SafetyIncident["categories"]>().notNull(),
+    recordedAtUtc: timestamp("recorded_at_utc", { withTimezone: true }).notNull(),
+    recordedAtSydney: text("recorded_at_sydney").notNull(),
+    localTimezone: text("local_timezone").$type<SafetyIncident["localTimezone"]>().notNull(),
+    triageLevel: text("triage_level").$type<SafetyIncident["triageLevel"]>().notNull(),
+    status: text("status").$type<SafetyIncident["status"]>().notNull(),
+    alertStatus: text("alert_status").$type<SafetyIncident["alertStatus"]>().notNull(),
+  },
+  table => [index("safety_incidents_recorded_at_idx").on(table.recordedAtUtc)],
 )
