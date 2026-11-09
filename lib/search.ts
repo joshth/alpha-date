@@ -3,13 +3,13 @@ import { discoverTerm } from "@/lib/discovery/discover"
 import { MAX_INPUT_LENGTH, sanitizeUserText } from "@/lib/discovery/prompt"
 import { normaliseSuggestion } from "@/lib/normalise"
 import { safetyResponseMessage } from "@/lib/safety/responses"
-import type { checkInputSafety } from "@/lib/safety/gate"
+import type { RequestSafetyCheck } from "@/lib/safety/gate"
 import type { generateDiscoveryObject } from "@/lib/_stubs/llm"
 import type { getTermByKey, logTermEvent, saveDiscoveredTerm } from "@/lib/terms-store"
 import type { SearchOutcome } from "@/lib/types"
 
 interface SearchDependencies {
-  checkInputSafety: typeof checkInputSafety
+  checkInputSafety: RequestSafetyCheck
   getTermByKey: typeof getTermByKey
   logTermEvent: typeof logTermEvent
   generateDiscoveryObject: typeof generateDiscoveryObject
@@ -21,7 +21,7 @@ export function createSearchTerm(dependencies: SearchDependencies) {
     const query = sanitizeUserText(raw, MAX_INPUT_LENGTH)
     if (!query) return { kind: "error", message: `Please enter a term (up to ${MAX_INPUT_LENGTH} characters).` }
 
-    const verdict = await dependencies.checkInputSafety(prepareSafetyInput(raw), "search")
+    const verdict = await dependencies.checkInputSafety(prepareSafetyInput(raw), "search", raw)
     if (verdict.action === "gentle_support") return { kind: "gentle_support", verdict, message: safetyResponseMessage(verdict, "search") }
     if (verdict.action === "safeguarding") return { kind: "safeguarding", verdict }
     if (verdict.action === "refuse") {

@@ -13,12 +13,13 @@ export function SafetyResponse({ verdict, message }: { verdict: SafetyVerdict; m
     )
   }
   if (verdict.action === "safeguarding" && verdict.crisis) {
-    return <CrisisCard crisis={verdict.crisis} categories={verdict.categories} />
+    return <CrisisCard crisis={verdict.crisis} categories={verdict.categories} reference={verdict.incidentReference} />
   }
   const categories = verdict.categories.length ? verdict.categories : ["bullying_harassment" as const]
   return (
     <div className="space-y-4">
       <p role="alert" className="text-foreground">{message}</p>
+      {verdict.incidentReference && <p className="break-all text-sm text-muted-foreground">Incident reference: <code>{verdict.incidentReference}</code></p>}
       {(verdict.decidedBy !== "fail_closed" || verdict.categories.length > 0) && (
         <HelpResources categories={categories} />
       )}

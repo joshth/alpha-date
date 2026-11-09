@@ -6,8 +6,7 @@ import { generateDiscoveryObject } from "@/lib/_stubs/llm"
 import { moderate } from "@/lib/_stubs/moderation"
 import { createSafeDiscovery } from "@/lib/discovery/safe-discovery"
 import { createSafeTermLookup } from "@/lib/safety/safe-term-lookup"
-import { createTrackedSafetyGate } from "@/lib/safety/events"
-import { recordSafetyEvent } from "@/lib/safety/event-store"
+import { checkRequestSafety } from "@/lib/safety/request-safety"
 import { readSafetyActivity, type SafetyActivity } from "@/lib/safety/activity"
 import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
@@ -30,10 +29,9 @@ export async function compareSafetyInput(raw: string) {
 // Pipeline: input → safety gate → lexicon lookup → AI discovery → stored for
 // review. Mirrors the order production uses; the gate always runs first.
 
-const trackedInputSafety = createTrackedSafetyGate(checkInputSafety, recordSafetyEvent)
 const generateSafeDiscovery = createSafeDiscovery(generateDiscoveryObject, moderate)
 const getSafeTermByKey = createSafeTermLookup(getTermByKey, moderate)
-const runSearch = createSearchTerm({ checkInputSafety: trackedInputSafety, getTermByKey: getSafeTermByKey, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
+const runSearch = createSearchTerm({ checkInputSafety: checkRequestSafety, getTermByKey: getSafeTermByKey, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
 
 export async function searchTerm(raw: string): Promise<SearchOutcome> {
   return runSearch(raw)
@@ -43,7 +41,7 @@ export async function fetchAiCallsAvoided(): Promise<number> {
   return getAiCallsAvoided()
 }
 
-const runSuggestion = createSuggestTerm({ checkInputSafety: trackedInputSafety, recordSuggestion })
+const runSuggestion = createSuggestTerm({ checkInputSafety: checkRequestSafety, recordSuggestion })
 
 export async function suggestTerm(rawTerm: string, rawContext?: string): Promise<ActionResult<SafetyVerdict>> {
   return runSuggestion(rawTerm, rawContext)

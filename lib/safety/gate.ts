@@ -13,9 +13,11 @@ export interface SafetyVerdict {
   decidedBy: "rules" | "moderation" | "fail_closed"
   /** Short machine-readable reason, for logs and the eval report. Never the input text. */
   reason: string
+  incidentReference?: string
 }
 
 export type SafetySurface = "search" | "suggestion"
+export type RequestSafetyCheck = (text: string, surface: SafetySurface, originalText: string) => Promise<SafetyVerdict>
 
 export function createInputSafetyGate(moderator: (text: string) => Promise<ModerationResult>) {
   return async (text: string, surface: SafetySurface = "search"): Promise<SafetyVerdict> => {

@@ -97,8 +97,12 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
     event.preventDefault()
     setBusy(true)
     try {
-      setOutcome(await searchTerm(query))
-      setAvoided(await fetchAiCallsAvoided())
+      const result = await searchTerm(query)
+      setOutcome(result)
+      if (result.kind === "found" || result.kind === "discovered" || result.kind === "not_found") {
+        const count = await fetchAiCallsAvoided().catch(() => null)
+        if (count !== null) setAvoided(count)
+      }
     } catch {
       setOutcome({ kind: "error", message: "Could not reach the service. Please try again." })
     } finally {

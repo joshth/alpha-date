@@ -37,7 +37,7 @@ export interface SafetyIncident {
   localTimezone: "Australia/Sydney"
   triageLevel: TriageLevel
   status: "open" | "closed"
-  alertStatus: "pending" | "not_required"
+  alertStatus: "pending" | "not_required" | "simulated" | "failed"
 }
 
 const sydneyClock = new Intl.DateTimeFormat("en-AU", {
@@ -62,10 +62,10 @@ export const safetyIncidentSchema = z.object({
   localTimezone: z.literal("Australia/Sydney"),
   triageLevel: inputSchema.shape.triageLevel,
   status: z.enum(["open", "closed"]),
-  alertStatus: z.enum(["pending", "not_required"]),
+  alertStatus: z.enum(["pending", "not_required", "simulated", "failed"]),
 }).strict().refine(record => record.triageLevel === "moderation_only"
   ? record.crisis === null && record.status === "closed" && record.alertStatus === "not_required"
-  : record.status === "open" && record.alertStatus === "pending", "Invalid incident workflow state.")
+  : record.status === "open" && record.alertStatus !== "not_required", "Invalid incident workflow state.")
   .refine(record => {
     const utc = new Date(record.recordedAtUtc)
     return Number.isFinite(utc.getTime()) && record.recordedAtSydney === sydneyTimestamp(utc)

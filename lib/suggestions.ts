@@ -1,12 +1,12 @@
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { sanitizeUserText } from "@/lib/discovery/prompt"
 import { safetyResponseMessage } from "@/lib/safety/responses"
-import type { checkInputSafety, SafetyVerdict } from "@/lib/safety/gate"
+import type { RequestSafetyCheck, SafetyVerdict } from "@/lib/safety/gate"
 import type { recordSuggestion } from "@/lib/feedback"
 import type { ActionResult } from "@/lib/types"
 
 interface SuggestionDependencies {
-  checkInputSafety: typeof checkInputSafety
+  checkInputSafety: RequestSafetyCheck
   recordSuggestion: typeof recordSuggestion
 }
 
@@ -22,7 +22,10 @@ export function createSuggestTerm(dependencies: SuggestionDependencies) {
       return { success: false, message: "Please keep context to 500 characters or fewer." }
     }
 
-    const verdict = await dependencies.checkInputSafety(`${prepareSafetyInput(rawTerm)}\n${prepareSafetyInput(rawContext ?? "")}`, "suggestion")
+    const original = rawContext === undefined ? rawTerm : `${rawTerm}\n${rawContext}`
+    const verdict = await dependencies.checkInputSafety(
+      `${prepareSafetyInput(rawTerm)}\n${prepareSafetyInput(rawContext ?? "")}`, "suggestion", original,
+    )
     if (verdict.action !== "safe") {
       return { success: false, message: safetyResponseMessage(verdict, "suggestion"), data: verdict }
     }
