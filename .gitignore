@@ -29,5 +29,10 @@ next-env.d.ts
 __pycache__/
 .pytest_cache/
 
+# CI outputs (.gitlab-ci.yml)
+/.pnpm-store/
+/junit.xml
+/eval-report.txt
+
 # macOS
 .DS_Store
