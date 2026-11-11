@@ -159,3 +159,14 @@ test("the Introduction links every feature page and the glossary, and keeps the 
   assert.match(text, /\*\*Content warning:\*\*/)
   assert.match(text, /^## Privacy and safety rules$/m)
 })
+
+test("the docs site renders LaTeX maths with locally bundled KaTeX, pinned to exact versions", () => {
+  const dependencies = JSON.parse(read("website/package.json") || "{}").dependencies ?? {}
+  for (const name of ["remark-math", "rehype-katex", "katex"]) assert.match(dependencies[name] ?? "", /^\d+\.\d+\.\d+$/, name)
+  assert.match(config, /remarkPlugins: \[remarkMath\]/)
+  assert.match(config, /rehypePlugins: \[rehypeKatex\]/)
+  // The docs are private and may be read offline, so no stylesheet from a CDN.
+  const css = read("website/src/css/custom.css")
+  assert.match(css, /@import 'katex\/dist\/katex\.min\.css';/)
+  assert.doesNotMatch(config + css, /cdn\.jsdelivr|cdnjs|unpkg/)
+})
