@@ -51,3 +51,12 @@ test("the Swagger version badges stay readable: no pale code-block fill behind w
   assert.match(css, /\.swagger-ui \.info \.title small\s*\{[^}]*background:\s*#434b4f/)
   assert.match(css, /small\.version-stamp\s*\{[^}]*background:\s*#1d632e/)
 })
+
+test("the docs site has local search, pinned to an exact version", () => {
+  const dependencies = JSON.parse(read("website/package.json") || "{}").dependencies ?? {}
+  assert.match(dependencies["@easyops-cn/docusaurus-search-local"] ?? "", /^\d+\.\d+\.\d+$/)
+  assert.match(config, /require\.resolve\('@easyops-cn\/docusaurus-search-local'\)/)
+  // The docs are served from the site root, and there is no blog.
+  assert.match(config, /docsRouteBasePath: '\/'/)
+  assert.match(config, /indexBlog: false/)
+})
