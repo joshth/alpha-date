@@ -55,6 +55,7 @@ export const goldenCaseSchema = z.discriminatedUnion("kind", [
   z.object({
     ...base,
     kind: z.literal("safety"),
+    surface: z.enum(["search", "suggestion"]).optional(),
     category: z.enum(EVAL_CATEGORIES),
     safety: expectedSafety.extend({ action: z.enum(["safe", "gentle_support", "refuse", "safeguarding"]) }),
   }),
@@ -87,15 +88,24 @@ const reviewSchema = z.object({
   disagreements: z.array(noagreement),
 })
 
+const outputSafetyCaseSchema = z.object({
+  ...base,
+  definition: z.string().trim().min(1),
+  examples: z.array(z.string()).optional(),
+  expected: z.enum(["shown", "withheld"]),
+}).strict()
+
 export const goldenSetSchema = z.object({
   version: z.string(),
   description: z.string().optional(),
   review: reviewSchema.optional(),
   cases: z.array(goldenCaseSchema),
+  outputSafetyCases: z.array(outputSafetyCaseSchema).optional(),
 })
 
 export type GoldenCase = z.infer<typeof goldenCaseSchema>
 export type GoldenSet = z.infer<typeof goldenSetSchema>
+export type OutputSafetyCase = z.infer<typeof outputSafetyCaseSchema>
 export type GoldenReview = z.infer<typeof reviewSchema>
 
 export const RATING_ORDER: readonly string[] = RATINGS
@@ -138,6 +148,16 @@ export function validateGoldenSet(
     if (caseResult.success) {
       const issues = labelProblems(caseResult.data);
       problems.push(...issues);
+    }
+  }
+
+  const outputCases = (raw as { outputSafetyCases?: unknown })?.outputSafetyCases
+  if (Array.isArray(outputCases)) {
+    for (const entry of outputCases) {
+      const id = (entry as { id?: unknown } | null)?.id
+      if (typeof id !== "string" || !id) continue
+      if (ids.has(id)) problems.push(`${id}: duplicate id`)
+      ids.add(id)
     }
   }
 
@@ -207,7 +227,7 @@ function describeIssue(raw: unknown, issue: z.ZodIssue): string {
   return `${field}: ${issue.message}`;
 }
 export function reviewProblems(set: GoldenSet): string[] {
-  const ids = new Set(set.cases.map((c) => c.id))
+  const ids = new Set([...set.cases, ...(set.outputSafetyCases ?? [])].map((c) => c.id))
   return (set.review?.disagreements ?? [])
     .filter((d) => !ids.has(d.id))
     .map((d) => `disagreement refers to unknown case id "${d.id}"`)

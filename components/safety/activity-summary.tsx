@@ -2,6 +2,7 @@ import type { SafetyActivityView } from "@/lib/safety/activity-view"
 
 const labels = { safe: "Allowed", refuse: "Refused", safeguarding: "Safeguarding", gentle_support: "Gentle support" } as const
 const number = new Intl.NumberFormat("en-AU")
+const usd = new Intl.NumberFormat("en-AU", { style: "currency", currency: "USD", maximumFractionDigits: 6 })
 const percentage = new Intl.NumberFormat("en-AU", { style: "percent", maximumFractionDigits: 1 })
 
 export function SafetyActivitySummary({ view }: { view: SafetyActivityView }) {
@@ -56,9 +57,24 @@ export function SafetyActivitySummary({ view }: { view: SafetyActivityView }) {
                 </tbody>
               </table>
               <p className="text-sm text-muted-foreground">Stopped outcomes include refusals, safeguarding and gentle support. Allowed outcomes mean the gate permitted continuation, not that a search succeeded.</p>
+              {view.discovery !== undefined && (
+                <section aria-labelledby="discovery-usage-heading" className="space-y-3 rounded-lg border p-4">
+                  <h2 id="discovery-usage-heading" className="font-semibold">Discovery usage in this period</h2>
+                  {view.discovery === null ? <p role="status">Could not load discovery usage.</p> : (
+                    <>
+                      <dl className="grid gap-3 sm:grid-cols-2">
+                        <div><dt>Recorded discovery calls avoided</dt><dd className="font-semibold">{number.format(view.discovery.callsAvoided)}</dd></div>
+                        <div><dt>Estimated savings (USD)</dt><dd className="font-semibold">{view.discovery.estimate ? usd.format(view.discovery.estimate.savingsUsd) : "Average cost unavailable"}</dd></div>
+                      </dl>
+                      {view.discovery.estimate && <p className="text-sm text-muted-foreground">Estimate uses {usd.format(view.discovery.estimate.averageCostUsd)} per call. Recorded events can include demo traffic.</p>}
+                      <p className="text-sm text-muted-foreground">A recorded lexicon match skipped discovery. Safety stops are counted separately because their effect on model calls is unknown.</p>
+                    </>
+                  )}
+                </section>
+              )}
             </>
           )}
-          <p className="text-sm text-muted-foreground">These totals can miss events or change as delayed events arrive. They do not measure unique users, model calls avoided or cost savings.</p>
+          <p className="text-sm text-muted-foreground">Safety outcome totals can miss events or change as delayed events arrive. They do not measure unique users, model calls avoided or cost savings.</p>
         </>
       )}
     </section>
