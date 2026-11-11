@@ -94,3 +94,29 @@ test("the Project scope page links to the live Google Doc and says it is a copy"
   assert.match(intro, /\]\(https:\/\/docs\.google\.com\/document\/d\/1LNojWKXzGpgl3YoTBUHLI9rGGd-ex9ao8Ywq3_FkoJs\/edit\?tab=t\.0#heading=h\.ua12c355tyes\)/)
   assert.match(intro, /copy/i)
 })
+
+// Pages converted from the team's shared documentation. Each red commit adds one entry.
+const sharedPages = [
+  {
+    file: "docs/features/safety-gate.md",
+    title: "Input Safety Gate",
+    headings: ["Why it exists", "Interface", "How it decides", "Real examples", "What the user sees", "Checking what the AI writes", "Safety activity reporting", "Measuring the gate", "Configuration", "Files and tests"],
+  },
+]
+
+for (const page of sharedPages) {
+  test(`${page.file} keeps the shared page's title and sections as plain Markdown`, () => {
+    const text = read(page.file)
+    assert.match(text, new RegExp(`^---\\n(?:.*\\n)*?title: ${page.title}\\n`))
+    assert.match(text, new RegExp(`^# ${page.title}\\b`, "m"))
+    for (const heading of page.headings) assert.match(text, new RegExp(`^## ${heading.replace(/[()]/g, "\\$&")}\\b`, "m"), heading)
+    // No raw HTML outside code fences: pages must stay plain CommonMark.
+    const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
+    assert.doesNotMatch(prose, /<\/?(div|span|a|table|svg|br|img|p|pre)[\s>]/)
+  })
+}
+
+test("the sidebar groups the feature pages under Features", () => {
+  const category = JSON.parse(read("docs/features/_category_.json") || "{}")
+  assert.equal(category.label, "Features")
+})
