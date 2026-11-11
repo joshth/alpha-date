@@ -151,7 +151,7 @@ test("the glossary page keeps every group and term from the shared glossary", ()
 })
 
 test("the Introduction links every feature page and the glossary, and keeps the warnings", () => {
-  const text = read("docs/intro.md")
+  const text = read("docs/intro.mdx")
   for (const page of ["features/safety-gate", "features/evaluation-harness", "features/normalisation", "features/aura", "glossary"]) {
     assert.match(text, new RegExp(`\\]\\(\\./${page}\\.md\\)`), page)
   }
