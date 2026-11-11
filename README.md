@@ -8,6 +8,7 @@
 > It contains safety rules and test phrases about self-harm and abuse; treat them with care.
 
 Full scope, schedule and success criteria: [docs/SCOPE.md](docs/SCOPE.md).
+Developer docs (guides, architecture, CI) and the Swagger API reference: `pnpm docs:dev`, then open http://localhost:3001.
 
 ## Quick start
 
@@ -50,6 +51,8 @@ Copy `.env.example` to `.env.local` to change any of these (see comments in that
 | `pnpm db:generate` | Generate a SQL migration after editing `lib/_stubs/schema.ts` |
 | `pnpm db:migrate` | Apply migrations to `DATABASE_URL` (your own hosted Postgres only) |
 | `pnpm db:reset` | Delete the local PGlite database |
+| `pnpm docs:dev` | Docs site from `docs/`, with the Swagger API reference at `/api`, on http://localhost:3001 (Node 20+; install once with `pnpm --dir website install --ignore-workspace`) |
+| `pnpm --dir website build` | Build the docs site; broken links fail it (what CI's `docs` job runs) |
 
 `aura:plot` needs a Python 3.12 venv in `sirs/`, made once:
 
