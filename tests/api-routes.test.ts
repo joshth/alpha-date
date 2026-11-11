@@ -51,3 +51,26 @@ test("POST /api/suggestions returns the safety verdict when the screen rejects i
   assert.equal(result.success, false)
   assert.notEqual(result.data.action, "safe")
 })
+
+async function apiHeaders(env: string) {
+  const previous = process.env.NODE_ENV
+  Object.assign(process.env, { NODE_ENV: env })
+  try {
+    const { default: config } = await import("../next.config.mjs")
+    const rules: { source: string; headers: { key: string; value: string }[] }[] = (await config.headers?.()) ?? []
+    return Object.fromEntries(rules.filter((rule) => rule.source === "/api/:path*").flatMap((rule) => rule.headers.map((h) => [h.key, h.value])))
+  } finally {
+    Object.assign(process.env, { NODE_ENV: previous })
+  }
+}
+
+test("in development the API lets the local docs site call it from Swagger UI", async () => {
+  const headers = await apiHeaders("development")
+  assert.equal(headers["Access-Control-Allow-Origin"], "http://localhost:3001")
+  assert.match(headers["Access-Control-Allow-Methods"] ?? "", /GET.*POST/)
+  assert.match(headers["Access-Control-Allow-Headers"] ?? "", /Content-Type/)
+})
+
+test("in production the API sends no CORS headers", async () => {
+  assert.equal((await apiHeaders("production"))["Access-Control-Allow-Origin"], undefined)
+})
