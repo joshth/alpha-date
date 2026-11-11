@@ -135,3 +135,17 @@ test("the sidebar groups the feature pages under Features", () => {
   const category = JSON.parse(read("docs/features/_category_.json") || "{}")
   assert.equal(category.label, "Features")
 })
+
+test("the glossary page keeps every group and term from the shared glossary", () => {
+  const text = read("docs/glossary.md")
+  assert.match(text, /^---\n(?:.*\n)*?title: Glossary\n/)
+  for (const group of ["Safety", "Evaluation", "Data", "Development"]) assert.match(text, new RegExp(`^## ${group}(?: |$)`, "m"), group)
+  const terms = [
+    "Safety gate", "Safeguarding resources", "Fail closed", "Evaluation harness", "Golden set (answer key)", "Precision and recall",
+    "Hallucination (H1)", "95% range", "Held-out words", "Normalisation and fuzzy matching", "Deduplication", "Aura (lifecycle and relevance)",
+    "Synthetic event data", "Stubs and mock data", "Mock-LLM mode", "Drizzle", "Ollama",
+  ]
+  for (const term of terms) assert.match(text, new RegExp(`^### ${term.replace(/[()]/g, "\\$&")}(?: |$)`, "m"), term)
+  const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
+  assert.doesNotMatch(prose, /<\/?(div|span|a|table|svg|br|img|p|pre)[\s>]/)
+})
