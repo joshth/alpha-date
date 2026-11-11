@@ -13,6 +13,7 @@ export default {
     hooks: { onBrokenMarkdownLinks: 'throw' },
   },
   themes: ['@docusaurus/theme-mermaid'],
+  staticDirectories: ['static', '../openapi'],
   noIndex: true, // private project under NDA: never index
   plugins: [
     // swagger-ui-react pulls in `xml`, which imports node's `stream`; unused in the browser.
@@ -36,6 +37,7 @@ export default {
       title: 'Gen Alpha Decoder | Date',
       items: [
         { type: 'docSidebar', sidebarId: 'docs', label: 'Docs', position: 'left' },
+        { to: '/api', label: 'API reference', position: 'left' },
       ],
     },
   } satisfies Preset.ThemeConfig,
