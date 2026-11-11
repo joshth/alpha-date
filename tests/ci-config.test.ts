@@ -1,8 +1,16 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 
 const scripts: Record<string, string> = JSON.parse(readFileSync("package.json", "utf8")).scripts
+const pipeline = existsSync(".gitlab-ci.yml") ? readFileSync(".gitlab-ci.yml", "utf8") : ""
+
+test("the GitLab pipeline forces the mock LLM and runs lint and typecheck", () => {
+  // Scope rule: CI never calls a real provider, even if a key is added later.
+  assert.match(pipeline, /^ {2}MOCK_LLM: "true"/m)
+  assert.match(pipeline, /script: pnpm lint$/m)
+  assert.match(pipeline, /script: pnpm typecheck$/m)
+})
 
 test("test:ci writes a JUnit report, with the reporter flags before the file list", () => {
   const command = scripts["test:ci"] ?? ""
