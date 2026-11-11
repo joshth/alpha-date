@@ -149,3 +149,13 @@ test("the glossary page keeps every group and term from the shared glossary", ()
   const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
   assert.doesNotMatch(prose, /<\/?(div|span|a|table|svg|br|img|p|pre)[\s>]/)
 })
+
+test("the Introduction links every feature page and the glossary, and keeps the warnings", () => {
+  const text = read("docs/intro.md")
+  for (const page of ["features/safety-gate", "features/evaluation-harness", "features/normalisation", "features/aura", "glossary"]) {
+    assert.match(text, new RegExp(`\\]\\(\\./${page}\\.md\\)`), page)
+  }
+  assert.match(text, /\*\*NDA:\*\*/)
+  assert.match(text, /\*\*Content warning:\*\*/)
+  assert.match(text, /^## Privacy and safety rules$/m)
+})
