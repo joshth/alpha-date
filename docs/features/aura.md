@@ -49,11 +49,30 @@ Slang spreads like a cold: people pick it up from each other, use it for a while
 | **R**ecovered | People who have moved on |
 | Γ (recovery rate) | Changes over time: interest drops faster once a term is everywhere |
 
-```
-dS/dt = −β·S·I + ξ·(1 − S − I)
-dI/dt =  β·S·I − Γ·I
-dΓ/dt =  Γ·(α·I − δ·S)              # time unit: 1 week
-```
+Everyone is in exactly one of the three groups, so the shares add up to one, and the recovered share follows from the other two:
+
+$$
+S + I + R = 1 \quad\Rightarrow\quad R = 1 - S - I
+$$
+
+The model then has three equations. Time is measured in weeks.
+
+$$
+\frac{dS}{dt} = -\beta\, S\, I + \xi\,(1 - S - I)
+$$
+
+$$
+\frac{dI}{dt} = \beta\, S\, I - \Gamma\, I
+$$
+
+$$
+\frac{d\Gamma}{dt} = \Gamma\,(\alpha I - \delta S)
+$$
+
+- $\beta$ is how fast the term spreads: it needs someone saying it ($I$) to meet someone open to it ($S$).
+- $\Gamma$ is how fast people get over it. Plain SIRS keeps it fixed. Here it changes with $S$ and $I$ (the third equation), and the model fits $\log\Gamma$ so that $\Gamma$ always stays positive.
+- $\xi$ is how fast people who got over it become open to it again.
+- $\alpha$ and $\delta$ set how strongly the crowd saying the term ($\alpha I$) and the people still open to it ($\delta S$) push $\Gamma$ up or down.
 
 Fitting gives a smooth, noise-free curve I(t) for each term, so the stage depends on the trend rather than on one noisy week.
 
