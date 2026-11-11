@@ -35,19 +35,19 @@ Gen Alpha Decoder explains youth slang to parents and educators. When someone se
 ## How it flows
 
 ```mermaid
-flowchart LR
-  A(["🔍 Search or suggestion"]) --> B{"🛡️ Safety gate"}
-  B -->|"crisis"| S["💙 Safeguarding panel<br/>no AI call"]
-  B -->|"unsafe"| R["🚫 Refused"]
-  B -->|"safe"| N["🔤 Normalise"]
-  N --> L{"📚 Lexicon lookup"}
-  L -->|"found"| F["✅ Return term<br/>no AI call"]
-  L -->|"not found"| D["🤖 AI discovery"]
-  D --> M["🧹 Moderate output"]
-  M --> Q["👀 Human review queue"]
-  Q --> P["🌈 Published term"]
-  P -.->|"anonymous search events"| U["⚡ Aura lifecycle score"]
-  E["🧪 Evaluation harness"] -.->|"grades"| D
+flowchart TB
+  A(["Search or suggestion"]) --> B{"Safety gate"}
+  B -->|"crisis"| S["Safeguarding panel<br/>no AI call"]
+  B -->|"unsafe"| R["Refused"]
+  B -->|"safe"| N["Normalise"]
+  N --> L{"Lexicon lookup"}
+  L -->|"found"| F["Return term<br/>no AI call"]
+  L -->|"not found"| D["AI discovery"]
+  D --> M["Moderate output"]
+  M --> Q["Human review queue"]
+  Q --> P["Published term"]
+  P -.->|"anonymous search events"| U["Aura lifecycle score"]
+  E["Evaluation harness"] -.->|"grades"| D
 
   classDef input fill:#ffe14d,stroke:#b38f00,color:#222
   classDef gate fill:#ff9f1c,stroke:#b36b00,color:#222
