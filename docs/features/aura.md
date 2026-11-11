@@ -70,15 +70,11 @@ $$
 The model then has three equations. Time is measured in weeks.
 
 $$
-\frac{dS}{dt} = -\beta\, S\, I + \xi\,(1 - S - I)
-$$
-
-$$
-\frac{dI}{dt} = \beta\, S\, I - \Gamma\, I
-$$
-
-$$
-\frac{d\Gamma}{dt} = \Gamma\,(\alpha I - \delta S)
+\begin{aligned}
+\frac{dS}{dt} &= -\beta\, S\, I + \xi\,(1 - S - I) \\[1em]
+\frac{dI}{dt} &= \beta\, S\, I - \Gamma\, I \\[1em]
+\frac{d\Gamma}{dt} &= \Gamma\,(\alpha I - \delta S)
+\end{aligned}
 $$
 
 - $\beta$ is how fast the term spreads: it needs someone saying it ($I$) to meet someone open to it ($S$).
