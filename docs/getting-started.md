@@ -44,6 +44,19 @@ You do not need environment variables, API keys or a database install. Copy `.en
 | `pnpm db:reset` | Delete the local PGlite database |
 | `pnpm docs:dev` | Docs site on http://localhost:3001 (install it once with `pnpm --dir website install --ignore-workspace`) |
 
+## Search the docs
+
+The docs site has a search box in the top bar. It uses a local index that is built into the site, so nothing is sent to an outside search service. These docs are private, so the site does not use a hosted search service.
+
+The index is only made by a production build. `pnpm docs:dev` has no search. To try it, run:
+
+```bash
+pnpm --dir website build
+pnpm --dir website serve   # http://localhost:3000, or add --port 3001
+```
+
+The API reference page is not searchable.
+
 ## The aura:plot Python venv
 
 `pnpm aura:plot` needs a Python 3.12 venv in `sirs/`. Make it once.
