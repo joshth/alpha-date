@@ -65,3 +65,10 @@ test("local search still indexes the docs although the site sends noindex to cra
   // The plugin skips pages with a noindex meta tag, which left the search index empty.
   assert.match(config, /forceIgnoreNoIndex: true/)
 })
+
+test("the search box placeholder and shortcut hint are dark enough to read", () => {
+  // The default placeholder and keys are pale grey on a pale grey pill.
+  const css = read("website/src/css/custom.css")
+  assert.match(css, /\.navbar__search-input::placeholder\s*\{[^}]*color:\s*var\(--ifm-color-emphasis-700\)/)
+  assert.match(css, /\[class\*='searchHint'\]\s*\{[^}]*color:\s*var\(--ifm-color-emphasis-800\)/)
+})
