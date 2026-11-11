@@ -1,3 +1,5 @@
+<p align="center"><img src="website/static/img/banner.svg" alt="Gen Alpha Decoder" width="640"></p>
+
 # Gen Alpha Decoder™ | Date — Lexicon Safety & Quality Pipeline
 
 > **Derived teaching scaffold — not the production Gen Alpha Decoder codebase.**
