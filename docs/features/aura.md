@@ -86,6 +86,24 @@ $$
 - $\xi$ is how fast people who got over it become open to it again.
 - $\alpha$ and $\delta$ set how strongly the crowd saying the term ($\alpha I$) and the people still open to it ($\delta S$) push $\Gamma$ up or down.
 
+### The feedback loop
+
+Plain SIRS keeps the recovery rate fixed, so a term always settles to the same steady level. Here $\Gamma$ reacts to the crowd, following Mazzarisi et al. (2024):
+
+- When many people are saying the term ($\alpha I$), it is oversaturated and less novel, so $\Gamma$ rises and people drop it faster. The authors call this interest saturation.
+- When many people are still open to it ($\delta S$), the few who say it keep promoting it, so $\Gamma$ falls. This is influencing enthusiasm, after Bisin and Verdier (2001).
+
+```mermaid
+flowchart LR
+  S["S<br/>open to it"]
+  I["I<br/>saying it"]
+  G["Γ<br/>how fast people<br/>get over it"]
+  R["R<br/>over it"]
+  I -->|"α · I<br/>interest saturation<br/>raises Γ"| G
+  S -->|"δ · S<br/>influencing enthusiasm<br/>lowers Γ"| G
+  G -->|"sets the rate<br/>I to R"| R
+```
+
 Fitting gives a smooth, noise-free curve I(t) for each term, so the stage depends on the trend rather than on one noisy week.
 
 ## The stage rule {#stage-rule}
