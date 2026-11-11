@@ -2,8 +2,12 @@ import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { GET as search } from "@/app/api/search/route"
+import { POST as suggest } from "@/app/api/suggestions/route"
 
 const get = (query: string) => search(new Request(`http://localhost/api/search${query}`))
+const post = (body: string) => suggest(new Request("http://localhost/api/suggestions", {
+  method: "POST", headers: { "Content-Type": "application/json" }, body,
+}))
 
 test("GET /api/search rejects a missing or blank q with 400", async () => {
   for (const query of ["", "?q=", "?q=%20%20"]) {
@@ -24,4 +28,26 @@ test("GET /api/search returns the search outcome for a seed term", async () => {
 test("GET /api/search runs the safety gate before any lookup", async () => {
   const outcome = await (await get(`?q=${encodeURIComponent("i want to kill myself")}`)).json()
   assert.equal(outcome.kind, "safeguarding")
+})
+
+test("POST /api/suggestions rejects a body that is not a JSON object with 400", async () => {
+  for (const body of ["not json", "[]", "null", '"rizz"']) {
+    const response = await post(body)
+    assert.equal(response.status, 400)
+    assert.match((await response.json()).error, /JSON object/)
+  }
+})
+
+test("POST /api/suggestions records a safe suggestion with 201", async () => {
+  const response = await post(JSON.stringify({ term: "glazing", context: "Heard it in class" }))
+  assert.equal(response.status, 201)
+  assert.equal((await response.json()).success, true)
+})
+
+test("POST /api/suggestions returns the safety verdict when the screen rejects it", async () => {
+  const response = await post(JSON.stringify({ term: "i want to kill myself" }))
+  assert.equal(response.status, 400)
+  const result = await response.json()
+  assert.equal(result.success, false)
+  assert.notEqual(result.data.action, "safe")
 })
