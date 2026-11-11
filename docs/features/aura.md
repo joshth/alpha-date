@@ -49,6 +49,18 @@ Slang spreads like a cold: people pick it up from each other, use it for a while
 | **R**ecovered | People who have moved on |
 | Γ (recovery rate) | Changes over time: interest drops faster once a term is everywhere |
 
+People move around this loop. They catch the term from someone who is already saying it, get over it, and after a while become open to it again:
+
+```mermaid
+flowchart LR
+  S["S<br/>open to it<br/>not heard it yet"]
+  I["I<br/>saying it<br/>using it now"]
+  R["R<br/>over it<br/>moved on"]
+  S -->|"β · S · I<br/>catch it"| I
+  I -->|"Γ · I<br/>get over it"| R
+  R -->|"ξ · R<br/>open again"| S
+```
+
 Everyone is in exactly one of the three groups, so the shares add up to one, and the recovered share follows from the other two:
 
 $$
