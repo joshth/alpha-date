@@ -51,3 +51,14 @@ unit-tests:
     reports:
       junit: junit.xml
     expire_in: 1 week
+
+eval:
+  extends: .node
+  stage: test
+  script:
+    - pnpm eval > eval-report.txt # no pipe: keeps eval's exit code
+    - cat eval-report.txt
+  artifacts:
+    when: always
+    paths: [eval-report.txt]
+    expire_in: 30 days
