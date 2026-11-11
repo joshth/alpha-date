@@ -1,5 +1,7 @@
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import rehypeKatex from 'rehype-katex';
+import remarkMath from 'remark-math';
 
 export default {
   title: 'Gen Alpha Decoder | Date',
@@ -44,7 +46,14 @@ export default {
     [
       'classic',
       {
-        docs: { path: '../docs', routeBasePath: '/', sidebarPath: './sidebars.ts' },
+        docs: {
+          path: '../docs',
+          routeBasePath: '/',
+          sidebarPath: './sidebars.ts',
+          // LaTeX maths in the docs ($...$ and $$...$$); styles come from katex in custom.css.
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
+        },
         blog: false,
         theme: { customCss: './src/css/custom.css' },
       } satisfies Preset.Options,
