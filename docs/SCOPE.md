@@ -5,6 +5,8 @@ sidebar_position: 6
 
 # **Gen Alpha Decoder™ | Date \- Project Scope and Schedule**
 
+Live version: [Project Scope and Schedule (Google Doc)](https://docs.google.com/document/d/1LNojWKXzGpgl3YoTBUHLI9rGGd-ex9ao8Ywq3_FkoJs/edit?tab=t.0#heading=h.ua12c355tyes). This page is a copy and may be out of date.
+
 # **Glossary of Technical Terms**
 
 **Content Moderation / Safety Gate:** An automatic check that runs on user input *before* it reaches an AI model, deciding whether the input is safe to process, should be refused, or should be redirected to help resources.
