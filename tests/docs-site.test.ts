@@ -112,6 +112,11 @@ const sharedPages = [
     title: "Normalisation and Deduplication",
     headings: ["Why it exists", "Interface", "Building the key", "Finding likely matches", "Where the app uses it", "Tuning and limits", "Files and tests"],
   },
+  {
+    file: "docs/features/aura.md",
+    title: "Aura Lifecycle",
+    headings: ["The four stages", "Interface", "How a term's lifecycle is modelled", "The stage rule", "Charting a term", "Test data and privacy", "Files and tests"],
+  },
 ]
 
 for (const page of sharedPages) {
