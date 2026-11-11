@@ -85,3 +85,12 @@ test("the README tells developers how to start the docs site and preview its sea
   // The mention near the top points at the section.
   assert.match(readme.split("## Quick start")[0], /\(#documentation-site\)/)
 })
+
+test("the Project scope page links to the live Google Doc and says it is a copy", () => {
+  const lines = read("docs/SCOPE.md").split("\n")
+  const body = lines.slice(lines.indexOf("---", 1) + 1)
+  const firstHeading = body.findIndex((line) => line.startsWith("# "))
+  const intro = body.slice(firstHeading + 1, firstHeading + 8).join("\n")
+  assert.match(intro, /\]\(https:\/\/docs\.google\.com\/document\/d\/1LNojWKXzGpgl3YoTBUHLI9rGGd-ex9ao8Ywq3_FkoJs\/edit\?tab=t\.0#heading=h\.ua12c355tyes\)/)
+  assert.match(intro, /copy/i)
+})
