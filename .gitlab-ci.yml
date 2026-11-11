@@ -1,6 +1,22 @@
 # CI for the lexicon pipeline. Every job runs offline: mock LLM, mock
 # moderation, in-memory PGlite. No secrets or CI/CD variables are needed.
 
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
+
+# One pipeline per change: MR pipelines while an MR is open, branch pipelines
+# otherwise (feature branches, main, tags). Newer commits cancel older runs.
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
 stages:
   - test
 
@@ -8,6 +24,8 @@ variables:
   # Guardrail: CI never calls a real provider, even if a key is added later.
   MOCK_LLM: "true"
   NEXT_TELEMETRY_DISABLED: "1"
+  # Run the Secret Detection and SAST template jobs in MR pipelines too.
+  AST_ENABLE_MR_PIPELINES: "true"
   COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
 
 default:
