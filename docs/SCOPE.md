@@ -1,3 +1,8 @@
+---
+sidebar_label: Project scope
+sidebar_position: 6
+---
+
 # **Gen Alpha Decoder™ | Date \- Project Scope and Schedule**
 
 # **Glossary of Technical Terms**
