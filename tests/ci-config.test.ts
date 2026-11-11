@@ -26,3 +26,9 @@ test("the GitLab pipeline runs once per change and scans for secrets", () => {
   assert.match(pipeline, /Jobs\/Secret-Detection\.gitlab-ci\.yml/)
   assert.match(pipeline, /AST_ENABLE_MR_PIPELINES: "true"/)
 })
+
+test("the build job only starts after lint, typecheck, unit tests and eval pass", () => {
+  assert.match(pipeline, /^build:/m)
+  assert.match(pipeline, /needs: \[lint, typecheck, unit-tests, eval\]/)
+  assert.match(pipeline, /script: pnpm build$/m)
+})
