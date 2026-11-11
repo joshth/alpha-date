@@ -17,6 +17,28 @@ Each change gets one pipeline. While a merge request is open, the merge request 
 
 The pipeline has two stages: `test` and `build`.
 
+```mermaid
+flowchart LR
+  subgraph test [test stage]
+    lint
+    typecheck
+    unit[unit-tests]
+    eval
+    docs
+    scans[Secret detection and SAST]
+    audit[dependency-audit<br/>allowed to fail]
+  end
+  subgraph build [build stage]
+    b[build]
+  end
+  lint --> b
+  typecheck --> b
+  unit --> b
+  eval --> b
+```
+
+`docs`, the scans and `dependency-audit` run in parallel with the other test jobs. `build` does not wait for them.
+
 | Job | Stage | What it does | Runs locally as |
 | --- | --- | --- | --- |
 | `lint` | test | ESLint | `pnpm lint` |
