@@ -107,6 +107,11 @@ const sharedPages = [
     title: "Evaluation Harness",
     headings: ["Why it exists", "The answer key (golden set)", "Running an evaluation", "How discovery is scored", "Running against a real model", "Cost and time", "Reports and the run log", "Comparing settings", "Results so far", "Files and tests"],
   },
+  {
+    file: "docs/features/normalisation.md",
+    title: "Normalisation and Deduplication",
+    headings: ["Why it exists", "Interface", "Building the key", "Finding likely matches", "Where the app uses it", "Tuning and limits", "Files and tests"],
+  },
 ]
 
 for (const page of sharedPages) {
