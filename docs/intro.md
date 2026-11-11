@@ -24,6 +24,39 @@ It was made for the UNSW COMP3900/COMP9900 project with the Western Australian A
 
 Gen Alpha Decoder explains youth slang to parents and educators. When someone searches a word the lexicon doesn't know, an AI decides whether it's real slang and writes a meaning. This repository covers the four parts of that pipeline that keep it safe and accurate.
 
+## How it flows
+
+```mermaid
+flowchart LR
+  A(["🔍 Search or suggestion"]) --> B{"🛡️ Safety gate"}
+  B -->|"crisis"| S["💙 Safeguarding panel<br/>no AI call"]
+  B -->|"unsafe"| R["🚫 Refused"]
+  B -->|"safe"| N["🔤 Normalise"]
+  N --> L{"📚 Lexicon lookup"}
+  L -->|"found"| F["✅ Return term<br/>no AI call"]
+  L -->|"not found"| D["🤖 AI discovery"]
+  D --> M["🧹 Moderate output"]
+  M --> Q["👀 Human review queue"]
+  Q --> P["🌈 Published term"]
+  P -.->|"anonymous search events"| U["⚡ Aura lifecycle score"]
+  E["🧪 Evaluation harness"] -.->|"grades"| D
+
+  classDef input fill:#ffe14d,stroke:#b38f00,color:#222
+  classDef gate fill:#ff9f1c,stroke:#b36b00,color:#222
+  classDef safe fill:#1fb6ff,stroke:#0a6fa3,color:#042
+  classDef stop fill:#ff4f6d,stroke:#a3112b,color:#fff
+  classDef ok fill:#2ecc71,stroke:#1b8a4a,color:#042
+  classDef ai fill:#7b5cff,stroke:#4a30c4,color:#fff
+  classDef review fill:#ff4fd8,stroke:#a3228b,color:#fff
+  class A input
+  class B,L gate
+  class N,S safe
+  class R stop
+  class F,P ok
+  class D,M,E ai
+  class Q,U review
+```
+
 | Feature | What it does | Interface | Where |
 | --- | --- | --- | --- |
 | [Input Safety Gate](./features/safety-gate.md) | Checks every search and suggestion before any AI call. Crisis inputs go to Australian support services. | `checkInputSafety(text, surface) → SafetyVerdict` | `lib/safety/gate.ts` |
