@@ -21,6 +21,8 @@ export default {
         // Hosted search needs a public site, and these docs are private (NDA).
         hashed: true,
         docsRouteBasePath: '/',
+        // The site sends noindex to crawlers (private docs); search must still index them.
+        forceIgnoreNoIndex: true,
         indexBlog: false,
       },
     ],
