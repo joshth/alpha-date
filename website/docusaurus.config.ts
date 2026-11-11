@@ -61,6 +61,7 @@ export default {
   ],
   themeConfig: {
     colorMode: { respectPrefersColorScheme: true },
+    mermaid: { options: { flowchart: { htmlLabels: false } } },
     navbar: {
       title: 'Gen Alpha Decoder | Date',
       items: [
