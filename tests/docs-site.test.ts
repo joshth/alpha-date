@@ -28,3 +28,11 @@ test("the docs site is never indexed, because the project is under NDA", () => {
 test("the app's typecheck skips the docs site", () => {
   assert.ok(JSON.parse(read("tsconfig.json")).exclude.includes("website"))
 })
+
+test("the docs site serves the OpenAPI spec and renders it with Swagger UI at /api", () => {
+  assert.match(config, /staticDirectories: \[[^\]]*'\.\.\/openapi'/)
+  assert.match(config, /to: '\/api'/)
+  const page = read("website/src/pages/api.tsx")
+  assert.match(page, /swagger-ui-react/)
+  assert.match(page, /\/openapi\.json/)
+})
