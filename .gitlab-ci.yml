@@ -62,3 +62,14 @@ eval:
     when: always
     paths: [eval-report.txt]
     expire_in: 30 days
+
+dependency-audit:
+  extends: .node
+  stage: test
+  before_script:
+    - corepack enable
+  cache: []
+  script: pnpm audit --prod --audit-level=high
+  # ponytail: warns instead of blocking until next is bumped past the open
+  # advisories (>=15.5.28); then delete this line so new advisories fail CI.
+  allow_failure: true
