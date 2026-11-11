@@ -19,6 +19,7 @@ workflow:
 
 stages:
   - test
+  - build
 
 variables:
   # Guardrail: CI never calls a real provider, even if a key is added later.
@@ -91,3 +92,9 @@ dependency-audit:
   # ponytail: warns instead of blocking until next is bumped past the open
   # advisories (>=15.5.28); then delete this line so new advisories fail CI.
   allow_failure: true
+
+build:
+  extends: .node
+  stage: build
+  needs: [lint, typecheck, unit-tests, eval] # don't wait for SAST/audit
+  script: pnpm build
