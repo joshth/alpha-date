@@ -18,3 +18,11 @@ test("test:ci writes a JUnit report, with the reporter flags before the file lis
   // Node ignores reporter flags placed after the test files.
   assert.ok(command.indexOf("--test-reporter") < command.indexOf("tests/*.test.ts"))
 })
+
+test("the GitLab pipeline runs once per change and scans for secrets", () => {
+  // One pipeline per change: MR pipelines when an MR is open, branch pipelines otherwise.
+  assert.match(pipeline, /\$CI_PIPELINE_SOURCE == "merge_request_event"/)
+  assert.match(pipeline, /\$CI_COMMIT_BRANCH && \$CI_OPEN_MERGE_REQUESTS\n\s+when: never/)
+  assert.match(pipeline, /Jobs\/Secret-Detection\.gitlab-ci\.yml/)
+  assert.match(pipeline, /AST_ENABLE_MR_PIPELINES: "true"/)
+})
