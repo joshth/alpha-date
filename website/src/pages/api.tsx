@@ -11,7 +11,12 @@ export default function Api() {
           // Swagger UI needs the DOM, so load it only in the browser.
           const SwaggerUI = require('swagger-ui-react').default;
           require('swagger-ui-react/swagger-ui.css');
-          return <SwaggerUI url={url} />;
+          // Swagger UI has no dark theme, so keep it on a light panel in both modes.
+          return (
+            <div style={{ background: '#fff', colorScheme: 'light', minHeight: '100vh' }}>
+              <SwaggerUI url={url} />
+            </div>
+          );
         }}
       </BrowserOnly>
     </Layout>
