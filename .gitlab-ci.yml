@@ -41,3 +41,13 @@ typecheck:
     paths: [.pnpm-store]
     policy: pull-push # the one job that refreshes the pnpm cache
   script: pnpm typecheck
+
+unit-tests:
+  extends: .node
+  stage: test
+  script: pnpm test:ci
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+    expire_in: 1 week
