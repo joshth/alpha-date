@@ -36,3 +36,9 @@ test("the docs site serves the OpenAPI spec and renders it with Swagger UI at /a
   assert.match(page, /swagger-ui-react/)
   assert.match(page, /\/openapi\.json/)
 })
+
+test("the docs bundle provides Buffer, which Swagger UI needs in the browser", () => {
+  // webpack 5 has no Node polyfills; without this /api crashes with "Buffer is not defined".
+  assert.ok(JSON.parse(read("website/package.json") || "{}").dependencies?.buffer)
+  assert.match(config, /ProvidePlugin\(\{ Buffer: \['buffer', 'Buffer'\] \}\)/)
+})
