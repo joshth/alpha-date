@@ -16,10 +16,14 @@ export default {
   staticDirectories: ['static', '../openapi'],
   noIndex: true, // private project under NDA: never index
   plugins: [
-    // swagger-ui-react pulls in `xml`, which imports node's `stream`; unused in the browser.
+    // Swagger UI expects Node globals that webpack 5 no longer polyfills:
+    // `xml` imports `stream` (unused in the browser) and the UI calls `Buffer`.
     () => ({
-      name: 'stream-fallback',
-      configureWebpack: () => ({ resolve: { fallback: { stream: false } } }),
+      name: 'swagger-ui-polyfills',
+      configureWebpack: (_config, _isServer, { currentBundler }) => ({
+        resolve: { fallback: { stream: false } },
+        plugins: [new currentBundler.instance.ProvidePlugin({ Buffer: ['buffer', 'Buffer'] })],
+      }),
     }),
   ],
   presets: [
