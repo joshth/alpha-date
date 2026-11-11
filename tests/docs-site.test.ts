@@ -194,3 +194,15 @@ test("the Aura page draws the three SIRS groups as a Mermaid diagram", () => {
   assert.match(flow, /R\S*\s*-->\s*\|[^|]*ξ[^|]*\|\s*S/)
   for (const meaning of ["open to it", "saying it", "over it"]) assert.match(flow, new RegExp(meaning))
 })
+
+test("the Aura page draws the recovery-rate feedback loop and cites its sources", () => {
+  const text = read("docs/features/aura.md")
+  const loop = mermaidBlocks("docs/features/aura.md").find((diagram) => /G\[[^\]]*Γ/.test(diagram))
+  assert.ok(loop, "a diagram with the Γ node")
+  // Many people saying it (αI) raise Γ; many still open to it (δS) lower it; Γ sets the I to R rate.
+  assert.match(loop, /I\S*\s*-->\s*\|[^|]*α[^|]*\|\s*G/)
+  assert.match(loop, /S\S*\s*-->\s*\|[^|]*δ[^|]*\|\s*G/)
+  assert.match(loop, /G\S*\s*-->\s*\|[^|]*\|\s*R/)
+  assert.match(text, /Mazzarisi et al\. \(2024\)/)
+  assert.match(text, /Bisin and Verdier \(2001\)/)
+})
