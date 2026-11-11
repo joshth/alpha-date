@@ -43,8 +43,8 @@ html [class*='searchHint'] {
 .gad-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 999px; font-weight: 700; color: #fff; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,.25); transition: transform .15s; }
 .gad-btn:hover { transform: translateY(-3px); color: #fff; text-decoration: none; }
 .gad-btn svg, .gad-card svg { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.gad-btn--primary { background: linear-gradient(90deg, #ff3b3b, #ff9f1c, #d4a500); }
-.gad-btn--alt { background: linear-gradient(90deg, #1fb6ff, #7b5cff, #ff4fd8); }
+.gad-btn--primary { background: #e0245e; }
+.gad-btn--alt { background: #7b5cff; }
 .gad-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
 .gad-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 1.1rem; border-radius: 16px; color: #fff; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,.25); transition: transform .15s; }
 .gad-card:hover { transform: translateY(-4px); color: #fff; text-decoration: none; }
