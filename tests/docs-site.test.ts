@@ -182,3 +182,15 @@ test("the Aura page writes the SIRS equations in LaTeX, not in a code block", ()
   // Gamma is modelled through its log so it stays positive.
   assert.match(text, /\blog\b/i)
 })
+
+const mermaidBlocks = (file: string) => [...read(file).matchAll(/```mermaid\n([\s\S]*?)```/g)].map((match) => match[1])
+
+test("the Aura page draws the three SIRS groups as a Mermaid diagram", () => {
+  const flow = mermaidBlocks("docs/features/aura.md").find((diagram) => /\bS\[/.test(diagram) && /\bI\[/.test(diagram) && /\bR\[/.test(diagram))
+  assert.ok(flow, "a diagram with the S, I and R groups")
+  // S to I at rate beta, I to R at Gamma, R back to S at xi.
+  assert.match(flow, /S\S*\s*-->\s*\|[^|]*β[^|]*\|\s*I/)
+  assert.match(flow, /I\S*\s*-->\s*\|[^|]*Γ[^|]*\|\s*R/)
+  assert.match(flow, /R\S*\s*-->\s*\|[^|]*ξ[^|]*\|\s*S/)
+  for (const meaning of ["open to it", "saying it", "over it"]) assert.match(flow, new RegExp(meaning))
+})
