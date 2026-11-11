@@ -8,7 +8,7 @@
 > It contains safety rules and test phrases about self-harm and abuse; treat them with care.
 
 Full scope, schedule and success criteria: [docs/SCOPE.md](docs/SCOPE.md).
-Developer docs (guides, architecture, CI) and the Swagger API reference: `pnpm docs:dev`, then open http://localhost:3001.
+Developer docs (guides, architecture, CI) and the Swagger API reference: see [Documentation site](#documentation-site).
 
 ## Quick start
 
@@ -33,6 +33,27 @@ No environment variables, API keys, or database install are needed. By default:
 - **Auth:** every request is the synthetic, signed-in user "Demo Reviewer".
 
 Copy `.env.example` to `.env.local` to change any of these (see comments in that file).
+
+## Documentation site
+
+The docs live in `docs/` and are shown by a Docusaurus site in `website/`, with a Swagger page for the HTTP API.
+It needs Node.js 20 or newer (check with `node -v`; with nvm, run `nvm use 24`).
+
+```bash
+pnpm --dir website install --ignore-workspace   # once
+pnpm docs:dev                                   # http://localhost:3001
+```
+
+- Docs pages: http://localhost:3001
+- API reference (Swagger): http://localhost:3001/api. To use "Try it out", also run `pnpm dev` (the app on http://localhost:3000).
+- Search only exists in a production build, not under `pnpm docs:dev`. To try it:
+
+  ```bash
+  pnpm --dir website build
+  pnpm --dir website serve   # http://localhost:3000, or add --port 3001
+  ```
+
+The docs are private (NDA). The site tells search engines not to index it, and CI builds it as a check only.
 
 ## Commands
 
