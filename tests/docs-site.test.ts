@@ -60,3 +60,8 @@ test("the docs site has local search, pinned to an exact version", () => {
   assert.match(config, /docsRouteBasePath: '\/'/)
   assert.match(config, /indexBlog: false/)
 })
+
+test("local search still indexes the docs although the site sends noindex to crawlers", () => {
+  // The plugin skips pages with a noindex meta tag, which left the search index empty.
+  assert.match(config, /forceIgnoreNoIndex: true/)
+})
