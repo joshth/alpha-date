@@ -34,3 +34,21 @@ html [class*='searchHint'] {
   color: var(--ifm-color-emphasis-800);
   border-color: var(--ifm-color-emphasis-600);
 }
+
+/* Landing page */
+.gad-hero { text-align: center; padding: 1.5rem 0 1rem; }
+.gad-banner { width: min(100%, 720px); }
+.gad-tagline { font-size: 1.25rem; margin: 0.5rem 0 1.25rem; }
+.gad-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.gad-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 999px; font-weight: 700; color: #fff; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,.25); transition: transform .15s; }
+.gad-btn:hover { transform: translateY(-3px); color: #fff; text-decoration: none; }
+.gad-btn svg, .gad-card svg { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gad-btn--primary { background: linear-gradient(90deg, #ff3b3b, #ff9f1c, #d4a500); }
+.gad-btn--alt { background: linear-gradient(90deg, #1fb6ff, #7b5cff, #ff4fd8); }
+.gad-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
+.gad-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 1.1rem; border-radius: 16px; color: #fff; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,.25); transition: transform .15s; }
+.gad-card:hover { transform: translateY(-4px); color: #fff; text-decoration: none; }
+.gad-card--0 { background: linear-gradient(135deg, #e0245e, #ff7a45); }
+.gad-card--1 { background: linear-gradient(135deg, #1b8a4a, #1fb6ff); }
+.gad-card--2 { background: linear-gradient(135deg, #7b5cff, #ff4fd8); }
+.gad-card--3 { background: linear-gradient(135deg, #b36b00, #d4a500); }
