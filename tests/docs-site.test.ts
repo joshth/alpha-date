@@ -102,14 +102,19 @@ const sharedPages = [
     title: "Input Safety Gate",
     headings: ["Why it exists", "Interface", "How it decides", "Real examples", "What the user sees", "Checking what the AI writes", "Safety activity reporting", "Measuring the gate", "Configuration", "Files and tests"],
   },
+  {
+    file: "docs/features/evaluation-harness.md",
+    title: "Evaluation Harness",
+    headings: ["Why it exists", "The answer key (golden set)", "Running an evaluation", "How discovery is scored", "Running against a real model", "Cost and time", "Reports and the run log", "Comparing settings", "Results so far", "Files and tests"],
+  },
 ]
 
 for (const page of sharedPages) {
   test(`${page.file} keeps the shared page's title and sections as plain Markdown`, () => {
     const text = read(page.file)
     assert.match(text, new RegExp(`^---\\n(?:.*\\n)*?title: ${page.title}\\n`))
-    assert.match(text, new RegExp(`^# ${page.title}\\b`, "m"))
-    for (const heading of page.headings) assert.match(text, new RegExp(`^## ${heading.replace(/[()]/g, "\\$&")}\\b`, "m"), heading)
+    assert.match(text, new RegExp(`^# ${page.title}(?: |$)`, "m"))
+    for (const heading of page.headings) assert.match(text, new RegExp(`^## ${heading.replace(/[()]/g, "\\$&")}(?: |$)`, "m"), heading)
     // No raw HTML outside code fences: pages must stay plain CommonMark.
     const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
     assert.doesNotMatch(prose, /<\/?(div|span|a|table|svg|br|img|p|pre)[\s>]/)
