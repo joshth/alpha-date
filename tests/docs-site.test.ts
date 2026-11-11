@@ -170,3 +170,15 @@ test("the docs site renders LaTeX maths with locally bundled KaTeX, pinned to ex
   assert.match(css, /@import 'katex\/dist\/katex\.min\.css';/)
   assert.doesNotMatch(config + css, /cdn\.jsdelivr|cdnjs|unpkg/)
 })
+
+test("the Aura page writes the SIRS equations in LaTeX, not in a code block", () => {
+  const text = read("docs/features/aura.md")
+  const blocks = [...text.matchAll(/^\$\$\n([\s\S]*?)\n\$\$$/gm)].map((match) => match[1])
+  for (const symbol of ["S", "I", "\\Gamma"]) {
+    assert.ok(blocks.some((block) => block.includes(`\\frac{d${symbol}}{dt}`)), `d${symbol}/dt`)
+  }
+  assert.ok(blocks.some((block) => /S\s*\+\s*I\s*\+\s*R\s*=\s*1/.test(block)), "S + I + R = 1")
+  assert.doesNotMatch(text, /```[^\n]*\n(?:(?!```)[\s\S])*dS\/dt/)
+  // Gamma is modelled through its log so it stays positive.
+  assert.match(text, /\blog\b/i)
+})
