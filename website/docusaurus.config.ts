@@ -12,7 +12,19 @@ export default {
     mermaid: true,
     hooks: { onBrokenMarkdownLinks: 'throw' },
   },
-  themes: ['@docusaurus/theme-mermaid'],
+  themes: [
+    '@docusaurus/theme-mermaid',
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      {
+        // Local search: the index is built into the site, so nothing leaves the machine.
+        // Hosted search needs a public site, and these docs are private (NDA).
+        hashed: true,
+        docsRouteBasePath: '/',
+        indexBlog: false,
+      },
+    ],
+  ],
   staticDirectories: ['static', '../openapi'],
   noIndex: true, // private project under NDA: never index
   plugins: [
