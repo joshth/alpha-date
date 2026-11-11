@@ -206,3 +206,13 @@ test("the Aura page draws the recovery-rate feedback loop and cites its sources"
   assert.match(text, /Mazzarisi et al\. \(2024\)/)
   assert.match(text, /Bisin and Verdier \(2001\)/)
 })
+
+test("the Aura page writes the stage rule's r and delta in LaTeX", () => {
+  const rule = read("docs/features/aura.md").split("## The stage rule")[1]?.split("\n## ")[0] ?? ""
+  const blocks = [...rule.matchAll(/^\$\$\n([\s\S]*?)\n\$\$$/gm)].map((match) => match[1])
+  assert.ok(blocks.some((block) => /^r\s*=/.test(block) && block.includes("I_{\\text{peak}}")), "r")
+  assert.ok(blocks.some((block) => block.includes("\\Delta") && block.includes("180")), "delta over 180 days")
+  // The pseudo-code block and the inline code for r and delta are gone.
+  assert.doesNotMatch(rule, /```[^\n]*\n(?:(?!```)[\s\S])*I_peak/)
+  assert.doesNotMatch(rule, /`[^`\n]*(?:delta|\br\b\s*[≥≤<>])[^`\n]*`/)
+})
