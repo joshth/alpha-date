@@ -1,3 +1,6 @@
+/* KaTeX styles and fonts, bundled locally (the docs are private, so no CDN). */
+@import 'katex/dist/katex.min.css';
+
 /* Swagger UI badges (version, OAS 3.1) next to the API title.
    Infima gives every <pre> a light background, which hid Swagger's white text.
    Use Swagger's own dark badge fills so the text keeps its contrast.
