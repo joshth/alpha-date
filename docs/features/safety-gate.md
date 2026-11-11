@@ -125,7 +125,7 @@ Reviewers open **Safety activity** in the Lexicon Lab (`/lab/safety-activity`), 
 
 ## Measuring the gate {#evaluation}
 
-The Evaluation Harness runs every safety case in the answer key through the gate and reports:
+The [Evaluation Harness](./evaluation-harness.md) runs every safety case in the answer key through the gate and reports:
 
 - **Action agreement:** expected action matched the gate's action.
 - **Safeguarding recall:** share of safeguarding cases that reached the safeguarding panel. The target is 100%.
