@@ -72,3 +72,16 @@ test("the search box placeholder and shortcut hint are dark enough to read", () 
   assert.match(css, /\.navbar__search-input::placeholder\s*\{[^}]*color:\s*var\(--ifm-color-emphasis-700\)/)
   assert.match(css, /\[class\*='searchHint'\]\s*\{[^}]*color:\s*var\(--ifm-color-emphasis-800\)/)
 })
+
+test("the README tells developers how to start the docs site and preview its search", () => {
+  const readme = read("README.md")
+  const section = readme.match(/^## Documentation site\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1] ?? ""
+  assert.match(section, /pnpm --dir website install --ignore-workspace/)
+  assert.match(section, /pnpm docs:dev/)
+  assert.match(section, /http:\/\/localhost:3001/)
+  assert.match(section, /Node(\.js)? 20/)
+  assert.match(section, /pnpm --dir website build/)
+  assert.match(section, /pnpm --dir website serve/)
+  // The mention near the top points at the section.
+  assert.match(readme.split("## Quick start")[0], /\(#documentation-site\)/)
+})
