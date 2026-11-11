@@ -42,3 +42,12 @@ test("the docs bundle provides Buffer, which Swagger UI needs in the browser", (
   assert.ok(JSON.parse(read("website/package.json") || "{}").dependencies?.buffer)
   assert.match(config, /ProvidePlugin\(\{ Buffer: \['buffer', 'Buffer'\] \}\)/)
 })
+
+test("the Swagger version badges stay readable: no pale code-block fill behind white text", () => {
+  // Infima gives every <pre> a light background, which hides Swagger's white badge text.
+  assert.match(config, /customCss: '\.\/src\/css\/custom\.css'/)
+  const css = read("website/src/css/custom.css")
+  assert.match(css, /\.swagger-ui \.info \.title small pre\s*\{[^}]*background:\s*transparent/)
+  assert.match(css, /\.swagger-ui \.info \.title small\s*\{[^}]*background:\s*#434b4f/)
+  assert.match(css, /small\.version-stamp\s*\{[^}]*background:\s*#1d632e/)
+})
