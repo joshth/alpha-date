@@ -1,0 +1,16 @@
+/* Swagger UI badges (version, OAS 3.1) next to the API title.
+   Infima gives every <pre> a light background, which hid Swagger's white text.
+   Use Swagger's own dark badge fills so the text keeps its contrast.
+   The html prefix beats Swagger's stylesheet, which loads after this one. */
+html .swagger-ui .info .title small {
+  background: #434b4f;
+}
+
+html .swagger-ui .info .title small.version-stamp {
+  background: #1d632e;
+}
+
+html .swagger-ui .info .title small pre {
+  background: transparent;
+  color: #fff;
+}
