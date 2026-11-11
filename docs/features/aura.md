@@ -110,20 +110,25 @@ Fitting gives a smooth, noise-free curve I(t) for each term, so the stage depend
 
 Everything is measured relative to the term's own peak, so a niche term and a viral one are judged the same way.
 
-```
-r     = I(now) / I_peak                                  # how close to its peak
-delta = (I(now) − I(now − 180 days)) / I_peak            # change over the last 180 days
-```
+$$
+r = \frac{I(\text{now})}{I_{\text{peak}}}
+$$
+
+$$
+\Delta = \frac{I(\text{now}) - I(\text{now} - 180\ \text{days})}{I_{\text{peak}}}
+$$
+
+Here $r$ is how close the term is to its peak, and $\Delta$ is how much it changed over the last 180 days, as a share of the peak.
 
 The first rule that matches wins:
 
-1.  **Peaking** if `r ≥ 0.80`.
+1.  **Peaking** if $r \ge 0.80$.
 
-2.  If the curve is **flat** (`|delta| < 0.20`): **parent territory** if the peak has passed, otherwise not yet a stage (the term hasn't taken off).
+2.  If the curve is **flat** ($|\Delta| < 0.20$): **parent territory** if the peak has passed, otherwise not yet a stage (the term hasn't taken off).
 
-3.  **Emerging** if `delta ≥ 0.20`.
+3.  **Emerging** if $\Delta \ge 0.20$.
 
-4.  **Declining** if `delta ≤ −0.20`.
+4.  **Declining** if $\Delta \le -0.20$.
 
 :::tip[Why 0.20?]
 
