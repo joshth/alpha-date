@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { eq } from "drizzle-orm"
 import { compareSafetyInput, searchTerm, suggestTerm } from "@/app/lab/actions"
-import { traceSearch } from "@/app/lab/pipeline/actions"
 import { getDb, schema } from "@/lib/_stubs/db"
 import type { SafetyVerdict } from "@/lib/safety/gate"
 import { isIncidentDemoEnabled } from "@/lib/safety/incident-demo"
@@ -71,7 +70,7 @@ test("moderation-only safeguarding is closed without an alert", async () => {
   assert.deepEqual(calls, [])
 })
 
-test("search, suggestion and Pipeline persist one incident each and keep support on alert failure", async () => {
+test("search and suggestion persist incidents and keep support on alert failure", async () => {
   Object.assign(process.env, demoEnv, {
     PGLITE_DATA_DIR: "memory://", SKIP_SEED: "true", MOCK_MODERATION_LATENCY_MS: "0",
     MOCK_MODERATION_FAILURE_RATE: "0", SAFETY_DEMO_ALERT_FAILURE: "false",
@@ -90,11 +89,10 @@ test("search, suggestion and Pipeline persist one incident each and keep support
   assert.equal(suggestion.data?.crisis, "harm_to_others")
   assert.ok(suggestion.data?.incidentReference)
 
-  const trace = await traceSearch(rawSearch)
-  assert.equal(trace.outcome.kind, "safeguarding")
-  assert.ok(trace.outcome.kind === "safeguarding" && trace.outcome.verdict.incidentReference)
-  const traceReference = trace.outcome.verdict.incidentReference
-  assert.deepEqual(trace.stages.map(stage => stage.state), ["stop", "skip", "skip", "skip"])
+  const failedSearch = await searchTerm(rawSearch)
+  assert.equal(failedSearch.kind, "safeguarding")
+  assert.ok(failedSearch.kind === "safeguarding" && failedSearch.verdict.incidentReference)
+  const failedSearchReference = failedSearch.verdict.incidentReference
   const rows = await db.select().from(schema.safetyIncidents)
   assert.equal(rows.length, 3)
   const searchRecord = rows.find(row => row.referenceId === search.verdict.incidentReference)
@@ -104,7 +102,7 @@ test("search, suggestion and Pipeline persist one incident each and keep support
   assert.equal(suggestionRecord?.query, `${rawTerm}\n${rawContext}`)
   assert.equal(suggestionRecord?.surface, "suggestion")
   assert.equal(suggestionRecord?.alertStatus, "failed")
-  assert.equal(rows.find(row => row.referenceId === traceReference)?.alertStatus, "failed")
+  assert.equal(rows.find(row => row.referenceId === failedSearchReference)?.alertStatus, "failed")
   assert.equal((await db.select().from(schema.termFeedback)).length, 0)
 
   const list = await readRecentSafetyIncidents()
