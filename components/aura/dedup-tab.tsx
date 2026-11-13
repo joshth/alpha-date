@@ -1,6 +1,8 @@
 "use client"
 import { useEffect, useId, useState, useTransition } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { GraphExplorer } from "@/components/aura/similarity-graph-explorer"
+import type { DedupGraphData } from "@/lib/dedup/graph"
 import type { DedupSavings } from "@/lib/dedup/savings"
 
 const mono = "font-mono tabular-nums whitespace-nowrap"
@@ -43,7 +45,7 @@ export function DedupResult({ savings, minutesPerReview, onMinutesChange }: { sa
   )
 }
 
-export function DedupTab({ savingsAction }: { savingsAction: (minutesPerReview: number) => Promise<DedupSavings> }) {
+export function DedupTab({ savingsAction, graphAction }: { savingsAction: (minutesPerReview: number) => Promise<DedupSavings>; graphAction: () => Promise<DedupGraphData> }) {
   const [minutes, setMinutes] = useState(2)
   const [savings, setSavings] = useState<DedupSavings | null>(null)
   const [pending, start] = useTransition()
@@ -52,6 +54,7 @@ export function DedupTab({ savingsAction }: { savingsAction: (minutesPerReview: 
     <div className="space-y-6">
       <div role="status" aria-live="polite" className="sr-only">{pending ? "Updating…" : savings ? "Dedup counts updated" : ""}</div>
       {savings ? <DedupResult savings={savings} minutesPerReview={minutes} onMinutesChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /> : <><MinutesInput value={minutes} onChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /><Skeleton className="h-24" /></>}
+      <GraphExplorer graphAction={graphAction} />
     </div>
   )
 }
