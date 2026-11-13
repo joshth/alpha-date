@@ -30,18 +30,32 @@ export function createDecoderTools(deps: DecoderDeps) {
     return answer(`${query}: not found`, [matches.length ? `Likely matches: ${matches.join(", ")}` : "No close matches in the lexicon."])
   }
 
+  /** The published term for a query, with its Aura score, or null. Pending and rejected terms are never shown. */
+  async function findScored(query: string) {
+    const record = await deps.getTermByKey(normaliseSuggestion(query))
+    if (!record || record.status !== "published") return null
+    const events = await deps.getTermEvents(record.term.term)
+    return { term: record.term, events, score: deps.scoreTermLifecycle(events, deps.now()) }
+  }
+
   return {
     async lookupTerm(query: string): Promise<string> {
-      const record = await deps.getTermByKey(normaliseSuggestion(query))
-      if (!record || record.status !== "published") return notFound(query)
-      const { term } = record
-      const score = deps.scoreTermLifecycle(await deps.getTermEvents(term.term), deps.now())
+      const found = await findScored(query)
+      if (!found) return notFound(query)
+      const { term, score } = found
       return answer(auraSummary(term.term, score), [
         "Meaning:",
         asData(term.definition),
         ...(score ? [`Aura: ${score.explanation}`] : []),
         `Safeguarding note: ${term.sensitivityRating}. ${term.cautionaryNotes ?? ""}`.trim(),
       ])
+    },
+
+    async getAura(query: string): Promise<string> {
+      const found = await findScored(query)
+      if (!found) return notFound(query)
+      const { term, score } = found
+      return answer(auraSummary(term.term, score), [score ? score.explanation : "There is too little search data to give a stage."])
     },
   }
 }
