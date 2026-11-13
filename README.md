@@ -70,6 +70,7 @@ The docs are private (NDA). The site tells search engines not to index it, and C
 | `pnpm eval:validate` | Validate `eval/golden-set.json` and print counts |
 | `pnpm eval` | Evaluation harness (**yours to build** — see `scripts/eval.ts`) |
 | `pnpm aura:plot bussin "goofy ahh" [--out chart.png]` | Chart each term's SIRS lifecycle curve coloured by Aura stage (opens a window, or saves with `--out`). Runs the SIRS plotter vendored in `sirs/`; needs its Python venv (below) |
+| `pnpm -s mcp` | Starts the read-only MCP server for assistive tech; waits for input, Ctrl+C stops it (see `docs/features/mcp-server.md`) |
 | `pnpm aura:plot --list` | Print every term `aura:plot` accepts, grouped by generation |
 | `pnpm db:generate` | Generate a SQL migration after editing `lib/_stubs/schema.ts` |
 | `pnpm db:migrate` | Apply migrations to `DATABASE_URL` (your own hosted Postgres only) |
