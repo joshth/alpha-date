@@ -25,6 +25,16 @@ export interface AuraScore {
 /** Fewer counted events than this in the window gives no stage at all. */
 export const MIN_EVENTS = 30
 export const WINDOW_DAYS = 180
+/** Share of its peak (r) at or above which a term counts as peaking. Tuned on the train split of the SIRS fixtures; the noise-free SIRS rule uses 0.8, but a 180-day window cannot see a peak that came before it. */
+export const R_PEAK = 0.9
+/** Smallest first-to-last change, as a share of peak, that counts as real movement. Tuned on the train split of the SIRS fixtures; the noise-free SIRS rule uses 0.2 (see R_PEAK). */
+export const FLOOR = 0.15
+/** Days averaged at each end of the window for the first and last levels. */
+export const BLOCK_DAYS = 60
+/** Rolling-mean width in days used to find the peak. */
+export const PEAK_SMOOTH_DAYS = 30
+/** A term still rising but already this close to its peak counts as peaking. */
+export const R_RISING_PEAK = 0.95
 const DAY_MS = 86_400_000
 /** Model and prompt events are made by the app, not by people searching. */
 const IGNORED_TYPES = new Set(["llm_generated", "prompt_generated"])
@@ -43,7 +53,19 @@ export function dailyCounts(events: TermEvent[], now: Date): number[] {
 export function scoreTermLifecycle(events: TermEvent[], now: Date = new Date()): AuraScore | null {
   const days = dailyCounts(events, now)
   if (days.reduce((a, b) => a + b, 0) < MIN_EVENTS) return null
-  throw new Error("scoreTermLifecycle: stage rule not implemented yet")
+  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
+  const first = mean(days.slice(0, BLOCK_DAYS))
+  const last = mean(days.slice(-BLOCK_DAYS))
+  let peak = 0
+  for (let i = 0; i + PEAK_SMOOTH_DAYS <= days.length; i++) peak = Math.max(peak, mean(days.slice(i, i + PEAK_SMOOTH_DAYS)))
+  const r = last / peak
+  const delta = (last - first) / peak
+  let stage: AuraStage
+  if (delta >= FLOOR) stage = r >= R_RISING_PEAK ? "peaking" : "emerging"
+  else if (r >= R_PEAK) stage = "peaking"
+  else if (Math.abs(delta) < FLOOR) stage = "parent_territory"
+  else stage = "declining"
+  return { stage, confidence: 1, explanation: "" }
 }
 
 export const AURA_STAGE_LABELS: Record<AuraStage, string> = {
