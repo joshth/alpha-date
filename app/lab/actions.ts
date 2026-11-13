@@ -13,7 +13,12 @@ import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
-import { getAiCallsAvoided, getTermByKey, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
+import { getAiCallsAvoided, getTermByKey, getTermEvents, listPublishedTermNames, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
+import { createAuraFit, type AuraFitResult } from "@/lib/aura/fit"
+import { runFit } from "@/lib/aura/fit-command"
+import { sanitizeUserText } from "@/lib/discovery/prompt"
+import { prepareSafetyInput } from "@/lib/safety/input"
+import { safetyResponseMessage } from "@/lib/safety/responses"
 import type { ActionResult, SearchOutcome } from "@/lib/types"
 
 // Pipeline: input → safety gate → lexicon lookup → AI discovery → stored for
@@ -59,4 +64,18 @@ export async function getSafetyActivity(from: string, to: string): Promise<Safet
   const user = await getSessionUser()
   if (!user || !isReviewer(user)) throw new Error("Reviewer access required.")
   return readSafetyActivity({ from, to })
+}
+
+// Aura dashboard: gate the term like search, then fit it (vendored SIRS data or our own events).
+// One instance per server process, so its cache makes repeat lookups instant.
+const runAuraFit = createAuraFit({ runFit, getTermEvents, listPublishedTermNames, now: () => new Date() })
+
+export type AuraFitOutcome = AuraFitResult | { kind: "blocked"; message: string } | { kind: "invalid"; message: string }
+
+export async function fitAuraTerm(raw: string): Promise<AuraFitOutcome> {
+  const term = sanitizeUserText(raw, 100)
+  if (!term || term.length < 2) return { kind: "invalid", message: "Enter a term between 2 and 100 characters." }
+  const verdict = await trackedInputSafety(prepareSafetyInput(raw), "search")
+  if (verdict.action !== "safe") return { kind: "blocked", message: safetyResponseMessage(verdict, "search") }
+  return runAuraFit(term)
 }
