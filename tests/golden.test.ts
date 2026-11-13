@@ -4,8 +4,23 @@ import path from "node:path"
 import { test } from "node:test"
 import { EVAL_CATEGORIES, type GoldenCase, type GoldenSet, labelProblems, loadGoldenSet, reviewProblems } from "@/lib/eval/golden"
 import { checkInputSafety } from "@/lib/safety/gate"
+import f11Expectations from "./fixtures/f1-1-safety-expectations.json"
 
 const golden = loadGoldenSet()
+// Keep the starter answer key unchanged while testing the newer F1.1 policy.
+const currentExpectations: Record<string, {
+  input: string; baselineAction: string; action: string; reason: string; requirement: string
+}> = f11Expectations
+
+test("F1.1 policy changes refer to the unchanged starter input and label", () => {
+  for (const [id, expected] of Object.entries(currentExpectations)) {
+    const entry = golden.cases.find(c => c.id === id)
+    assert.ok(entry && entry.kind === "discovery", id)
+    assert.equal(entry.input, expected.input)
+    assert.equal(entry.safety.action, expected.baselineAction)
+    assert.equal(expected.requirement, "W18EDATE-146")
+  }
+})
 
 test("every safety and discovery case has a consistent evaluation category", () => {
   for (const c of golden.cases) {
@@ -26,9 +41,11 @@ test("every evaluation category has at least one case, so canot break", () => {
 
 for (const c of golden.cases) {
   if (c.kind !== "discovery") continue
-  test(`gate lets discovery case through: ${c.id}`, async () => {
+  test(`gate enforces current safety policy for discovery case: ${c.id}`, async () => {
     const verdict = await checkInputSafety(c.input)
-    assert.equal(verdict.action, c.safety.action, `action for case ${c.id}`)
+    const expected = currentExpectations[c.id]
+    assert.equal(verdict.action, expected?.action ?? c.safety.action, `action for case ${c.id}`)
+    if (expected) assert.equal(verdict.reason, expected.reason, `reason for case ${c.id}`)
     for (const category of c.safety.categories) {
       assert.ok(verdict.categories.includes(category), `category ${category} for case ${c.id}`)
     }
