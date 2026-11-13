@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { scoreTermLifecycle, type TermEvent } from "@/lib/aura"
@@ -20,4 +21,41 @@ test("scoreTermLifecycle returns null below MIN_EVENTS counted events, ignoring 
     ...eventsOn(Array.from({ length: 40 }, (_, i) => i * 4), "prompt_generated"),
   ]
   assert.equal(scoreTermLifecycle([...counted, ...ignored], NOW), null)
+})
+
+// One day's events: round(rate(i)) at noon of the day (179 - i) days before NOW, i = 0..179
+function eventsFromRate(rate: (i: number) => number): TermEvent[] {
+  return Array.from({ length: 180 }, (_, i) => eventsOn(Array(Math.round(rate(i))).fill(179 - i))).flat()
+}
+
+test("scoreTermLifecycle: linear rise is emerging", () => {
+  assert.equal(scoreTermLifecycle(eventsFromRate((i) => 0.5 + (7.5 * i) / 179), NOW)?.stage, "emerging")
+})
+
+test("scoreTermLifecycle: steady at its own peak is peaking", () => {
+  assert.equal(scoreTermLifecycle(eventsFromRate(() => 6), NOW)?.stage, "peaking")
+})
+
+test("scoreTermLifecycle: linear fall is declining", () => {
+  assert.equal(scoreTermLifecycle(eventsFromRate((i) => 8 - (7.5 * i) / 179), NOW)?.stage, "declining")
+})
+
+test("scoreTermLifecycle: early blip then flat low rate is parent_territory", () => {
+  assert.equal(scoreTermLifecycle(eventsFromRate((i) => (i < 3 ? 8 : 2)), NOW)?.stage, "parent_territory")
+})
+
+test("scoreTermLifecycle: held-out fixture accuracy >= 0.55", () => {
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/aura-fixtures-test.json", import.meta.url), "utf8"))
+  let hits = 0
+  for (const c of fixture.cases) {
+    const now = new Date(c.now).getTime()
+    const at = (daysAgo: number, eventType: string) => ({ eventType, createdAt: new Date(now - daysAgo * DAY - DAY / 2) })
+    const events = [
+      ...c.days.flatMap((n: number, i: number) => Array.from({ length: n }, () => at(179 - i, "search_hit"))),
+      ...Array.from({ length: c.ignored }, (_, k) => at((k * 7) % 180, "llm_generated")),
+    ]
+    if (scoreTermLifecycle(events, new Date(c.now))?.stage === c.stage) hits++
+  }
+  const accuracy = hits / fixture.cases.length
+  assert.ok(accuracy >= 0.55, `accuracy ${accuracy.toFixed(3)} (${hits}/${fixture.cases.length})`)
 })
