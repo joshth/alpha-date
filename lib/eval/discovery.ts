@@ -1,7 +1,7 @@
 import { discoverTerm, type GenerateDiscovery } from "@/lib/discovery/discover"
 import { buildDiscoveryPrompt } from "@/lib/discovery/prompt"
-import { type EvalCategory, type GoldenCase, RATING_ORDER } from "@/lib/eval/golden"
-import { rate } from "@/lib/eval/metrics"
+import { type EvalCategory, type GoldenCase, RATING_ORDER, type Split, type WordType } from "@/lib/eval/golden"
+import { type Rate, rate } from "@/lib/eval/metrics"
 
 // Discovery evaluation (W18EDATE-65, part of W18EDATE-29).
 //
@@ -19,6 +19,11 @@ import { rate } from "@/lib/eval/metrics"
 // - a provider error is neither accepted nor rejected: the case is listed in
 //   errorIds and left out of every denominator, so outages can't pass as
 //   "the model said no".
+// - byWordType / byDialect / bySplit (W18EDATE-70): the same recall and H1,
+//   worked out inside each group, so a weak spot (e.g. AU slang, or plausible
+//   made-up words) shows up instead of hiding in the overall number. A group
+//   with no real slang (or no invented words) shows that rate as n/a.
+// - options.split runs only the "dev" or the "held-out" cases.
 //
 // Only discovery cases are sent to the model. Safety cases are filtered out
 // here, so their inputs never reach a provider or a report.
@@ -31,6 +36,9 @@ export interface DiscoveryCaseResult {
   id: string
   input: string
   category: EvalCategory
+  wordType: WordType
+  split: Split
+  dialect: string
   isRealSlang: boolean
   accepted: boolean | null
   outcome: Outcome
@@ -45,6 +53,33 @@ export interface DiscoveryCaseResult {
 export interface EvaluateDiscoveryOptions {
   buildPrompt?: (searchTerm: string) => string
   now?: () => number
+  split?: Split
+}
+
+// Recall and H1 inside one group of results (one word type, dialect or split).
+export interface GroupRates {
+  cases: number
+  recall: Rate
+  hallucinationRate: Rate
+}
+
+function ratesBy(scored: readonly DiscoveryCaseResult[], pick: (r: DiscoveryCaseResult) => string): Record<string, GroupRates> {
+  const keys = [...new Set(scored.map(pick))].sort()
+  return Object.fromEntries(
+    keys.map((key) => {
+      const group = scored.filter((r) => pick(r) === key)
+      const real = group.filter((r) => r.isRealSlang)
+      const invented = group.filter((r) => r.category === "invented")
+      return [
+        key,
+        {
+          cases: group.length,
+          recall: rate(real.filter((r) => r.accepted).length, real.length),
+          hallucinationRate: rate(invented.filter((r) => r.accepted).length, invented.length),
+        },
+      ]
+    }),
+  )
 }
 
 function outcomeFor(isRealSlang: boolean, accepted: boolean): Outcome {
@@ -65,9 +100,11 @@ function percentile(sorted: number[], p: number): number | null {
 export async function evaluateDiscovery(
   cases: readonly GoldenCase[],
   generate: GenerateDiscovery,
-  { buildPrompt = buildDiscoveryPrompt, now = () => performance.now() }: EvaluateDiscoveryOptions = {},
+  { buildPrompt = buildDiscoveryPrompt, now = () => performance.now(), split }: EvaluateDiscoveryOptions = {},
 ) {
-  const labelled = cases.filter((entry): entry is DiscoveryCase => entry.kind === "discovery")
+  const labelled = cases.filter(
+    (entry): entry is DiscoveryCase => entry.kind === "discovery" && (split === undefined || entry.discovery.split === split),
+  )
   const results: DiscoveryCaseResult[] = []
 
   for (const entry of labelled) {
@@ -90,6 +127,9 @@ export async function evaluateDiscovery(
       id: entry.id,
       input: entry.input,
       category: entry.category,
+      wordType: entry.discovery.wordType,
+      split: entry.discovery.split,
+      dialect: entry.discovery.dialect,
       isRealSlang: entry.discovery.isRealSlang,
       accepted,
       outcome: accepted === null ? "error" : outcomeFor(entry.discovery.isRealSlang, accepted),
@@ -134,6 +174,9 @@ export async function evaluateDiscovery(
     falseAcceptRate: rate(nonSlang.filter((r) => r.accepted).length, nonSlang.length),
     sensitivityMislabelRate: rate(withMinimum.filter((r) => r.sensitivityMislabel).length, withMinimum.length),
     acceptedByCategory: byCategory,
+    byWordType: ratesBy(scored, (r) => r.wordType),
+    byDialect: ratesBy(scored, (r) => r.dialect),
+    bySplit: ratesBy(scored, (r) => r.split),
     hallucinatedIds: invented.filter((r) => r.accepted).map((r) => r.id),
     falsePositiveIds: scored.filter((r) => r.outcome === "false_positive").map((r) => r.id),
     falseNegativeIds: scored.filter((r) => r.outcome === "false_negative").map((r) => r.id),

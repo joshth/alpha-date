@@ -28,7 +28,7 @@ import {
 } from "@/lib/eval/cost"
 import { DISCOVERY_PROMPT_VERSION } from "@/lib/discovery/prompt"
 import { evaluateDiscovery } from "@/lib/eval/discovery"
-import { DEFAULT_GOLDEN_SET_PATH, EVAL_CATEGORIES, type GoldenSet, loadGoldenSet } from "@/lib/eval/golden"
+import { DEFAULT_GOLDEN_SET_PATH, EVAL_CATEGORIES, type GoldenSet, loadGoldenSet, SPLITS, type Split } from "@/lib/eval/golden"
 import { formatRate } from "@/lib/eval/metrics"
 import { type RunMeta, sha256File, writeReport } from "@/lib/eval/report"
 import {
@@ -54,6 +54,13 @@ if (caseLimit !== undefined && !(Number.isInteger(caseLimit) && caseLimit > 0)) 
   process.exit(1)
 }
 
+const flagSplit = process.argv.indexOf("--split")
+const onlySplit = flagSplit >= 0 ? (process.argv[flagSplit + 1] as Split | undefined) : undefined
+if (flagSplit >= 0 && !SPLITS.includes(onlySplit as Split)) {
+  console.error(`--split must be one of ${SPLITS.join(", ")} (got "${process.argv[flagSplit + 1] ?? ""}")`)
+  process.exit(1)
+}
+
 let set: GoldenSet
 try {
   set = loadGoldenSet(file)
@@ -73,6 +80,15 @@ for (const c of set.cases) if (c.kind !== "dedup") byCategory[c.category]++
 console.log("By category:", byCategory)
 const empty = EVAL_CATEGORIES.filter((category) => byCategory[category] === 0)
 if (empty.length) console.log(`  (no cases yet for: ${empty.join(", ")})`)
+
+const discoveryCases = set.cases.flatMap((c) => (c.kind === "discovery" ? [c] : []))
+const countBy = (pick: (c: (typeof discoveryCases)[number]) => string) =>
+  discoveryCases.reduce<Record<string, number>>((acc, c) => {
+    acc[pick(c)] = (acc[pick(c)] ?? 0) + 1
+    return acc
+  }, {})
+console.log("Discovery by word type:", countBy((c) => c.discovery.wordType))
+console.log("Discovery by split:", countBy((c) => c.discovery.split), "by dialect:", countBy((c) => c.discovery.dialect))
 
 //Reviewer section
   const review = set.review;
@@ -100,8 +116,11 @@ async function runDiscoveryOnce() {
   const pricing = pricingFor(meta.config)
   const meter = meterDiscovery(generateDiscoveryObject)
   const startedMs = performance.now()
-  const cases = caseLimit ? set.cases.filter((c) => c.kind === "discovery").slice(0, caseLimit) : set.cases
+  
+  const pool = discoveryCases.filter((c) => onlySplit === undefined || c.discovery.split === onlySplit)
+  const cases = caseLimit ? pool.slice(0, caseLimit) : pool
   if (caseLimit) meta.caseLimit = caseLimit
+  if (onlySplit) meta.split = onlySplit
   const discovery = await evaluateDiscovery(cases, meter.generate)
   meta.finishedAt = new Date().toISOString()
   const timing = runTiming(startedMs, performance.now(), discovery.calls)
@@ -115,7 +134,7 @@ async function runDiscovery() {
   const { meta, timing, cost, pricing, discovery, calls } = await runDiscoveryOnce()
   console.log(
     `\nDiscovery evaluation: ${meta.config.mock ? "MOCK model, deterministic; not a real accuracy claim" : meta.config.model}` +
-      ` (prompt ${meta.config.promptVersion})`,
+      ` (prompt ${meta.config.promptVersion}; ${onlySplit ? `${onlySplit} split only` : "all splits"})`,
   )
   console.table({
     "model accepted": { "real slang": discovery.confusion.truePositive, "not slang": discovery.confusion.falsePositive },
@@ -126,6 +145,16 @@ async function runDiscovery() {
   console.log(`H1 hallucination rate: ${formatRate(discovery.hallucinationRate)}  [${discovery.hallucinatedIds.join(", ")}]`)
   console.log(`False-accept rate:     ${formatRate(discovery.falseAcceptRate)}`)
   console.log(`Sensitivity mislabels: ${formatRate(discovery.sensitivityMislabelRate)}  [${discovery.sensitivityMislabelIds.join(", ")}]`)
+  for (const [title, groups] of [
+    ["word type", discovery.byWordType],
+    ["dialect", discovery.byDialect],
+    ["split", discovery.bySplit],
+  ] as const) {
+    console.log(`By ${title}:`)
+    for (const [key, g] of Object.entries(groups)) {
+      console.log(`  ${key.padEnd(19)} ${String(g.cases).padStart(3)} cases; recall ${formatRate(g.recall)}; H1 ${formatRate(g.hallucinationRate)}`)
+    }
+  }
   console.log(
     `Calls: ${discovery.calls}; provider errors: ${discovery.errorIds.length}; ` +
       `latency mean ${discovery.latency.meanMs?.toFixed(1)} ms, p95 ${discovery.latency.p95Ms?.toFixed(1)} ms; ` +
@@ -180,6 +209,7 @@ async function runSweep() {
       startedAt,
       promptVersion: DISCOVERY_PROMPT_VERSION,
       mock: runs.every((r) => r.config.mock),
+      ...(onlySplit ? { split: onlySplit } : {}),
     },
     summary,
     runs,

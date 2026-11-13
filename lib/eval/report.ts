@@ -2,7 +2,8 @@ import { createHash } from "node:crypto"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { type CostSummary, formatUsd, type MeteredCall, type RunTiming, type TokenSource } from "@/lib/eval/cost"
-import type { DiscoveryEvaluation } from "@/lib/eval/discovery"
+import type { DiscoveryEvaluation, GroupRates } from "@/lib/eval/discovery"
+import type { Split } from "@/lib/eval/golden"
 import { formatRate } from "@/lib/eval/metrics"
 
 // Run report for `pnpm eval --report`. Every report carries the dataset and
@@ -32,6 +33,7 @@ export interface RunMeta {
   timing?: RunTiming
   cost?: CostSummary
   caseLimit?: number
+  split?: Split
 }
 
 export function sha256File(file: string): string {
@@ -41,12 +43,25 @@ export function sha256File(file: string): string {
 export function reportBaseName(meta: RunMeta): string {
   const stamp = meta.startedAt.replace(/[:.]/g, "-").replace(/Z$/, "")
   const model = meta.config.mock ? "mock" : meta.config.model.replace(/[^a-z0-9.-]+/gi, "_")
-  return `${stamp}-discovery-${model}${meta.caseLimit ? `-first${meta.caseLimit}` : ""}`
+  return `${stamp}-discovery-${model}${meta.split ? `-${meta.split}` : ""}${meta.caseLimit ? `-first${meta.caseLimit}` : ""}`
+}
+
+// W18EDATE-70: recall and H1 inside each word type, dialect or split.
+export function breakdownLines(title: string, groups: Record<string, GroupRates>): string[] {
+  return [
+    `| ${title} | Cases | Recall (real slang found) | H1 (made-up words accepted) |`,
+    "| --- | --- | --- | --- |",
+    ...Object.entries(groups).map(
+      ([key, g]) => `| ${key} | ${g.cases} | ${formatRate(g.recall)} | ${formatRate(g.hallucinationRate)} |`,
+    ),
+    "",
+  ]
 }
 
 // The header line a reader sees first: how long the run took and what it cost.
 export function runSummaryLines(meta: RunMeta): string[] {
   const lines: string[] = []
+  if (meta.split) lines.push(`- Split: ${meta.split} cases only`)
   if (meta.caseLimit) lines.push(`- Timing test: first ${meta.caseLimit} discovery cases only`)
   if (meta.timing && meta.cost) {
     const perMinute = meta.timing.callsPerMinute === null ? "" : ` (${meta.timing.callsPerMinute.toFixed(0)} per minute)`
@@ -108,6 +123,13 @@ export function toMarkdown(meta: RunMeta, discovery: DiscoveryEvaluation): strin
     `| Model accepted | ${discovery.confusion.truePositive} | ${discovery.confusion.falsePositive} |`,
     `| Model rejected | ${discovery.confusion.falseNegative} | ${discovery.confusion.trueNegative} |`,
     "",
+    "## Breakdowns (W18EDATE-70)",
+    "",
+    "Recall and H1 worked out inside each group. Small groups have wide intervals; n/a means the group has no real slang or no made-up words.",
+    "",
+    ...breakdownLines("Word type", discovery.byWordType),
+    ...breakdownLines("Dialect", discovery.byDialect),
+    ...breakdownLines("Split", discovery.bySplit),
     `Hallucinated: ${discovery.hallucinatedIds.join(", ") || "none"}`,
     "",
     `Missed real slang: ${discovery.falseNegativeIds.join(", ") || "none"}`,

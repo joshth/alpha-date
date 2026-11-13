@@ -122,6 +122,32 @@ test("discovery metrics match the hand-computed fixture", async () => {
   assert.deepEqual(report.acceptedByCategory.invented, rate(1, 3))
 })
 
+test("recall and H1 are broken down by word type, dialect and split (W18EDATE-70)", async () => {
+  const report = await evaluateDiscovery(fixture, fakeModel([]))
+  // Fixture word types: valid_slang -> real-new, invented -> invented-plausible,
+  // non_slang -> real-old. down-1 errored, so it is in no group.
+  assert.deepEqual(report.byWordType["real-new"], { cases: 3, recall: rate(2, 3), hallucinationRate: rate(0, 0) })
+  assert.deepEqual(report.byWordType["invented-plausible"], { cases: 3, recall: rate(0, 0), hallucinationRate: rate(1, 3) })
+  assert.deepEqual(report.byWordType["real-old"], { cases: 2, recall: rate(0, 0), hallucinationRate: rate(0, 0) })
+  assert.deepEqual(Object.keys(report.byDialect), ["US"])
+  assert.deepEqual(report.byDialect.US, { cases: 8, recall: rate(2, 3), hallucinationRate: rate(1, 3) })
+  // The split groups add back up to the overall numbers.
+  const splits = Object.values(report.bySplit)
+  assert.equal(splits.reduce((n, g) => n + g.cases, 0), 8)
+  assert.equal(splits.reduce((n, g) => n + g.recall.numerator, 0), 2)
+  assert.equal(splits.reduce((n, g) => n + g.hallucinationRate.numerator, 0), 1)
+})
+
+test("--split runs only the cases in that split", async () => {
+  const seen: string[] = []
+  const heldOut = fixture.filter((c) => c.kind === "discovery" && c.discovery.split === "held-out")
+  const report = await evaluateDiscovery(fixture, fakeModel(seen), { split: "held-out" })
+  assert.equal(report.total, heldOut.length)
+  assert.deepEqual(seen, heldOut.map((c) => c.input))
+  assert.ok(report.results.every((r) => r.split === "held-out"))
+  assert.deepEqual(Object.keys(report.bySplit), heldOut.length ? ["held-out"] : [])
+})
+
 test("safety cases are never sent to the discovery model", async () => {
   const seen: string[] = []
   const report = await evaluateDiscovery(fixture, fakeModel(seen))
