@@ -82,3 +82,17 @@ export const AURA_STAGE_LABELS: Record<AuraStage, string> = {
   declining: "Declining",
   parent_territory: "Parent territory",
 }
+
+export const TREND_WEEKS = 26
+
+/** Counted events per week for the last 26 weeks, oldest first, scaled so the busiest week is 1 (A11Y-17). */
+export function auraTrend(events: TermEvent[], now: Date = new Date()): number[] {
+  const weeks = new Array<number>(TREND_WEEKS).fill(0)
+  for (const event of events) {
+    if (IGNORED_TYPES.has(event.eventType)) continue
+    const week = Math.floor(Math.floor((now.getTime() - event.createdAt.getTime()) / DAY_MS) / 7)
+    if (week >= 0 && week < TREND_WEEKS) weeks[TREND_WEEKS - 1 - week]++
+  }
+  const max = Math.max(...weeks)
+  return max === 0 ? weeks : weeks.map((count) => count / max)
+}
