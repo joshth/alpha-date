@@ -1,11 +1,4 @@
----
-sidebar_label: Project scope
-sidebar_position: 6
----
-
 # **Gen Alpha Decoder™ | Date \- Project Scope and Schedule**
-
-Live version: [Project Scope and Schedule (Google Doc)](https://docs.google.com/document/d/1LNojWKXzGpgl3YoTBUHLI9rGGd-ex9ao8Ywq3_FkoJs/edit?tab=t.0#heading=h.ua12c355tyes). This page is a copy and may be out of date.
 
 # **Glossary of Technical Terms**
 
