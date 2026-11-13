@@ -13,7 +13,9 @@ import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
 import type { DedupSavings } from "@/lib/dedup/savings"
-import { readDedupSavings } from "@/lib/dedup/store"
+import type { DedupGraphData } from "@/lib/dedup/graph"
+import { readDedupRows, readDedupSavings } from "@/lib/dedup/store"
+import { loadGoldenSet } from "@/lib/eval/golden"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
 import { getAiCallsAvoided, getTermByKey, getTermEvents, listPublishedTermNames, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
 import { createAuraFit, type AuraFitResult } from "@/lib/aura/fit"
@@ -85,4 +87,14 @@ export async function fitAuraTerm(raw: string): Promise<AuraFitOutcome> {
 export async function getDedupSavings(minutesPerReview = 2): Promise<DedupSavings> {
   const ok = Number.isFinite(minutesPerReview) && minutesPerReview >= 0 && minutesPerReview <= 10000
   return readDedupSavings(ok ? minutesPerReview : 2)
+}
+
+export async function getDedupGraph(): Promise<DedupGraphData> {
+  let golden: DedupGraphData["golden"] = []
+  try {
+    golden = loadGoldenSet().cases.flatMap((c) => (c.kind === "dedup" ? [{ input: c.input, candidate: c.dedup.candidate, sameTerm: c.dedup.sameTerm }] : []))
+  } catch {
+    // No readable golden set: the explorer then says "No golden dedup cases loaded." instead of failing.
+  }
+  return { rows: await readDedupRows(), lexicon: await listPublishedTermNames(), golden }
 }

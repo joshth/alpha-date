@@ -4,6 +4,13 @@ export type GraphNode = { id: string; label: string; kind: "suggestion" | "lexic
 export type GraphEdge = { id: string; source: string; target: string; score: number; reason: MatchReason; signals?: { trigram: number; stem: boolean } }
 export type Graph = { nodes: GraphNode[]; edges: GraphEdge[] }
 
+/** What the Dedup tab loads once: suggestion rows (text and count only), lexicon terms and the golden dedup cases. */
+export type DedupGraphData = {
+  rows: { suggestedTerm: string; count: number }[]
+  lexicon: string[]
+  golden: { input: string; candidate: string; sameTerm: boolean }[]
+}
+
 const key = (s: string) => s.trim().toLowerCase()
 
 export function similarityGraph(rows: { suggestedTerm: string; count: number }[], lexicon: string[], threshold = MATCH_THRESHOLD): Graph {
