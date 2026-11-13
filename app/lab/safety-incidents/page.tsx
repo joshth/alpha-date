@@ -19,7 +19,7 @@ export default async function SafetyIncidentsPage() {
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-bold text-foreground">Safety incidents</h1>
-      <p className="text-muted-foreground">Local demo for synthetic inputs. Submitted phrases are shown for incident review; alerts are simulated.</p>
+      <p className="text-muted-foreground">Local demo for synthetic inputs. Submitted phrases are redacted for personal information before incident review; alerts are simulated.</p>
       {incidents === null ? <p role="alert">Could not load incidents. Please try again.</p> : incidents.length === 0 ? (
         <p>No incidents recorded yet.</p>
       ) : (

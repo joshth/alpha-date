@@ -1,4 +1,5 @@
 import "server-only"
+import { redactPersonalInformation } from "@/lib/safety/privacy"
 import { and, desc, eq } from "drizzle-orm"
 import { getDb, type Db } from "@/lib/_stubs/db"
 import { safetyIncidents } from "@/lib/_stubs/schema"
@@ -26,7 +27,7 @@ export function createSafetyIncidentStore(database: () => Promise<Db> = getDb, t
       await withIncidentDeadline(async () => {
         const db = await database()
         await db.insert(safetyIncidents).values({
-          referenceId: record.referenceId, query: record.query, surface: record.surface,
+          referenceId: record.referenceId, query: redactPersonalInformation(record.query), surface: record.surface,
           crisis: record.crisis, categories: record.categories,
           recordedAtUtc: new Date(record.recordedAtUtc), recordedAtSydney: record.recordedAtSydney,
           localTimezone: record.localTimezone, triageLevel: record.triageLevel,
@@ -64,8 +65,9 @@ export async function readRecentSafetyIncidents() {
 export async function readRecentSafetyIncidentDetails() {
   const { referenceId, query, recordedAtUtc, recordedAtSydney, surface, crisis, triageLevel, status, alertStatus } = safetyIncidents
   const db = await getDb()
-  return db.select({ referenceId, query, recordedAtUtc, recordedAtSydney, surface, crisis, triageLevel, status, alertStatus })
+  const rows = await db.select({ referenceId, query, recordedAtUtc, recordedAtSydney, surface, crisis, triageLevel, status, alertStatus })
     .from(safetyIncidents)
     .orderBy(desc(recordedAtUtc), desc(referenceId))
     .limit(50)
+  return rows.map(row => ({ ...row, query: redactPersonalInformation(row.query) }))
 }

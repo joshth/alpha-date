@@ -2,6 +2,8 @@ import { assessSafety, type CrisisKind, type SafetyCategory } from "@/lib/safety
 import { moderate, type ModerationResult } from "@/lib/_stubs/moderation"
 import { decideSafetyVerdict } from "@/lib/safety/policy"
 import { assessContextualSafety } from "@/lib/safety/context"
+import { redactPersonalInformation } from "@/lib/safety/privacy"
+import { isPromptInjection } from "@/lib/safety/injection"
 
 export type SafetyAction = "safe" | "gentle_support" | "refuse" | "safeguarding"
 
@@ -37,9 +39,14 @@ export function createInputSafetyGate(moderator: (text: string) => Promise<Moder
       return { ...contextual, categories: [...new Set([...assessment.categories, ...contextual.categories])] }
     }
 
+    if (isPromptInjection(text)) {
+      if (contextual?.action === "gentle_support") return contextual
+      return { action: "refuse", categories: assessment.categories, crisis: null, decidedBy: "rules", reason: "prompt_injection" }
+    }
+
     let result: ModerationResult
     try {
-      result = await moderator(text)
+      result = await moderator(redactPersonalInformation(text))
     } catch {
       return {
         action: "refuse",
