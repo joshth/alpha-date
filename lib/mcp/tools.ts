@@ -2,7 +2,7 @@
 import { AURA_STAGE_LABELS, LOW_CONFIDENCE, type AuraScore, type scoreTermLifecycle } from "@/lib/aura"
 import { asData } from "@/lib/mcp/data"
 import { answer } from "@/lib/mcp/format"
-import { normaliseSuggestion } from "@/lib/normalise"
+import { findLikelyMatches, normaliseSuggestion } from "@/lib/normalise"
 import type { checkInputSafety } from "@/lib/safety/gate"
 import type { getTermByKey, getTermEvents, listPublishedTermNames } from "@/lib/terms-store"
 
@@ -24,10 +24,16 @@ export function auraSummary(name: string, score: AuraScore | null): string {
 }
 
 export function createDecoderTools(deps: DecoderDeps) {
+  /** Never guesses a definition: names up to 3 published terms the query is close to (A11Y-14). */
+  async function notFound(query: string): Promise<string> {
+    const matches = findLikelyMatches(query, await deps.listPublishedTermNames()).slice(0, 3).map((m) => m.candidate)
+    return answer(`${query}: not found`, [matches.length ? `Likely matches: ${matches.join(", ")}` : "No close matches in the lexicon."])
+  }
+
   return {
     async lookupTerm(query: string): Promise<string> {
       const record = await deps.getTermByKey(normaliseSuggestion(query))
-      if (!record || record.status !== "published") return answer(`${query}: not found`, [])
+      if (!record || record.status !== "published") return notFound(query)
       const { term } = record
       const score = deps.scoreTermLifecycle(await deps.getTermEvents(term.term), deps.now())
       return answer(auraSummary(term.term, score), [
