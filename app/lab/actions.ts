@@ -12,6 +12,8 @@ import { readSafetyActivity, type SafetyActivity } from "@/lib/safety/activity"
 import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
+import type { DedupSavings } from "@/lib/dedup/savings"
+import { readDedupSavings } from "@/lib/dedup/store"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
 import { getAiCallsAvoided, getTermByKey, getTermEvents, listPublishedTermNames, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
 import { createAuraFit, type AuraFitResult } from "@/lib/aura/fit"
@@ -78,4 +80,9 @@ export async function fitAuraTerm(raw: string): Promise<AuraFitOutcome> {
   const verdict = await trackedInputSafety(prepareSafetyInput(raw), "search")
   if (verdict.action !== "safe") return { kind: "blocked", message: safetyResponseMessage(verdict, "search") }
   return runAuraFit(term)
+}
+
+export async function getDedupSavings(minutesPerReview = 2): Promise<DedupSavings> {
+  const ok = Number.isFinite(minutesPerReview) && minutesPerReview >= 0 && minutesPerReview <= 10000
+  return readDedupSavings(ok ? minutesPerReview : 2)
 }
