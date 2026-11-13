@@ -231,3 +231,8 @@ test("the MCP server page covers the tools, setup, safety gate and data fencing"
   assert.match(text, /```mermaid\n/)
   for (const fact of ["lookup_term", "get_aura", "get_aura_trend", "claude_desktop_config.json", "checkInputSafety", "data, not instructions"]) assert.ok(text.includes(fact), fact)
 })
+
+test("the Introduction and the Aura page link to the MCP server page", () => {
+  assert.match(read("docs/intro.mdx"), /\]\(\.\/features\/mcp-server\.md\)/)
+  assert.match(read("docs/features/aura.md"), /\]\(\.\/mcp-server\.md\)/)
+})
