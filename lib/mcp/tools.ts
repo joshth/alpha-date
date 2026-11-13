@@ -4,6 +4,9 @@ import { asData } from "@/lib/mcp/data"
 import { answer } from "@/lib/mcp/format"
 import { findLikelyMatches, normaliseSuggestion } from "@/lib/normalise"
 import type { checkInputSafety } from "@/lib/safety/gate"
+import { prepareSafetyInput } from "@/lib/safety/input"
+import { resourcesFor } from "@/lib/safety/resources"
+import { safetyResponseMessage } from "@/lib/safety/responses"
 import type { getTermByKey, getTermEvents, listPublishedTermNames } from "@/lib/terms-store"
 
 export interface DecoderDeps {
@@ -24,6 +27,17 @@ export function auraSummary(name: string, score: AuraScore | null): string {
 }
 
 export function createDecoderTools(deps: DecoderDeps) {
+  /** Same gate and message as web search (A11Y-16). A flagged query gets help services and nothing from the lexicon. */
+  async function blocked(query: string): Promise<string | null> {
+    const verdict = await deps.checkInputSafety(prepareSafetyInput(query), "search")
+    if (verdict.action === "safe") return null
+    const message = safetyResponseMessage(verdict, "search")
+    const firstSentence = message.slice(0, message.indexOf(".") + 1)
+    const help = resourcesFor(verdict.categories).map((r) =>
+      [r.name, r.detail, r.phone && `Phone ${r.phone}`, r.text && `Text ${r.text}`, r.url].filter(Boolean).join(". "))
+    return answer(firstSentence, [message.slice(firstSentence.length), ...help])
+  }
+
   /** Never guesses a definition: names up to 3 published terms the query is close to (A11Y-14). */
   async function notFound(query: string): Promise<string> {
     const matches = findLikelyMatches(query, await deps.listPublishedTermNames()).slice(0, 3).map((m) => m.candidate)
@@ -40,6 +54,8 @@ export function createDecoderTools(deps: DecoderDeps) {
 
   return {
     async lookupTerm(query: string): Promise<string> {
+      const refusal = await blocked(query)
+      if (refusal) return refusal
       const found = await findScored(query)
       if (!found) return notFound(query)
       const { term, score } = found
@@ -52,6 +68,8 @@ export function createDecoderTools(deps: DecoderDeps) {
     },
 
     async getAura(query: string): Promise<string> {
+      const refusal = await blocked(query)
+      if (refusal) return refusal
       const found = await findScored(query)
       if (!found) return notFound(query)
       const { term, score } = found
@@ -60,6 +78,8 @@ export function createDecoderTools(deps: DecoderDeps) {
 
     /** Numbers only: the user's own device turns them into pitch or vibration (A11Y-17). */
     async getAuraTrend(query: string): Promise<string> {
+      const refusal = await blocked(query)
+      if (refusal) return refusal
       const found = await findScored(query)
       if (!found) return notFound(query)
       const { term, events, score } = found
