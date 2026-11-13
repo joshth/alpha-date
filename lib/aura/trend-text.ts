@@ -7,7 +7,7 @@ export function trendSentence({ r, delta, stage }: Pick<SirsFit, "r" | "delta" |
   if (stage === null) return "No stage yet: the curve hasn't taken off."
   const pts = Math.round(delta * 100)
   const from = r >= 0.995 ? "At its peak" : `Down ${Math.round((1 - r) * 100)}% from its peak`
-  return `${from}, ${pts === 0 ? "no change" : `${pts > 0 ? "up" : "down"} ${Math.abs(pts)} points`} in the last 180 days.`
+  return `${from}, ${pts === 0 ? "no change" : `${pts > 0 ? "up" : "down"} ${Math.abs(pts)} ${Math.abs(pts) === 1 ? "point" : "points"}`} in the last 180 days.`
 }
 
 export function lifecycleRows(fit: SirsFit) {
