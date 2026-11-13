@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { scoreTermLifecycle, type TermEvent } from "@/lib/aura"
+import { LOW_CONFIDENCE, scoreTermLifecycle, type TermEvent } from "@/lib/aura"
 
 const NOW = new Date("2026-11-01T00:00:00.000Z")
 const DAY = 86_400_000
@@ -58,4 +58,25 @@ test("scoreTermLifecycle: held-out fixture accuracy >= 0.55", () => {
   }
   const accuracy = hits / fixture.cases.length
   assert.ok(accuracy >= 0.55, `accuracy ${accuracy.toFixed(3)} (${hits}/${fixture.cases.length})`)
+})
+
+test("LOW_CONFIDENCE is exported and equals 0.4", () => {
+  assert.equal(LOW_CONFIDENCE, 0.4)
+})
+
+test("confidence is counted events / 365, capped at 1", () => {
+  const sparse = scoreTermLifecycle(eventsOn(Array.from({ length: 73 }, (_, i) => i * 2)), NOW)
+  assert.ok(sparse && Math.abs(sparse.confidence - 0.2) < 1e-9, `confidence ${sparse?.confidence}`)
+  assert.equal(scoreTermLifecycle(eventsFromRate(() => 6), NOW)?.confidence, 1)
+})
+
+test("explanation states peak share and 180-day change in one sentence", () => {
+  assert.equal(
+    scoreTermLifecycle(eventsFromRate((i) => 8 - (7.5 * i) / 179), NOW)?.explanation,
+    "At 24% of its 180-day peak, down 68 points in 180 days.",
+  )
+  assert.equal(
+    scoreTermLifecycle(eventsFromRate(() => 6), NOW)?.explanation,
+    "At 100% of its 180-day peak, level over 180 days.",
+  )
 })
