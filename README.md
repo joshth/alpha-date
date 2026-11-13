@@ -42,6 +42,7 @@ Copy `.env.example` to `.env.local` to change any of these (see comments in that
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint (Next.js rules) |
 | `pnpm test` | Unit tests (`node:test` via tsx; in-memory database, instant mocks) |
+| `pnpm test:ci` | Same tests as `pnpm test`, plus a `junit.xml` report (what GitLab CI runs) |
 | `pnpm eval:validate` | Validate `eval/golden-set.json` and print counts |
 | `pnpm eval` | Evaluation harness (**yours to build** — see `scripts/eval.ts`) |
 | `pnpm aura:plot bussin "goofy ahh" [--out chart.png]` | Chart each term's SIRS lifecycle curve coloured by Aura stage (opens a window, or saves with `--out`). Runs the SIRS plotter vendored in `sirs/`; needs its Python venv (below) |
@@ -93,6 +94,24 @@ decide a policy per surface (e.g. today a *suggestion* of a sensitive term like 
 accepted as a normal suggestion — should it be?), and improve the rules wherever your golden
 set finds misses or false positives. Every rule fix you prove with a new golden-set case can
 go straight into production's regression suite.
+
+### Continuous integration (GitLab)
+
+`.gitlab-ci.yml` runs on every merge request and on pushes to branches and tags. It uses the
+mock AI and mock moderation only, so it needs no API keys or CI/CD variables.
+
+| Job | Runs locally as |
+| --- | --- |
+| `lint` | `pnpm lint` |
+| `typecheck` | `pnpm typecheck` |
+| `unit-tests` | `pnpm test:ci` (JUnit report shows in the merge request) |
+| `eval` | `pnpm eval` (report kept as a downloadable artifact) |
+| `dependency-audit` | `pnpm audit --prod --audit-level=high` (warns, does not block, until `next` is upgraded) |
+| Secret detection and SAST | GitLab's built-in scan templates (no local command) |
+| `build` | `pnpm build` (starts only after lint, typecheck, unit-tests and eval pass) |
+
+To reproduce a pipeline before pushing, run the first four commands in the table, then `pnpm build`.
+CI uses Node 24.18.0 and the pnpm version pinned in `package.json`.
 
 ### Integration rules (how your work gets into production)
 
