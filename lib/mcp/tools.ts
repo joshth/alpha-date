@@ -1,5 +1,5 @@
 // MCP tools for assistive tech: short plain-text answers (A11Y-15), lexicon text fenced as data (A11Y-16).
-import { AURA_STAGE_LABELS, LOW_CONFIDENCE, type AuraScore, type scoreTermLifecycle } from "@/lib/aura"
+import { AURA_STAGE_LABELS, auraTrend, LOW_CONFIDENCE, type AuraScore, type scoreTermLifecycle } from "@/lib/aura"
 import { asData } from "@/lib/mcp/data"
 import { answer } from "@/lib/mcp/format"
 import { findLikelyMatches, normaliseSuggestion } from "@/lib/normalise"
@@ -56,6 +56,16 @@ export function createDecoderTools(deps: DecoderDeps) {
       if (!found) return notFound(query)
       const { term, score } = found
       return answer(auraSummary(term.term, score), [score ? score.explanation : "There is too little search data to give a stage."])
+    },
+
+    /** Numbers only: the user's own device turns them into pitch or vibration (A11Y-17). */
+    async getAuraTrend(query: string): Promise<string> {
+      const found = await findScored(query)
+      if (!found) return notFound(query)
+      const { term, events, score } = found
+      if (!score) return answer(auraSummary(term.term, score), ["There is too little search data to give a trend."])
+      const series = auraTrend(events, deps.now()).map((v) => v.toFixed(2)).join(", ")
+      return answer(auraSummary(term.term, score), [score.explanation, `Weekly trend, oldest first, 0 to 1: ${series}`])
     },
   }
 }
