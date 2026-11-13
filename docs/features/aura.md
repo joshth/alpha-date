@@ -34,7 +34,7 @@ export function scoreTermLifecycle(events: TermEvent[], now?: Date): AuraScore |
 
 :::warning[Status]
 
-The stage rule, the lifecycle charts and the TypeScript scorer all work today (see [The TypeScript scorer](#scorer)). The `<AuraBadge />` component is still to come.
+The stage rule, the lifecycle charts and the TypeScript scorer all work today (see [The TypeScript scorer](#scorer)). Assistive tech can read the stage through the [MCP server](./mcp-server.md). The `<AuraBadge />` component is still to come.
 
 :::
 
@@ -134,7 +134,7 @@ Search counts are noisy. The 0.20 floor is the smallest change that still shows 
 
 ## The TypeScript scorer {#scorer}
 
-`scoreTermLifecycle` in `lib/aura/index.ts` reads raw search events, not a fitted curve, so it cannot use the noise-free rule above as it stands. It also exports `auraTrend(events, now)`, which returns 26 weekly counted totals scaled 0 to 1 (oldest first). The MCP server's `get_aura_trend` uses it.
+`scoreTermLifecycle` in `lib/aura/index.ts` reads raw search events, not a fitted curve, so it cannot use the noise-free rule above as it stands. It also exports `auraTrend(events, now)`, which returns 26 weekly counted totals scaled 0 to 1 (oldest first). The [MCP server](./mcp-server.md)'s `get_aura_trend` uses it.
 
 **The window.** The scorer counts every event except `llm_generated` and `prompt_generated` (the app makes those, not searchers). It keeps events from the 180 days before `now` and counts them per day.
 

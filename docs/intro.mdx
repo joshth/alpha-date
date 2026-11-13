@@ -71,6 +71,7 @@ flowchart TB
 | [Evaluation Harness](./features/evaluation-harness.md) | Gives the AI an exam on a labelled answer key and reports precision, recall, hallucination rate, cost and time. | `pnpm eval` and the golden-set file format | `scripts/eval.ts`, `eval/golden-set.json` |
 | [Normalisation and Deduplication](./features/normalisation.md) | Turns "Brain Rot!", "brain-rot" and "brainrot" into one key, and finds likely matches in the lexicon. | `normaliseSuggestion(text)`, `findLikelyMatches(text, candidates)` | `lib/normalise` |
 | [Aura Lifecycle](./features/aura.md) | Places each term in a stage, from emerging to parent territory, using anonymous search trends. | `scoreTermLifecycle(events) → AuraScore` | `lib/aura` |
+| [MCP server for assistive tech](./features/mcp-server.md) | Look up a term and its Aura stage from a screen reader, voice control or Claude Desktop. | Tools `lookup_term`, `get_aura`, `get_aura_trend` | `lib/mcp`, `scripts/mcp-server.ts` |
 
 Each feature is a self-contained module behind an agreed interface, so the Western Australian AI Hub can port it into production without the team seeing the production repository. Contract modules are pure: they take their inputs (events, candidates, the model function, the moderation function) as parameters and never call the database or an SDK directly. Only server actions, stores and the eval script import from `lib/_stubs/`.
 
