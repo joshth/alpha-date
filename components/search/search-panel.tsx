@@ -97,8 +97,12 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
     event.preventDefault()
     setBusy(true)
     try {
-      setOutcome(await searchTerm(query))
-      setAvoided(await fetchAiCallsAvoided())
+      const result = await searchTerm(query)
+      setOutcome(result)
+      if (result.kind === "found" || result.kind === "discovered" || result.kind === "not_found") {
+        const count = await fetchAiCallsAvoided().catch(() => null)
+        if (count !== null) setAvoided(count)
+      }
     } catch {
       setOutcome({ kind: "error", message: "Could not reach the service. Please try again." })
     } finally {
@@ -129,6 +133,9 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
       </form>
 
       <div aria-live="polite" className="space-y-4">
+        {outcome?.kind === "gentle_support" && (
+          <SafetyResponse verdict={outcome.verdict} message={outcome.message} />
+        )}
         {outcome?.kind === "safeguarding" && (
           <SafetyResponse verdict={outcome.verdict} message={safetyResponseMessage(outcome.verdict, "search")} />
         )}
@@ -143,7 +150,7 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
             {outcome.message}
           </p>
         )}
-        {sensitive && outcome.kind !== "safeguarding" && outcome.kind !== "refused" && (
+        {sensitive && outcome.kind !== "safeguarding" && outcome.kind !== "refused" && outcome.kind !== "gentle_support" && (
           <HelpResources categories={outcome.verdict.categories} />
         )}
         {outcome && "verdict" in outcome && (

@@ -1,4 +1,5 @@
 import "server-only"
+import { redactPersonalInformation } from "@/lib/safety/privacy"
 import { z } from "zod"
 import { isMockLlm, simulate } from "./llm"
 
@@ -42,6 +43,11 @@ const MOCK_RULES: { pattern: RegExp; category: string }[] = [
 
 export async function moderate(text: string): Promise<ModerationResult> {
   const started = Date.now()
+  try {
+    text = redactPersonalInformation(text)
+  } catch {
+    return { status: "unavailable", categories: [], provider: isMockLlm() ? "mock" : "openai", latencyMs: Date.now() - started }
+  }
   if (isMockLlm()) {
     try {
       await simulate("MOCK_MODERATION_LATENCY_MS", "MOCK_MODERATION_FAILURE_RATE", 150, "moderation provider")

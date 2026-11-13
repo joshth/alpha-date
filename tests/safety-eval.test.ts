@@ -31,6 +31,7 @@ test("counts confusion matrix with expected rows and actual columns", async () =
   })
   assert.deepEqual(report.actionAgreement, { numerator: 3, denominator: 5, value: 0.6 })
   assert.deepEqual(report.safeguardingRecall, { numerator: 1, denominator: 2, value: 0.5 })
+  assert.deepEqual(report.refusalRecall, { numerator: 1, denominator: 1, value: 1 })
   assert.deepEqual(report.falseRefusalRate, { numerator: 1, denominator: 2, value: 0.5 })
   assert.deepEqual(report.misclassifiedIds, ["false-refusal", "missed-crisis"])
 })
@@ -74,6 +75,8 @@ test("runs only safety cases and forwards the selected surface", async () => {
   const entries: GoldenCase[] = [
     { id: "discovery", input: "rizz", source: "synthetic", kind: "discovery", category: "valid_slang", safety: { action: "safe", categories: [] }, discovery: { isRealSlang: true } },
     fixture("safety", "safe"),
+    { ...fixture("search-only", "safe"), surface: "search" },
+    { ...fixture("suggestion-only", "refuse"), surface: "suggestion" },
     { id: "dedup", input: "rizz", source: "synthetic", kind: "dedup", dedup: { candidate: "rizz", sameTerm: true } },
   ]
   const calls: unknown[] = []
@@ -81,9 +84,20 @@ test("runs only safety cases and forwards the selected surface", async () => {
     calls.push([text, surface])
     return verdict("safe")
   }, "suggestion")
-  assert.equal(report.total, 1)
-  assert.deepEqual(calls, [["private fixture safety", "suggestion"]])
+  assert.equal(report.total, 2)
+  assert.deepEqual(calls, [["private fixture safety", "suggestion"], ["private fixture suggestion-only", "suggestion"]])
+  assert.deepEqual(report.refusalRecall, { numerator: 0, denominator: 1, value: 0 })
   assert.equal(report.surface, "suggestion")
+})
+
+test("suggestion scoring uses labelled sensitivity and still detects missed refusals", async () => {
+  const entry = fixture("sensitive-lookup", "safe")
+  entry.safety.categories = ["suicide_self_harm"]
+  const check = async () => ({ ...verdict("safe"), categories: entry.safety.categories })
+  assert.equal((await evaluateSafety([entry], check)).actionAgreement.value, 1)
+  const suggestion = await evaluateSafety([entry], check, "suggestion")
+  assert.deepEqual(suggestion.refusalRecall, { numerator: 0, denominator: 1, value: 0 })
+  assert.deepEqual(suggestion.misclassifiedIds, [entry.id])
 })
 
 test("defaults to search and never exports fixture input", async () => {
