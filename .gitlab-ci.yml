@@ -1,0 +1,100 @@
+# CI for the lexicon pipeline. Every job runs offline: mock LLM, mock
+# moderation, in-memory PGlite. No secrets or CI/CD variables are needed.
+
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
+
+# One pipeline per change: MR pipelines while an MR is open, branch pipelines
+# otherwise (feature branches, main, tags). Newer commits cancel older runs.
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+stages:
+  - test
+  - build
+
+variables:
+  # Guardrail: CI never calls a real provider, even if a key is added later.
+  MOCK_LLM: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+  # Run the Secret Detection and SAST template jobs in MR pipelines too.
+  AST_ENABLE_MR_PIPELINES: "true"
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+
+default:
+  tags: [general] # CSE C6A.large (2 vCPU / 4 GB); use [intensive] only if a job runs out of memory
+  interruptible: true
+  timeout: 15m
+
+.node:
+  image: node:24.18.0-slim
+  before_script:
+    - corepack enable # pnpm version comes from packageManager in package.json
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  cache:
+    key:
+      files: [pnpm-lock.yaml]
+    paths: [.pnpm-store]
+    policy: pull
+
+lint:
+  extends: .node
+  stage: test
+  script: pnpm lint
+
+typecheck:
+  extends: .node
+  stage: test
+  cache:
+    key:
+      files: [pnpm-lock.yaml]
+    paths: [.pnpm-store]
+    policy: pull-push # the one job that refreshes the pnpm cache
+  script: pnpm typecheck
+
+unit-tests:
+  extends: .node
+  stage: test
+  script: pnpm test:ci
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+    expire_in: 1 week
+
+eval:
+  extends: .node
+  stage: test
+  script:
+    - pnpm eval > eval-report.txt # no pipe: keeps eval's exit code
+    - cat eval-report.txt
+  artifacts:
+    when: always
+    paths: [eval-report.txt]
+    expire_in: 30 days
+
+dependency-audit:
+  extends: .node
+  stage: test
+  before_script:
+    - corepack enable
+  cache: []
+  script: pnpm audit --prod --audit-level=high
+  # ponytail: warns instead of blocking until next is bumped past the open
+  # advisories (>=15.5.28); then delete this line so new advisories fail CI.
+  allow_failure: true
+
+build:
+  extends: .node
+  stage: build
+  needs: [lint, typecheck, unit-tests, eval] # don't wait for SAST/audit
+  script: pnpm build
