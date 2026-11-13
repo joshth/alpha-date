@@ -44,7 +44,7 @@ export async function runEval(): Promise<EvalReport> {
   const rows = await Promise.all(cases.map(async (c): Promise<EvalRow> => {
     if (c.kind !== "discovery") throw new Error("unreachable")
     const verdict = await checkInputSafety(c.input, "search")
-    const found = await discoverTerm(c.input, generate)
+    const found = verdict.action === "safe" ? await discoverTerm(c.input, generate) : null
     const aiSaidReal = found !== null
     let v: RowVerdict = "correct"
     if (aiSaidReal && !c.discovery.isRealSlang) v = "hallucination"

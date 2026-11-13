@@ -5,7 +5,7 @@ import { HelpResources } from "@/components/safety/help-resources"
 // Shown instead of a slang lookup when someone types a first-person statement
 // of intent to self-harm or to harm others. Calm, direct, and leads with
 // emergency help; no AI content is generated for these inputs.
-export function CrisisCard({ crisis, categories }: { crisis: CrisisKind; categories: SafetyCategory[] }) {
+export function CrisisCard({ crisis, categories, reference }: { crisis: CrisisKind; categories: SafetyCategory[]; reference?: string }) {
   const harmToOthers = crisis === "harm_to_others"
   return (
     <div role="alert" aria-live="assertive" className="space-y-4 rounded-lg border-2 border-red-600/60 bg-card p-5 shadow-sm">
@@ -32,9 +32,7 @@ export function CrisisCard({ crisis, categories }: { crisis: CrisisKind; categor
       <p className="text-sm text-muted-foreground">
         If you were looking up a phrase for someone else, the services above can also help you support them.
       </p>
-      {/* Production adds: "We can't reply to messages typed here. We keep a short,
-          secure safety record of them." with a privacy link. This scaffold keeps
-          no safety log, so that line is omitted. */}
+      {reference && <p className="break-all text-sm text-muted-foreground">Incident reference: <code>{reference}</code></p>}
       <p className="text-xs text-muted-foreground">We can&apos;t reply to messages typed here.</p>
     </div>
   )

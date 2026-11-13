@@ -1,5 +1,6 @@
 import type { ModerationResult } from "@/lib/_stubs/moderation"
 import { createOutputSafetyCheck } from "@/lib/safety/output"
+import { redactTextFields } from "@/lib/safety/privacy"
 import { discoverySchema } from "./prompt"
 import type { GenerateDiscovery } from "./discover"
 
@@ -17,7 +18,7 @@ export function createSafeDiscovery(
     }
     const parsed = discoverySchema.safeParse(raw)
     if (!parsed.success) throw new Error("Discovery returned an invalid result.")
-    const result = parsed.data
+    const result = redactTextFields(parsed.data)
     if (!result.isLegit || !result.definition?.trim()) return result
 
     const text = [result.definition, ...(result.examples ?? []), result.originAndContext, result.commonSentiment]

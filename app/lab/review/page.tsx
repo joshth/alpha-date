@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ReviewButtons } from "@/components/review/review-buttons"
 import { listSuggestions } from "@/lib/feedback"
+import { formatReviewTime } from "@/lib/review-time"
 import { listTermsByStatus } from "@/lib/terms-store"
 
 export const metadata = { title: "Review queue" }
@@ -41,7 +42,7 @@ export default async function ReviewPage() {
                   {record.term.sensitivityRating}
                 </Badge>
                 <Badge variant="outline">{record.source}</Badge>
-                <Badge variant="outline">{new Date(record.createdAt).toLocaleDateString("en-AU")}</Badge>
+                <Badge variant="outline"><time dateTime={record.createdAt}>{formatReviewTime(record.createdAt)}</time></Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -67,7 +68,7 @@ export default async function ReviewPage() {
                 <th scope="col" className="py-2 pr-4">Suggestion</th>
                 <th scope="col" className="py-2 pr-4">Count</th>
                 <th scope="col" className="py-2 pr-4">Context</th>
-                <th scope="col" className="py-2">First seen</th>
+                <th scope="col" className="py-2">First seen (Sydney time)</th>
               </tr>
             </thead>
             <tbody>
@@ -76,7 +77,7 @@ export default async function ReviewPage() {
                   <td className="py-2 pr-4 font-medium text-foreground">{s.suggestedTerm}</td>
                   <td className="py-2 pr-4 text-foreground">{s.count}</td>
                   <td className="py-2 pr-4 text-muted-foreground">{s.context ?? "—"}</td>
-                  <td className="py-2 text-muted-foreground">{new Date(s.createdAt).toLocaleDateString("en-AU")}</td>
+                  <td className="py-2 text-muted-foreground whitespace-nowrap"><time dateTime={s.createdAt}>{formatReviewTime(s.createdAt)}</time></td>
                 </tr>
               ))}
             </tbody>
