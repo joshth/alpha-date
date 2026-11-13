@@ -17,6 +17,11 @@ export function isMockLlm(): boolean {
 
 export const DEFAULT_DISCOVERY_TEMPERATURE = 0.3
 
+// A discovery answer is short (31–190 output tokens in the real 3B run of
+// 3 Nov 2026). On 14 Nov llama3.2:3b kept generating past 1,800 tokens on one
+// call, so cap it: a runaway answer now fails fast and is counted as an error.
+export const MAX_DISCOVERY_OUTPUT_TOKENS = 400
+
 export interface TokenUsage {
   promptTokens: number
   completionTokens: number
@@ -96,6 +101,7 @@ export async function generateDiscoveryObject(
     schema: discoverySchema,
     prompt: input.prompt,
     temperature: config.temperature ?? DEFAULT_DISCOVERY_TEMPERATURE,
+    maxTokens: MAX_DISCOVERY_OUTPUT_TOKENS,
     ...(config.seed !== null ? { seed: config.seed } : {}),
   })
   onUsage?.({ promptTokens: usage.promptTokens, completionTokens: usage.completionTokens })

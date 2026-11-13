@@ -87,6 +87,37 @@ test("sweep flags: defaults, lists and clear errors", () => {
   assert.throws(() => parseSweepArgs(["--max-h1", "10"], "x"), /--max-h1 must be a fraction/)
 })
 
+test("openai: models need a key, and mixing them with local models needs LLM_BASE_URL", () => {
+  const real = { MOCK_LLM: "false" }
+  const args = ["--models", "llama3.2:3b,openai:gpt-4o-mini"]
+  assert.throws(() => parseSweepArgs(args, "x", { ...real, LLM_BASE_URL: "http://localhost:11434/v1" }), /need OPENAI_API_KEY/)
+  assert.throws(() => parseSweepArgs(args, "x", { ...real, OPENAI_API_KEY: "test-key" }), /needs LLM_BASE_URL/)
+  assert.throws(() => parseSweepArgs(["--models", "openai:"], "x", { ...real, OPENAI_API_KEY: "test-key" }), /needs a model name/)
+  const ok = parseSweepArgs(args, "x", { ...real, OPENAI_API_KEY: "test-key", LLM_BASE_URL: "http://localhost:11434/v1" })
+  assert.deepEqual(ok.models, ["llama3.2:3b", "openai:gpt-4o-mini"])
+  assert.doesNotThrow(() => parseSweepArgs(args, "x", {}), "mock runs need no key")
+})
+
+test("an openai: setting goes to OpenAI; a plain name goes to LLM_BASE_URL; both are restored", async () => {
+  const before = process.env.LLM_BASE_URL
+  process.env.LLM_BASE_URL = "http://localhost:11434/v1"
+  const seen = () => ({ model: process.env.LLM_MODEL, baseURL: process.env.LLM_BASE_URL })
+  try {
+    assert.deepEqual(await withDiscoverySetting({ model: "openai:gpt-4o-mini", temperature: 0 }, 0, async () => seen()), {
+      model: "gpt-4o-mini",
+      baseURL: undefined,
+    })
+    assert.deepEqual(await withDiscoverySetting({ model: "llama3.2:3b", temperature: 0 }, 0, async () => seen()), {
+      model: "llama3.2:3b",
+      baseURL: "http://localhost:11434/v1",
+    })
+    assert.equal(process.env.LLM_BASE_URL, "http://localhost:11434/v1")
+  } finally {
+    if (before === undefined) delete process.env.LLM_BASE_URL
+    else process.env.LLM_BASE_URL = before
+  }
+})
+
 test("every model is paired with every temperature", () => {
   const settings = sweepSettings({ models: ["a", "b"], temperatures: [0, 0.7, 1.3] })
   assert.equal(settings.length, 6)

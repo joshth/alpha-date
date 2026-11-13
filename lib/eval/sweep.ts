@@ -50,11 +50,35 @@ function numberFlag(argv: readonly string[], name: string, fallback: number, che
   return value
 }
 
-export function parseSweepArgs(argv: readonly string[], currentModel: string): SweepOptions {
+// `openai:gpt-4o-mini` runs on OpenAI with OPENAI_API_KEY; any other name runs
+// on LLM_BASE_URL (e.g. Ollama), so one sweep can compare local and hosted models.
+export const OPENAI_PREFIX = "openai:"
+
+export function modelRoute(model: string): { hosted: boolean; model: string } {
+  return model.startsWith(OPENAI_PREFIX)
+    ? { hosted: true, model: model.slice(OPENAI_PREFIX.length) }
+    : { hosted: false, model }
+}
+
+export function parseSweepArgs(
+  argv: readonly string[],
+  currentModel: string,
+  env: Record<string, string | undefined> = process.env,
+): SweepOptions {
   const models = (flagValue(argv, "--models") ?? currentModel)
     .split(",")
     .map((m) => m.trim())
     .filter(Boolean)
+  if (env.MOCK_LLM === "false") {
+    const hosted = models.filter((m) => modelRoute(m).hosted)
+    if (hosted.length > 0 && !env.OPENAI_API_KEY?.trim()) {
+      throw new Error(`${hosted.join(", ")} need OPENAI_API_KEY: export it in this terminal first (pnpm eval does not read .env.local; never commit a key)`)
+    }
+    if (hosted.length > 0 && hosted.length < models.length && !env.LLM_BASE_URL?.trim()) {
+      throw new Error("Mixing openai: models with local ones needs LLM_BASE_URL for the local ones, e.g. http://localhost:11434/v1")
+    }
+    if (hosted.some((m) => !modelRoute(m).model)) throw new Error(`"${OPENAI_PREFIX}" needs a model name, e.g. openai:gpt-4o-mini`)
+  }
   const rawTemps = flagValue(argv, "--temperatures")
   const temperatures = rawTemps === undefined ? DEFAULT_TEMPERATURES : rawTemps.split(",").map((t) => Number(t.trim()))
   if (temperatures.length === 0 || temperatures.some((t) => !Number.isFinite(t) || t < 0 || t > 2)) {
@@ -75,13 +99,16 @@ export function sweepSettings(options: Pick<SweepOptions, "models" | "temperatur
   return options.models.flatMap((model) => options.temperatures.map((temperature) => ({ model, temperature })))
 }
 
-const SWEPT_KEYS = ["LLM_MODEL", "LLM_TEMPERATURE", "LLM_SEED"] as const
+const SWEPT_KEYS = ["LLM_MODEL", "LLM_TEMPERATURE", "LLM_SEED", "LLM_BASE_URL"] as const
 
 // Runs `fn` with discovery switched to one setting, then puts the environment back.
 export async function withDiscoverySetting<T>(setting: SweepSetting, repeat: number, fn: () => Promise<T>): Promise<T> {
   const saved = Object.fromEntries(SWEPT_KEYS.map((key) => [key, process.env[key]]))
   const baseSeed = process.env.LLM_SEED?.trim()
-  process.env.LLM_MODEL = setting.model
+  const route = modelRoute(setting.model)
+  // Hosted models skip LLM_BASE_URL so they go to OpenAI, not the local server.
+  if (route.hosted) delete process.env.LLM_BASE_URL
+  process.env.LLM_MODEL = route.model
   process.env.LLM_TEMPERATURE = String(setting.temperature)
   if (baseSeed && Number.isInteger(Number(baseSeed))) process.env.LLM_SEED = String(Number(baseSeed) + repeat)
   try {
@@ -191,7 +218,7 @@ const pct = (x: number) => `${(x * 100).toFixed(1)}%`
 const settingLabel = (s: SweepSetting, mock: boolean) => `${mock ? "mock, as " : ""}${s.model} @ ${s.temperature}`
 
 export function sweepMarkdown(
-  meta: { datasetVersion: string; datasetSha256: string; startedAt: string; promptVersion: string; mock: boolean },
+  meta: { datasetVersion: string; datasetSha256: string; startedAt: string; promptVersion: string; mock: boolean; split?: string },
   summary: SweepSummary,
 ): string {
   const label = (s: SweepSetting) => settingLabel(s, meta.mock)
@@ -201,6 +228,7 @@ export function sweepMarkdown(
     `- Dataset: golden set v${meta.datasetVersion}, sha256 \`${meta.datasetSha256.slice(0, 12)}\``,
     `- Prompt: \`${meta.promptVersion}\``,
     `- Started: ${meta.startedAt}`,
+    ...(meta.split ? [`- Split: ${meta.split} cases only`] : []),
     `- Rule: acceptable when H1 ≤ ${pct(summary.rule.maxH1)} and recall ≥ ${pct(summary.rule.minRecall)}; ` +
       "then cheapest per 1,000 calls, then fastest.",
     meta.mock
