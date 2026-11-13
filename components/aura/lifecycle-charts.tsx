@@ -47,14 +47,30 @@ export function FocusDot({ cx, cy, index, payload, tabbable, active, onFocusPoin
 
 const config = (...s: Series[][]): ChartConfig =>
   Object.fromEntries(s.flat().map((x) => [x.key, { label: x.label, color: x.color }]))
-const axes = (
-  <>
-    <CartesianGrid vertical={false} stroke={tok("border")} />
-    <XAxis dataKey="week" tickLine={false} minTickGap={48} />
-    <YAxis width={40} tickLine={false} />
-    <ChartTooltip content={<ChartTooltipContent />} />
-  </>
-)
+const tick = { fill: tok("text-muted"), fontSize: 12 }
+// An array, not a fragment: Recharts only registers axes and the grid when they are direct children.
+const axes = [
+  <CartesianGrid key="grid" vertical={false} stroke={tok("border")} />,
+  <XAxis key="x" dataKey="week" tickLine={false} tickFormatter={(w: string) => w.slice(0, 7)} interval="preserveStartEnd" minTickGap={48} tick={tick} stroke={tok("border-strong")} />,
+  <YAxis key="y" width={40} tickLine={false} tick={tick} tickFormatter={(v: number) => Number(v).toFixed(2)} domain={[0, "auto"]} stroke={tok("border-strong")} />,
+  <ChartTooltip key="tip" content={<ChartTooltipContent />} />,
+]
+export function SeriesLegend({ series }: { series: typeof MAIN_SERIES }) {
+  return (
+    <ul aria-label="Legend" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-lab-muted">
+      {series.map((s) => (
+        <li key={s.key} className="flex items-center gap-1.5">
+          <svg aria-hidden="true" width="24" height="8">
+            {s.shape === "line"
+              ? <line x1="0" y1="4" x2="24" y2="4" stroke={s.color} strokeWidth={2} strokeDasharray={s.dash} />
+              : <circle cx="12" cy="4" r="3" fill={s.color} />}
+          </svg>
+          {s.label}
+        </li>
+      ))}
+    </ul>
+  )
+}
 const lines = (series: Series[]) => series.map((s) => (
   <Line key={s.key} dataKey={s.key} type="monotone" stroke={s.color} strokeWidth={2} strokeDasharray={s.dash} dot={false} isAnimationActive={false} />
 ))
@@ -79,9 +95,12 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
   const table = (caption: string, series: Series[]) => ({ caption, columns: cols(series), rows })
   const share = (title: string, series: Series[], caption: string, extra?: React.ReactNode) => (
     <ChartPanel title={title} summary={summary} table={table(caption, series)}>
-      <ChartContainer config={config(series)} className="h-56 w-full">
-        <ComposedChart data={rows}>{axes}{lines(series)}{extra}</ComposedChart>
-      </ChartContainer>
+      <>
+        <ChartContainer config={config(series)} className="h-56 w-full">
+          <ComposedChart data={rows}>{axes}{lines(series)}{extra}</ComposedChart>
+        </ChartContainer>
+        <SeriesLegend series={series} />
+      </>
     </ChartPanel>
   )
   return (
@@ -105,6 +124,7 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
               {lines([MAIN_SERIES[1]])}
             </ComposedChart>
           </ChartContainer>
+          <SeriesLegend series={MAIN_SERIES} />
         </div>
       </ChartPanel>
       {share("Population shares", SHARE_SERIES, "Susceptible, infected and recovered shares by week")}
