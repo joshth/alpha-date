@@ -15,6 +15,11 @@ test("trendSentence: down from peak, at peak, no change", () => {
   assert.equal(trendSentence({ r: 0.9, delta: 0.004, stage: "emerging" }), "Down 10% from its peak, no change in the last 180 days.")
 })
 
+test("trendSentence: one point is singular", () => {
+  assert.equal(trendSentence({ r: 0.09, delta: -0.01, stage: "parent_territory" }), "Down 91% from its peak, down 1 point in the last 180 days.")
+  assert.equal(trendSentence({ r: 1, delta: 0.012, stage: "peaking" }), "At its peak, up 1 point in the last 180 days.")
+})
+
 const N = 200
 const day = (i: number) => new Date(Date.UTC(2020, 0, 6 + 7 * i)).toISOString().slice(0, 10)
 const weeks = Array.from({ length: N }, (_, i) => day(i))
