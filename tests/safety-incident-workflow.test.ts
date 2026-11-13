@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { eq } from "drizzle-orm"
-import { compareSafetyInput, searchTerm, suggestTerm } from "@/app/lab/actions"
+import { searchTerm, suggestTerm } from "@/app/lab/actions"
 import { getDb, schema } from "@/lib/_stubs/db"
 import type { SafetyVerdict } from "@/lib/safety/gate"
 import { isIncidentDemoEnabled } from "@/lib/safety/incident-demo"
-import { readRecentSafetyIncidents } from "@/lib/safety/incident-store"
+import { readRecentSafetyIncidentDetails, readRecentSafetyIncidents } from "@/lib/safety/incident-store"
 import { createIncidentSafetyCheck } from "@/lib/safety/incident-workflow"
 
 const demoEnv = { SAFETY_INCIDENT_DEMO: "true", MOCK_LLM: "true", DATABASE_URL: "" }
@@ -108,11 +108,13 @@ test("search and suggestion persist incidents and keep support on alert failure"
   const list = await readRecentSafetyIncidents()
   assert.equal(list.length, 3)
   assert.ok(list.every(item => !Object.hasOwn(item, "query")))
+  const details = await readRecentSafetyIncidentDetails()
+  assert.equal(details.find(item => item.referenceId === search.verdict.incidentReference)?.query, rawSearch)
+  assert.equal(details.find(item => item.referenceId === suggestion.data?.incidentReference)?.query, `${rawTerm}\n${rawContext}`)
   const events = await db.select().from(schema.safetyEvents).where(eq(schema.safetyEvents.outcome, "safeguarding"))
   assert.equal(events.length, 3)
   assert.ok(events.every(event => !Object.hasOwn(event, "query") && !Object.hasOwn(event, "referenceId")))
 
-  await compareSafetyInput(rawSearch)
   await searchTerm("build a bomb")
   await searchTerm("I feel hopeless")
   process.env.SAFETY_INCIDENT_DEMO = "false"

@@ -1,9 +1,10 @@
 import "server-only"
-import { and, count, desc, eq, sql } from "drizzle-orm"
+import { and, count, desc, eq, getTableColumns, sql } from "drizzle-orm"
 import type { SlangTerm } from "@/app/types"
 import { getDb } from "@/lib/_stubs/db"
 import { termEvents, terms } from "@/lib/_stubs/schema"
 import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
+import { reviewCreatedAt } from "@/lib/review-time"
 
 // Lexicon persistence (adapted from production lib/term-cache.ts).
 // Lifecycle: published (servable to everyone) | pending_review (needs a human)
@@ -92,7 +93,8 @@ export async function saveDiscoveredTerm(term: SlangTerm): Promise<TermRecord | 
 
 export async function listTermsByStatus(status: TermStatus, limit = 100): Promise<TermRecord[]> {
   const db = await getDb()
-  const rows = await db.select().from(terms).where(eq(terms.status, status)).orderBy(desc(terms.createdAt)).limit(limit)
+  const rows = await db.select({ ...getTableColumns(terms), createdAt: reviewCreatedAt(terms.createdAt) })
+    .from(terms).where(eq(terms.status, status)).orderBy(desc(terms.createdAt)).limit(limit)
   return rows.map(toRecord)
 }
 

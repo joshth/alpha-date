@@ -1,7 +1,8 @@
 import "server-only"
-import { desc, eq, sql } from "drizzle-orm"
+import { desc, eq, getTableColumns, sql } from "drizzle-orm"
 import { getDb } from "@/lib/_stubs/db"
 import { termFeedback } from "@/lib/_stubs/schema"
+import { reviewCreatedAt } from "@/lib/review-time"
 
 // Missing-term suggestions (adapted from production submitTermFeedback).
 //
@@ -36,7 +37,7 @@ export async function recordSuggestion(suggestedTerm: string, context: string | 
 export async function listSuggestions(status = "pending"): Promise<FeedbackRow[]> {
   const db = await getDb()
   const rows = await db
-    .select()
+    .select({ ...getTableColumns(termFeedback), createdAt: reviewCreatedAt(termFeedback.createdAt) })
     .from(termFeedback)
     .where(eq(termFeedback.status, status))
     .orderBy(desc(termFeedback.count), desc(termFeedback.createdAt))

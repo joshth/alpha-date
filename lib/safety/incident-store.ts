@@ -60,3 +60,12 @@ export async function readRecentSafetyIncidents() {
     .orderBy(desc(recordedAtUtc), desc(referenceId))
     .limit(50)
 }
+
+export async function readRecentSafetyIncidentDetails() {
+  const { referenceId, query, recordedAtUtc, recordedAtSydney, surface, crisis, triageLevel, status, alertStatus } = safetyIncidents
+  const db = await getDb()
+  return db.select({ referenceId, query, recordedAtUtc, recordedAtSydney, surface, crisis, triageLevel, status, alertStatus })
+    .from(safetyIncidents)
+    .orderBy(desc(recordedAtUtc), desc(referenceId))
+    .limit(50)
+}
