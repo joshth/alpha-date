@@ -1,7 +1,11 @@
 import type React from "react"
 import Link from "next/link"
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
 import { getSessionUser } from "@/lib/_stubs/auth"
 import { isMockLlm } from "@/lib/_stubs/llm"
+
+const plexSans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap", variable: "--font-plex-sans" })
+const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap", variable: "--font-plex-mono" })
 
 export const metadata = { title: "Lexicon Lab" }
 
@@ -20,7 +24,7 @@ const NAV = [
 export default async function LabLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser()
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`${plexSans.variable} ${plexMono.variable} lab min-h-screen bg-background font-sans text-foreground`}>
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 py-3">
           <Link href="/lab" className="font-bold text-foreground">
