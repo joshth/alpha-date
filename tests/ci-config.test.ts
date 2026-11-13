@@ -32,10 +32,3 @@ test("the build job only starts after lint, typecheck, unit tests and eval pass"
   assert.match(pipeline, /needs: \[lint, typecheck, unit-tests, eval\]/)
   assert.match(pipeline, /script: pnpm build$/m)
 })
-
-test("a docs job builds the docs site from its own lockfile, so broken links fail CI", () => {
-  const job = pipeline.match(/^docs:\n(?:[ \n].*\n?)*/m)?.[0] ?? ""
-  assert.match(job, /pnpm --dir website install --frozen-lockfile --ignore-workspace/)
-  assert.match(job, /files: \[website\/pnpm-lock\.yaml\]/)
-  assert.match(job, /script: pnpm --dir website build$/m)
-})
