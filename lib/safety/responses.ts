@@ -1,6 +1,9 @@
 import type { SafetySurface, SafetyVerdict } from "@/lib/safety/gate"
 
 export function safetyResponseMessage(verdict: SafetyVerdict, surface: SafetySurface): string {
+  if (verdict.reason === "prompt_injection") {
+    return "Please enter a slang term or phrase. Instructions to change the system, expose secrets or modify data are not processed."
+  }
   if (verdict.action === "gentle_support") {
     return "That sounds difficult. You deserve kindness and support. If this describes how you're feeling, consider talking with someone you trust, such as a friend, parent, teacher or counsellor."
   }

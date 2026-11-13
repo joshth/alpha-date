@@ -1,3 +1,4 @@
+import { redactTextFields } from "@/lib/safety/privacy"
 import { z } from "zod"
 import type { ModerationResult } from "@/lib/_stubs/moderation"
 import type { getTermRecord } from "@/lib/terms-store"
@@ -51,7 +52,8 @@ export function createSafeTermLookup(
     }
     const parsed = contentSchema.safeParse(record.term)
     if (!parsed.success) throw new Error("Stored result is invalid.")
-    await checkOutput(textValues(parsed.data).join("\n"))
-    return record
+    const term = { ...redactTextFields(record.term), id: record.term.id }
+    await checkOutput(textValues(redactTextFields(parsed.data)).join("\n"))
+    return JSON.stringify(term) === JSON.stringify(record.term) ? record : { ...record, term }
   }
 }

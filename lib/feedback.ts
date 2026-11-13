@@ -1,4 +1,5 @@
 import "server-only"
+import { redactPersonalInformation } from "@/lib/safety/privacy"
 import { desc, eq, getTableColumns, sql } from "drizzle-orm"
 import { getDb } from "@/lib/_stubs/db"
 import { termFeedback } from "@/lib/_stubs/schema"
@@ -22,7 +23,8 @@ export interface FeedbackRow {
 
 export async function recordSuggestion(suggestedTerm: string, context: string | null): Promise<{ merged: boolean }> {
   const db = await getDb()
-  const key = suggestedTerm.trim().toLowerCase()
+  const key = redactPersonalInformation(suggestedTerm).trim().toLowerCase()
+  context = context === null ? null : redactPersonalInformation(context)
   const rows = await db
     .insert(termFeedback)
     .values({ suggestedTerm: key, context, status: "pending" })

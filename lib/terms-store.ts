@@ -4,6 +4,7 @@ import type { SlangTerm } from "@/app/types"
 import { getDb } from "@/lib/_stubs/db"
 import { termEvents, terms } from "@/lib/_stubs/schema"
 import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
+import { redactTextFields } from "@/lib/safety/privacy"
 import { reviewCreatedAt } from "@/lib/review-time"
 
 // Lexicon persistence (adapted from production lib/term-cache.ts).
@@ -67,6 +68,7 @@ export async function listPublishedTermNames(): Promise<string[]> {
 
 /** Saves an AI-discovered term for human review. Never overwrites an existing row. */
 export async function saveDiscoveredTerm(term: SlangTerm): Promise<TermRecord | null> {
+  term = redactTextFields(term)
   const db = await getDb()
   const rows = await db
     .insert(terms)

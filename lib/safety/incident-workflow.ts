@@ -1,4 +1,5 @@
 import "server-only"
+import { redactPersonalInformation } from "@/lib/safety/privacy"
 import type { checkInputSafety, RequestSafetyCheck } from "@/lib/safety/gate"
 import { createSafetyIncident, type SafetyIncident } from "@/lib/safety/incidents"
 
@@ -24,7 +25,7 @@ export function createIncidentSafetyCheck(
       const triageLevel = verdict.crisis
         ? "high"
         : verdict.decidedBy === "moderation" ? "moderation_only" : "medium"
-      incident = createSafetyIncident({ query: originalText, surface, verdict, triageLevel })
+      incident = createSafetyIncident({ query: redactPersonalInformation(originalText), surface, verdict, triageLevel })
       await demo.save(incident)
     } catch {
       return verdict

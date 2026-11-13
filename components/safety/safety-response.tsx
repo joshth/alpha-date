@@ -20,7 +20,7 @@ export function SafetyResponse({ verdict, message }: { verdict: SafetyVerdict; m
     <div className="space-y-4">
       <p role="alert" className="text-foreground">{message}</p>
       {verdict.incidentReference && <p className="break-all text-sm text-muted-foreground">Incident reference: <code>{verdict.incidentReference}</code></p>}
-      {(verdict.decidedBy !== "fail_closed" || verdict.categories.length > 0) && (
+      {verdict.reason !== "prompt_injection" && (verdict.decidedBy !== "fail_closed" || verdict.categories.length > 0) && (
         <HelpResources categories={categories} />
       )}
     </div>

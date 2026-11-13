@@ -1,5 +1,7 @@
 import type { SlangTerm } from "@/app/types"
-import { buildDiscoveryPrompt, type DiscoveryOutput } from "./prompt"
+import { redactPersonalInformation, redactTextFields } from "@/lib/safety/privacy"
+import { isPromptInjection } from "@/lib/safety/injection"
+import { buildProtectedDiscoveryPrompt, type DiscoveryOutput } from "./prompt"
 
 // Term discovery, extracted from production. The model call is INJECTED so the
 // evaluation harness can run the exact same logic against mock, real, or
@@ -40,9 +42,11 @@ export function toDiscoveredTerm(searchTerm: string, raw: DiscoveryOutput, today
 export async function discoverTerm(
   searchTerm: string,
   generate: GenerateDiscovery,
-  buildPrompt: (searchTerm: string) => string = buildDiscoveryPrompt,
+  buildPrompt: (searchTerm: string) => string = buildProtectedDiscoveryPrompt,
 ): Promise<DiscoveryResult | null> {
-  const raw = await generate({ prompt: buildPrompt(searchTerm), searchTerm })
+  if (isPromptInjection(searchTerm)) throw new Error("Instructions are not a slang lookup.")
+  searchTerm = redactPersonalInformation(searchTerm)
+  const raw = redactTextFields(await generate({ prompt: buildPrompt(searchTerm), searchTerm }))
   const term = toDiscoveredTerm(searchTerm, raw)
   return term ? { term, raw } : null
 }

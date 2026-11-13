@@ -1,3 +1,4 @@
+import { redactPersonalInformation } from "@/lib/safety/privacy"
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { discoverTerm } from "@/lib/discovery/discover"
 import { MAX_INPUT_LENGTH, sanitizeUserText } from "@/lib/discovery/prompt"
@@ -18,10 +19,13 @@ interface SearchDependencies {
 
 export function createSearchTerm(dependencies: SearchDependencies) {
   return async (raw: string): Promise<SearchOutcome> => {
-    const query = sanitizeUserText(raw, MAX_INPUT_LENGTH)
+    const validated = sanitizeUserText(raw, MAX_INPUT_LENGTH)
+    const query = validated ? redactPersonalInformation(validated) : null
     if (!query) return { kind: "error", message: `Please enter a term (up to ${MAX_INPUT_LENGTH} characters).` }
 
-    const verdict = await dependencies.checkInputSafety(prepareSafetyInput(raw), "search", raw)
+    const screening = redactPersonalInformation(prepareSafetyInput(raw))
+    const original = redactPersonalInformation(raw.length <= 10000 ? raw : prepareSafetyInput(raw))
+    const verdict = await dependencies.checkInputSafety(screening, "search", original)
     if (verdict.action === "gentle_support") return { kind: "gentle_support", verdict, message: safetyResponseMessage(verdict, "search") }
     if (verdict.action === "safeguarding") return { kind: "safeguarding", verdict }
     if (verdict.action === "refuse") {
@@ -54,8 +58,8 @@ export function createSearchTerm(dependencies: SearchDependencies) {
         verdict,
         note: "AI-generated and unverified. Saved for human review before anyone else sees it.",
       }
-    } catch (error) {
-      console.error("searchTerm failed:", error instanceof Error ? error.message : error)
+    } catch {
+      console.error("searchTerm failed.")
       return { kind: "error", message: "Something went wrong looking that up. Please try again." }
     }
   }

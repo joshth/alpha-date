@@ -1,3 +1,4 @@
+import { redactPersonalInformation } from "@/lib/safety/privacy"
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { sanitizeUserText } from "@/lib/discovery/prompt"
 import { safetyResponseMessage } from "@/lib/safety/responses"
@@ -12,19 +13,22 @@ interface SuggestionDependencies {
 
 export function createSuggestTerm(dependencies: SuggestionDependencies) {
   return async (rawTerm: string, rawContext?: string): Promise<ActionResult<SafetyVerdict>> => {
-    const term = sanitizeUserText(rawTerm, 100)
+    const validatedTerm = sanitizeUserText(rawTerm, 100)
+    const term = validatedTerm ? redactPersonalInformation(validatedTerm) : null
     if (!term || term.length < 2) return { success: false, message: "Please enter a term between 2 and 100 characters." }
     if (rawContext !== undefined && typeof rawContext !== "string") {
       return { success: false, message: "Please enter valid text for the context." }
     }
-    const context = rawContext ? sanitizeUserText(rawContext, 500) : null
+    const validatedContext = rawContext ? sanitizeUserText(rawContext, 500) : null
+    const context = validatedContext ? redactPersonalInformation(validatedContext) : null
     if (rawContext?.trim() && !context) {
       return { success: false, message: "Please keep context to 500 characters or fewer." }
     }
 
-    const original = rawContext === undefined ? rawTerm : `${rawTerm}\n${rawContext}`
+    const submission = rawContext === undefined ? rawTerm : `${rawTerm}\n${rawContext}`
+    const original = redactPersonalInformation(submission.length <= 10000 ? submission : prepareSafetyInput(submission))
     const verdict = await dependencies.checkInputSafety(
-      `${prepareSafetyInput(rawTerm)}\n${prepareSafetyInput(rawContext ?? "")}`, "suggestion", original,
+      `${redactPersonalInformation(prepareSafetyInput(rawTerm))}\n${redactPersonalInformation(prepareSafetyInput(rawContext ?? ""))}`, "suggestion", original,
     )
     if (verdict.action !== "safe") {
       return { success: false, message: safetyResponseMessage(verdict, "suggestion"), data: verdict }
@@ -32,8 +36,8 @@ export function createSuggestTerm(dependencies: SuggestionDependencies) {
     try {
       const { merged } = await dependencies.recordSuggestion(term, context)
       return { success: true, message: merged ? `Thanks! We've recorded your suggestion for "${term}".` : `Thanks! We'll review "${term}".` }
-    } catch (error) {
-      console.error("suggestTerm failed:", error instanceof Error ? error.message : error)
+    } catch {
+      console.error("suggestTerm failed.")
       return { success: false, message: "Could not save your suggestion. Please try again." }
     }
   }
