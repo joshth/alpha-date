@@ -216,3 +216,23 @@ test("the Aura page writes the stage rule's r and delta in LaTeX", () => {
   assert.doesNotMatch(rule, /```[^\n]*\n(?:(?!```)[\s\S])*I_peak/)
   assert.doesNotMatch(rule, /`[^`\n]*(?:delta|\br\b\s*[≥≤<>])[^`\n]*`/)
 })
+
+test("the Aura page documents the TypeScript scorer and no longer says it throws", () => {
+  const text = read("docs/features/aura.md")
+  assert.match(text, /^## .+ \{#scorer\}$/m)
+  const section = text.split(/^## .+ \{#scorer\}$/m)[1]?.split("\n## ")[0] ?? ""
+  for (const fact of ["MIN_EVENTS", "0.9", "0.15", "63.6%", "LOW_CONFIDENCE"]) assert.ok(section.includes(fact), fact)
+  assert.doesNotMatch(text, /throws "not implemented"/)
+})
+
+test("the MCP server page covers the tools, setup, safety gate and data fencing", () => {
+  const text = read("docs/features/mcp-server.md")
+  assert.ok(text, "docs/features/mcp-server.md exists")
+  assert.match(text, /```mermaid\n/)
+  for (const fact of ["lookup_term", "get_aura", "get_aura_trend", "claude_desktop_config.json", "checkInputSafety", "data, not instructions"]) assert.ok(text.includes(fact), fact)
+})
+
+test("the Introduction and the Aura page link to the MCP server page", () => {
+  assert.match(read("docs/intro.mdx"), /\]\(\.\/features\/mcp-server\.md\)/)
+  assert.match(read("docs/features/aura.md"), /\]\(\.\/mcp-server\.md\)/)
+})

@@ -34,7 +34,7 @@ export function scoreTermLifecycle(events: TermEvent[], now?: Date): AuraScore |
 
 :::warning[Status]
 
-The stage rule and the lifecycle charts below work today. The TypeScript `scoreTermLifecycle` and the `<AuraBadge />` component are the Sprint 3 work that ports this rule into the app; until then the function throws "not implemented".
+The stage rule, the lifecycle charts and the TypeScript scorer all work today (see [The TypeScript scorer](#scorer)). Assistive tech can read the stage through the [MCP server](./mcp-server.md). The `<AuraBadge />` component is still to come.
 
 :::
 
@@ -132,6 +132,60 @@ Search counts are noisy. The 0.20 floor is the smallest change that still shows 
 
 :::
 
+## The TypeScript scorer {#scorer}
+
+`scoreTermLifecycle` in `lib/aura/index.ts` reads raw search events, not a fitted curve, so it cannot use the noise-free rule above as it stands. It also exports `auraTrend(events, now)`, which returns 26 weekly counted totals scaled 0 to 1 (oldest first). The [MCP server](./mcp-server.md)'s `get_aura_trend` uses it.
+
+**The window.** The scorer counts every event except `llm_generated` and `prompt_generated` (the app makes those, not searchers). It keeps events from the 180 days before `now` and counts them per day.
+
+| Constant | Value | Meaning |
+|----|----|----|
+| `MIN_EVENTS` | 30 | Fewer counted events than this gives no stage ("No stage yet") |
+| `BLOCK_DAYS` | 60 | Days averaged at each end of the window for the first and last levels |
+| `PEAK_SMOOTH_DAYS` | 30 | Width of the rolling mean used to find the peak |
+| `FLOOR` | 0.15 | Smallest change, as a share of the peak, that counts as a trend |
+| `R_PEAK` | 0.9 | Share of the peak at or above which a term is peaking |
+| `R_RISING_PEAK` | 0.95 | A rising term this close to its peak is peaking, not emerging |
+| `FULL_CONFIDENCE_EVENTS` | 365 | Counted events at which confidence reaches 1 |
+| `LOW_CONFIDENCE` | 0.4 | Below this confidence the stage is shown as "low confidence" |
+
+The scorer takes the mean daily count of the first 60 days (first) and of the last 60 days (last). The peak is the highest 30-day rolling mean in the window. Then:
+
+$$
+r = \frac{\text{last}}{\text{peak}}
+\qquad
+\Delta = \frac{\text{last} - \text{first}}{\text{peak}}
+$$
+
+The first rule that matches wins:
+
+1.  If $\Delta \ge 0.15$: **peaking** when $r \ge 0.95$, otherwise **emerging**.
+
+2.  **Peaking** if $r \ge 0.9$.
+
+3.  **Parent territory** if $|\Delta| < 0.15$.
+
+4.  Otherwise **declining**.
+
+**Confidence** is the number of counted events divided by 365, capped at 1. A term with 146 events scores 0.4. Below 0.4 the stage is still returned, but it is shown as "low confidence".
+
+**Explanation** is one sentence built from the same $r$ and $\Delta$. For example, "At 24% of its 180-day peak, down 68 points in 180 days." or "At 100% of its 180-day peak, level over 180 days."
+
+### How accurate it is
+
+The test in `tests/aura-score.test.ts` runs the scorer on the held-out test split of the SIRS fixtures: 77 cases, vendored as daily counts in `tests/fixtures/aura-fixtures-test.json`. It gets **63.6%** right (49 of 77). Guessing would get 25%. The test fails if accuracy drops below 55%.
+
+`R_PEAK` and `FLOOR` were tuned on the train split only. The test split was not used to pick them.
+
+It is wrong about a third of the time. The main errors:
+
+- Terms that are flat after a peak are read as **peaking** instead of parent territory.
+- Terms that are still rising but near their peak are read as **emerging** instead of peaking.
+
+### Why the thresholds differ from the noise-free rule
+
+The rule in [The stage rule](#stage-rule) (0.8 and 0.2) labels the fitted curve. That curve knows the true peak, even when the peak was long ago. The scorer sees only 180 days of noisy counts. If the peak came before the window, it cannot see it, so the window's own highest point looks like the peak. A term that has been flat for months then looks close to its peak. The scorer needs different thresholds (0.9 and 0.15) to do best on that data, and it still makes the errors above.
+
 ## Charting a term {#plot}
 
 `pnpm aura:plot` draws each term's fitted lifecycle curve, coloured by stage, from the SIRS model vendored in `sirs/`.
@@ -171,6 +225,8 @@ Events carry only a term, an event type and a time. No user ID, IP address or se
 | File | Purpose |
 |----|----|
 | `lib/aura/index.ts` | The contract: stages, labels and `scoreTermLifecycle` |
+| `tests/aura-score.test.ts` | Checks the scorer on hand-built shapes and on held-out SIRS fixtures (accuracy of at least 55%) |
+| `tests/fixtures/aura-fixtures-test.json` | The 77 held-out test cases, as daily counts |
 | `lib/aura/plot-command.ts`, `scripts/aura-plot.ts` | The `pnpm aura:plot` command |
 | `sirs/src/sirs/model.py` | The modified SIRS model |
 | `sirs/src/sirs/stages.py` | The stage rule and its noise floor |
