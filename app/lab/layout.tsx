@@ -2,6 +2,7 @@ import type React from "react"
 import Link from "next/link"
 import { getSessionUser } from "@/lib/_stubs/auth"
 import { isMockLlm } from "@/lib/_stubs/llm"
+import { isIncidentDemoEnabled } from "@/lib/safety/incident-demo"
 
 export const metadata = { title: "Lexicon Lab" }
 
@@ -11,7 +12,9 @@ export const dynamic = "force-dynamic"
 const NAV = [
   { href: "/lab", label: "Dashboard" },
   { href: "/lab/search", label: "Search" },
+  { href: "/lab/eval", label: "Evaluation" },
   { href: "/lab/review", label: "Review queue" },
+  { href: "/lab/safety-incidents", label: "Safety incidents", demoOnly: true },
   { href: "/lab/safety-activity", label: "Safety activity" },
 ]
 
@@ -26,7 +29,7 @@ export default async function LabLayout({ children }: { children: React.ReactNod
           </Link>
           <nav aria-label="Lab">
             <ul className="flex flex-wrap gap-1 text-sm">
-              {NAV.map((item) => (
+              {NAV.filter(item => !item.demoOnly || isIncidentDemoEnabled()).map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className="rounded px-2 py-2 text-muted-foreground hover:text-primary">
                     {item.label}

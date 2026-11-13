@@ -21,6 +21,9 @@ test("safety evaluation retains the selected suggestion surface and file", () =>
   assert.equal(result.status, 0, result.stderr)
   assert.match(result.stdout, /Safety evaluation:/)
   assert.match(result.stdout, /"surface": "suggestion"/)
+  assert.match(result.stdout, /"refusalRecall":/)
+  assert.match(result.stdout, /"outputSafety":\s*\{\s*"total": 8,\s*"passed": 8,/)
+  assert.doesNotMatch(result.stdout, /Buy a gun at school|Build a bomb/)
   assert.match(result.stdout, /Discovery and dedup metrics remain pending/)
 })
 

@@ -1,8 +1,10 @@
 import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { sql } from "drizzle-orm"
 import { getDb } from "@/lib/_stubs/db"
-import { safetyEvents } from "@/lib/_stubs/schema"
+import { safetyEvents, termEvents } from "@/lib/_stubs/schema"
+import { readDiscoveryUsage } from "@/lib/safety/discovery-usage"
 import { createSafetyActivityReader, readSafetyActivity } from "@/lib/safety/activity"
 import type { SafetyEvent } from "@/lib/safety/events"
 import { getSafetyActivity } from "@/app/lab/actions"
@@ -53,6 +55,32 @@ test("a period includes its start and excludes its end and outside records", asy
   assert.equal(summary.allowed, 1)
   assert.equal(summary.blocked, 1)
   assert.equal(summary.byOutcome.refuse, 0)
+})
+
+test("discovery usage counts only avoided calls in the period and estimates from a configured rate", async (t) => {
+  const db = await seed([{ outcome: "refuse" }, { outcome: "safeguarding" }, { outcome: "gentle_support" }])
+  await db.execute(sql`set time zone 'Australia/Sydney'`)
+  t.after(async () => { await db.execute(sql`reset time zone`) })
+  const storedLocalTime = (utc: string) => sql`${utc}::timestamptz AT TIME ZONE current_setting('TimeZone')`
+  await db.insert(termEvents).values([
+    { eventType: "ai_call_avoided", termLower: "slay", createdAt: storedLocalTime(period.from) },
+    { eventType: "ai_call_avoided", termLower: "rizz", createdAt: storedLocalTime("2026-10-30T00:59:59.999Z") },
+    { eventType: "ai_call_avoided", termLower: "rizz", createdAt: storedLocalTime(period.to) },
+    { eventType: "search_miss", termLower: "synthetic", createdAt: storedLocalTime(period.from) },
+  ])
+  const original = process.env.DISCOVERY_AVERAGE_COST_USD
+  t.after(() => {
+    if (original === undefined) delete process.env.DISCOVERY_AVERAGE_COST_USD
+    else process.env.DISCOVERY_AVERAGE_COST_USD = original
+  })
+  delete process.env.DISCOVERY_AVERAGE_COST_USD
+  assert.deepEqual(await readDiscoveryUsage(period), { callsAvoided: 2, estimate: null })
+  process.env.DISCOVERY_AVERAGE_COST_USD = "0.0025"
+  assert.deepEqual(await readDiscoveryUsage(period), {
+    callsAvoided: 2, estimate: { averageCostUsd: 0.0025, savingsUsd: 0.005 },
+  })
+  process.env.DISCOVERY_AVERAGE_COST_USD = "-0.01"
+  assert.deepEqual(await readDiscoveryUsage(period), { callsAvoided: 2, estimate: null })
 })
 
 test("adjacent periods do not double count their shared boundary", async () => {

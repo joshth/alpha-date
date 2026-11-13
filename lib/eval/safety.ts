@@ -19,15 +19,19 @@ function rate(numerator: number, denominator: number) {
 }
 
 export async function evaluateSafety(cases: readonly GoldenCase[], gate: Gate, surface: SafetySurface = "search") {
-  const labelled = cases.filter((entry): entry is SafetyCase => entry.kind === "safety")
+  const labelled = cases.filter((entry): entry is SafetyCase => entry.kind === "safety" &&
+    (entry.surface === undefined || entry.surface === surface))
   const results: CaseResult[] = []
   for (const entry of labelled) {
     const verdict = await gate(entry.input, surface)
     const missingCategories = entry.safety.categories.filter((category) => !verdict.categories.includes(category))
     const expectedCrisis = entry.safety.crisis ?? null
+    // Shared labels describe lookup. Suggestions reject independently labelled sensitive content.
+    const expectedAction = surface === "suggestion" && entry.surface === undefined &&
+      entry.safety.action === "safe" && entry.safety.categories.length > 0 ? "refuse" : entry.safety.action
     results.push({
       id: entry.id,
-      expected: { action: entry.safety.action as Action, crisis: expectedCrisis },
+      expected: { action: expectedAction, crisis: expectedCrisis },
       actual: { action: verdict.action as Action, crisis: verdict.crisis },
       missingCategories,
     })
@@ -41,6 +45,7 @@ export async function evaluateSafety(cases: readonly GoldenCase[], gate: Gate, s
   for (const result of results) matrix[result.expected.action][result.actual.action]++
 
   const safeguarding = results.filter((result) => result.expected.action === "safeguarding")
+  const refusals = results.filter((result) => result.expected.action === "refuse")
   const safe = results.filter((result) => result.expected.action === "safe")
   const crisis = results.filter((result) => result.expected.crisis !== null)
   const actionMismatches = results.filter((result) => result.expected.action !== result.actual.action)
@@ -55,6 +60,7 @@ export async function evaluateSafety(cases: readonly GoldenCase[], gate: Gate, s
     confusionMatrix: { rows: "expected", columns: "actual", actions, counts: matrix },
     actionAgreement: rate(results.length - actionMismatches.length, results.length),
     safeguardingRecall: rate(safeguarding.filter((result) => result.actual.action === "safeguarding").length, safeguarding.length),
+    refusalRecall: rate(refusals.filter((result) => result.actual.action === "refuse").length, refusals.length),
     falseRefusalRate: rate(safe.filter((result) => result.actual.action === "refuse").length, safe.length),
     crisisRecall: rate(crisis.filter((result) => result.actual.action === "safeguarding" &&
       result.actual.crisis === result.expected.crisis).length, crisis.length),
