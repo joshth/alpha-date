@@ -24,6 +24,10 @@ export interface AuraScore {
 
 /** Fewer counted events than this in the window gives no stage at all. */
 export const MIN_EVENTS = 30
+/** Counted events at which confidence reaches 1 (about two a day over the window). */
+export const FULL_CONFIDENCE_EVENTS = 365
+/** Below this confidence the stage is shown as "low confidence". */
+export const LOW_CONFIDENCE = 0.4
 export const WINDOW_DAYS = 180
 /** Share of its peak (r) at or above which a term counts as peaking. Tuned on the train split of the SIRS fixtures; the noise-free SIRS rule uses 0.8, but a 180-day window cannot see a peak that came before it. */
 export const R_PEAK = 0.9
@@ -52,7 +56,8 @@ export function dailyCounts(events: TermEvent[], now: Date): number[] {
 
 export function scoreTermLifecycle(events: TermEvent[], now: Date = new Date()): AuraScore | null {
   const days = dailyCounts(events, now)
-  if (days.reduce((a, b) => a + b, 0) < MIN_EVENTS) return null
+  const counted = days.reduce((a, b) => a + b, 0)
+  if (counted < MIN_EVENTS) return null
   const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
   const first = mean(days.slice(0, BLOCK_DAYS))
   const last = mean(days.slice(-BLOCK_DAYS))
@@ -65,7 +70,10 @@ export function scoreTermLifecycle(events: TermEvent[], now: Date = new Date()):
   else if (r >= R_PEAK) stage = "peaking"
   else if (Math.abs(delta) < FLOOR) stage = "parent_territory"
   else stage = "declining"
-  return { stage, confidence: 1, explanation: "" }
+  const change = Math.round(Math.abs(delta) * 100)
+  const explanation = `At ${Math.round(r * 100)}% of its 180-day peak, ` +
+    (change === 0 ? "level over 180 days." : `${delta > 0 ? "up" : "down"} ${change} points in 180 days.`)
+  return { stage, confidence: Math.min(1, counted / FULL_CONFIDENCE_EVENTS), explanation }
 }
 
 export const AURA_STAGE_LABELS: Record<AuraStage, string> = {
