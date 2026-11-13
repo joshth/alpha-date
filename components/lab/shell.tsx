@@ -1,6 +1,6 @@
 import type React from "react"
 import Link from "next/link"
-import { PanelLeftClose } from "lucide-react"
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { LAB_NAV } from "./nav"
 
 const ROOT = { href: "/lab", label: "Lexicon Lab" }
@@ -21,11 +21,24 @@ export function breadcrumbs(pathname: string): { href: string; label: string }[]
 
 const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 
-export function LabShellView({ pathname, userName, mockLlm, children }: {
+export function shouldFocusSearch(e: {
+  key: string; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean
+  target?: { tagName?: string; isContentEditable?: boolean } | null
+}): boolean {
+  if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return false
+  const t = e.target
+  return !(t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName ?? "")))
+}
+
+export function LabShellView({ pathname, userName, mockLlm, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer }: {
   pathname: string
   userName: string
   mockLlm: boolean
   children: React.ReactNode
+  collapsed?: boolean
+  drawerOpen?: boolean
+  onToggleCollapsed?: () => void
+  onToggleDrawer?: () => void
 }) {
   const initials = userName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
   const active = activeHref(pathname)
@@ -33,6 +46,10 @@ export function LabShellView({ pathname, userName, mockLlm, children }: {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex h-14 items-center gap-4 border-b border-lab-border bg-lab-chrome px-4">
+        <button type="button" aria-controls="lab-sidebar" aria-expanded={drawerOpen} onClick={onToggleDrawer} className={`flex h-8 w-8 items-center justify-center rounded text-lab-muted hover:bg-lab-raised md:hidden ${ring}`}>
+          <Menu aria-hidden="true" className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </button>
         <Link href="/lab" className={`font-semibold ${ring}`}>Lexicon Lab</Link>
         <form role="search" action="/lab/search" className="relative mx-auto w-full max-w-md">
           <label htmlFor="lab-search" className="sr-only">Search or go to</label>
@@ -47,11 +64,12 @@ export function LabShellView({ pathname, userName, mockLlm, children }: {
         {mockLlm ? "mock AI and moderation" : "real AI and moderation (your own key)"}
       </p>
       <div className="flex flex-1">
-        <aside id="lab-sidebar" className="flex w-60 shrink-0 flex-col border-r border-lab-border bg-lab-chrome">
+        {drawerOpen && <div data-drawer-backdrop aria-hidden="true" onClick={onToggleDrawer} className="fixed inset-0 z-30 bg-lab-chrome/70 md:hidden" />}
+        <aside id="lab-sidebar" className={`shrink-0 flex-col border-r border-lab-border bg-lab-chrome ${drawerOpen ? "fixed inset-y-0 left-0 z-40 flex w-60" : `hidden md:flex ${collapsed ? "md:w-14" : "w-60"}`}`}>
           <nav aria-label="Lab" className="flex-1 overflow-y-auto p-2">
             {LAB_NAV.map((group) => (
               <div key={group.label}>
-                <h2 className="px-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-lab-muted">{group.label}</h2>
+                <h2 className={`${collapsed ? "sr-only" : ""} px-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-lab-muted`}>{group.label}</h2>
                 <ul>
                   {group.items.map((item) => (
                     <li key={item.href}>
@@ -59,16 +77,16 @@ export function LabShellView({ pathname, userName, mockLlm, children }: {
                         href={item.href}
                         aria-current={item.href === active ? "page" : undefined}
                         className={`block rounded px-2 py-1.5 text-sm ${ring} ${item.href === active ? "bg-lab-raised text-lab-text" : "text-lab-muted hover:bg-lab-raised hover:text-lab-text"}`}
-                      >{item.label}</Link>
+                      >{collapsed ? <><span className="sr-only">{item.label}</span><span aria-hidden="true">{item.label[0]}</span></> : item.label}</Link>
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
           </nav>
-          <button type="button" aria-expanded="true" aria-controls="lab-sidebar" className={`m-2 flex items-center gap-2 rounded px-2 py-1.5 text-sm text-lab-muted hover:bg-lab-raised hover:text-lab-text ${ring}`}>
-            <PanelLeftClose aria-hidden="true" className="h-4 w-4" />
-            Collapse sidebar
+          <button type="button" aria-expanded={!collapsed} aria-controls="lab-sidebar" onClick={onToggleCollapsed} className={`m-2 flex items-center gap-2 rounded px-2 py-1.5 text-sm text-lab-muted hover:bg-lab-raised hover:text-lab-text ${ring}`}>
+            {collapsed ? <PanelLeftOpen aria-hidden="true" className="h-4 w-4" /> : <PanelLeftClose aria-hidden="true" className="h-4 w-4" />}
+            {collapsed ? <span className="sr-only">Expand sidebar</span> : "Collapse sidebar"}
           </button>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col bg-background">
