@@ -216,3 +216,11 @@ test("the Aura page writes the stage rule's r and delta in LaTeX", () => {
   assert.doesNotMatch(rule, /```[^\n]*\n(?:(?!```)[\s\S])*I_peak/)
   assert.doesNotMatch(rule, /`[^`\n]*(?:delta|\br\b\s*[≥≤<>])[^`\n]*`/)
 })
+
+test("the Aura page documents the TypeScript scorer and no longer says it throws", () => {
+  const text = read("docs/features/aura.md")
+  assert.match(text, /^## .+ \{#scorer\}$/m)
+  const section = text.split(/^## .+ \{#scorer\}$/m)[1]?.split("\n## ")[0] ?? ""
+  for (const fact of ["MIN_EVENTS", "0.9", "0.15", "63.6%", "LOW_CONFIDENCE"]) assert.ok(section.includes(fact), fact)
+  assert.doesNotMatch(text, /throws "not implemented"/)
+})
