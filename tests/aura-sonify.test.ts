@@ -1,7 +1,8 @@
 import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { trendNotes, SCALE, MAX_NOTES } from "../lib/aura/sonify"
+import { trendNotes, stageCue, SCALE, MAX_NOTES } from "../lib/aura/sonify"
+import { AURA_STAGE_LABELS, type AuraStage } from "../lib/aura"
 
 const rise = Array.from({ length: 100 }, (_, i) => i / 99)
 const hump = Array.from({ length: 60 }, (_, i) => Math.sin((Math.PI * i) / 59))
@@ -46,4 +47,29 @@ test("SCALE: ascending C major pentatonic over two octaves", () => {
   assert.ok(Math.abs(SCALE[0] - 261.63) < 0.01)
   assert.ok(Math.abs(SCALE[SCALE.length - 1] - 1046.5) < 0.01)
   for (let i = 1; i < SCALE.length; i++) assert.ok(SCALE[i] > SCALE[i - 1])
+})
+
+const stages = Object.keys(AURA_STAGE_LABELS) as AuraStage[]
+const semitones = (a: number, b: number) => Math.round(12 * Math.log2(b / a))
+
+test("stageCue: every stage has its own short cue", () => {
+  const cues = stages.map((s) => stageCue(s))
+  for (const cue of cues) assert.ok(cue.length >= 2 && cue.length <= 4)
+  assert.equal(new Set(cues.map((c) => c.join(","))).size, stages.length)
+})
+
+test("stageCue: emerging rises, declining falls, peaking is a rising major chime", () => {
+  const [e1, e2] = stageCue("emerging")
+  assert.ok(e2 > e1)
+  const [d1, d2] = stageCue("declining")
+  assert.ok(d2 < d1)
+  const chime = stageCue("peaking")
+  assert.deepEqual(chime.slice(1).map((f, i) => semitones(chime[i], f)), [4, 3, 5])
+})
+
+test("stageCue: parent territory is a tritone, C then F sharp", () => {
+  const [c, fSharp] = stageCue("parent_territory")
+  assert.equal(stageCue("parent_territory").length, 2)
+  assert.equal(c, SCALE[0])
+  assert.equal(semitones(c, fSharp), 6)
 })
