@@ -17,8 +17,8 @@ export default function AuraPage() {
           <TabsTrigger value="lifecycle" className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-lab-text data-[state=active]:bg-transparent data-[state=active]:shadow-none">Lifecycle</TabsTrigger>
           <TabsTrigger value="dedup" className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-lab-text data-[state=active]:bg-transparent data-[state=active]:shadow-none">Dedup</TabsTrigger>
         </TabsList>
-        <TabsContent value="lifecycle" className="pt-6"><LifecycleTab fitAction={fitAuraTerm} /></TabsContent>
-        <TabsContent value="dedup" className="pt-6"><DedupTab savingsAction={getDedupSavings} graphAction={getDedupGraph} /></TabsContent>
+        <TabsContent value="lifecycle" forceMount className="pt-6 data-[state=inactive]:hidden"><LifecycleTab fitAction={fitAuraTerm} /></TabsContent>
+        <TabsContent value="dedup" forceMount className="pt-6 data-[state=inactive]:hidden"><DedupTab savingsAction={getDedupSavings} graphAction={getDedupGraph} /></TabsContent>
       </Tabs>
     </div>
   )
