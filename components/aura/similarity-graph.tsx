@@ -3,6 +3,7 @@
 import type { KeyboardEvent } from "react"
 import type { Graph } from "@/lib/dedup/graph"
 import { clusters, edgesAt } from "@/lib/dedup/nav"
+import type { SemanticEdge } from "@/lib/dedup/semantic"
 
 const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`
 
@@ -12,8 +13,8 @@ const tok = (n: string) => `hsl(var(--lab-${n}))`
 const DASH = { same_key: undefined, trigram: "6 4", stem: "2 3" } as Record<string, string | undefined>
 const ARROWS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]
 
-export function GraphView({ graph, positions, selectedId, threshold, size, onSelect, onMove }: {
-  graph: Graph; positions: Record<string, Pos>; selectedId: string | null; threshold: number
+export function GraphView({ graph, positions, selectedId, threshold, size, onSelect, onMove, semanticEdges }: {
+  graph: Graph; positions: Record<string, Pos>; selectedId: string | null; threshold: number; semanticEdges?: SemanticEdge[]
   size?: { width: number; height: number }; onSelect?: (id: string) => void; onMove?: (key: Key) => void
 }) {
   const edges = edgesAt(graph, threshold)
@@ -28,6 +29,16 @@ export function GraphView({ graph, positions, selectedId, threshold, size, onSel
       {edges.map((e) => {
         const a = positions[e.source], b = positions[e.target]
         return <line key={e.id} data-edge-id={e.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={tok("border-strong")} strokeWidth={1.5} strokeDasharray={DASH[e.reason]} />
+      })}
+      {semanticEdges?.map((e) => {
+        const a = positions[e.source], b = positions[e.target]
+        if (!a || !b) return null
+        const len = Math.hypot(b.x - a.x, b.y - a.y) || 1, dx = (-(b.y - a.y) / len) * 1, dy = ((b.x - a.x) / len) * 1
+        return (
+          <g key={e.id} data-edge-kind="semantic" data-edge-id={e.id} aria-hidden="true">
+            {[-1, 1].map((s) => <line key={s} x1={a.x + s * dx} y1={a.y + s * dy} x2={b.x + s * dx} y2={b.y + s * dy} stroke={tok("border-strong")} strokeWidth={1} />)}
+          </g>
+        )
       })}
       {graph.nodes.map((n) => {
         const p = positions[n.id], matches = edges.filter((e) => e.source === n.id || e.target === n.id).length
@@ -45,7 +56,7 @@ export function GraphView({ graph, positions, selectedId, threshold, size, onSel
   )
 }
 
-export function GraphLegend() {
+export function GraphLegend({ semantic }: { semantic?: boolean }) {
   return (
     <ul aria-label="Edge types" className="flex gap-4 text-xs text-lab-text-muted">
       {([["Same key", "same_key"], ["Trigram", "trigram"], ["Stem", "stem"]] as const).map(([t, r]) => (
@@ -54,6 +65,12 @@ export function GraphLegend() {
           {t}
         </li>
       ))}
+      {semantic && (
+        <li className="flex items-center gap-2">
+          <svg aria-hidden="true" width="28" height="6"><line x1="0" y1="2" x2="28" y2="2" stroke={tok("border-strong")} /><line x1="0" y1="4" x2="28" y2="4" stroke={tok("border-strong")} /></svg>
+          Meaning (reviewer hint)
+        </li>
+      )}
     </ul>
   )
 }

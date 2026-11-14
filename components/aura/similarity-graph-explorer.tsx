@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 import { ClusterTable, GraphLegend, GraphView, NodePanel } from "@/components/aura/similarity-graph"
 import { similarityGraph, type DedupGraphData, type Graph } from "@/lib/dedup/graph"
+import type { SemanticEdge } from "@/lib/dedup/semantic"
 import { layoutGraph } from "@/lib/dedup/layout"
 import { mergeCount, nextNeighbour } from "@/lib/dedup/nav"
 import { mergeQuality } from "@/lib/dedup/threshold"
@@ -18,8 +19,9 @@ export const defaultShowTable = (viewportWidth: number) => viewportWidth < 768
 
 const fmt = (n: number | null) => (n === null ? "n/a" : n.toFixed(2))
 
-export function GraphExplorerView({ graph, positions, threshold, onThreshold, selectedId, showTable, onToggleTable, quality, onSelect, onMove }: {
+export function GraphExplorerView({ graph, positions, threshold, onThreshold, selectedId, showTable, onToggleTable, quality, onSelect, onMove, semanticOn, onToggleSemantic, semanticEdges }: {
   graph: Graph; positions: Record<string, Pos>; threshold: number; onThreshold?: (n: number) => void; selectedId: string | null
+  semanticOn?: boolean; onToggleSemantic?: () => void; semanticEdges?: SemanticEdge[]
   showTable: boolean; onToggleTable?: () => void; quality: Quality; onSelect?: (id: string) => void; onMove?: (key: Key) => void
 }) {
   return (
@@ -33,11 +35,13 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
         <p className="text-xs text-lab-muted">Changing the threshold never changes stored data.</p>
         <p className="text-xs text-lab-muted">{quality ? `Merge precision ${fmt(quality.precision)} · recall ${fmt(quality.recall)} on ${quality.cases} golden cases` : "No golden dedup cases loaded."}</p>
         <button type="button" aria-pressed={showTable} onClick={onToggleTable} className="h-9 rounded border border-lab-border-strong px-3 text-sm">Show as table</button>
+        <button type="button" aria-pressed={!!semanticOn} onClick={onToggleSemantic} className="ml-2 h-9 rounded border border-lab-border-strong px-3 text-sm">Show meaning matches</button>
+        <p className="text-xs text-lab-muted">Meaning matches are hints for a reviewer. They never merge rows.</p>
       </div>
       {showTable ? <ClusterTable graph={graph} threshold={threshold} /> : (
         <div className="space-y-3">
-          <GraphView graph={graph} positions={positions} selectedId={selectedId} threshold={threshold} onSelect={onSelect} onMove={onMove} />
-          <GraphLegend />
+          <GraphView graph={graph} positions={positions} selectedId={selectedId} threshold={threshold} onSelect={onSelect} onMove={onMove} semanticEdges={semanticOn ? semanticEdges : undefined} />
+          <GraphLegend semantic={semanticOn} />
           <NodePanel graph={graph} id={selectedId} threshold={threshold} />
         </div>
       )}
@@ -45,7 +49,13 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
   )
 }
 
-export function GraphExplorer({ graphAction }: { graphAction: () => Promise<DedupGraphData> }) {
+export function GraphExplorer({ graphAction, semanticAction }: { graphAction: () => Promise<DedupGraphData>; semanticAction?: () => Promise<SemanticEdge[]> }) {
+  const [semanticOn, setSemanticOn] = useState(false)
+  const [semantic, setSemantic] = useState<SemanticEdge[] | null>(null)
+  const toggleSemantic = () => {
+    if (!semanticOn && !semantic && semanticAction) semanticAction().then(setSemantic, () => setSemantic([]))
+    setSemanticOn((v) => !v)
+  }
   const [data, setData] = useState<DedupGraphData | null>(null)
   const [threshold, setThreshold] = useState(MATCH_THRESHOLD)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -66,5 +76,5 @@ export function GraphExplorer({ graphAction }: { graphAction: () => Promise<Dedu
     setSelectedId(id)
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-node-id="${CSS.escape(id)}"]`)?.focus())
   }
-  return <GraphExplorerView graph={graph} positions={positions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} />
+  return <GraphExplorerView graph={graph} positions={positions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} semanticOn={semanticOn} onToggleSemantic={toggleSemantic} semanticEdges={semantic ?? undefined} />
 }
