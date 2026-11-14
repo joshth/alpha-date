@@ -1,5 +1,6 @@
 import "./setup"
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
 import test from "node:test"
 import { emergencyFor, resourcesFor } from "@/lib/safety/resources"
 import { isSupportRegion, supportRegion, SUPPORT_REGIONS } from "@/lib/safety/regions"
@@ -46,4 +47,44 @@ test("Australia keeps specialist resources and mixed categories do not duplicate
   const resources = resourcesFor([...categories], "AU")
   assert.equal(new Set(resources.map(r => r.name)).size, resources.length)
   assert.ok(!resources.some(r => r.name === "Outside Australia"))
+})
+
+test("regional crisis cards render correct emergency, phone and SMS links", () => {
+  const output = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react");
+    globalThis.React = React;
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { RegionProvider } = require("./components/safety/region-provider.tsx");
+    const { CrisisCard } = require("./components/safety/crisis-card.tsx");
+    const { HelpResources } = require("./components/safety/help-resources.tsx");
+    const render = (region, child) => renderToStaticMarkup(React.createElement(RegionProvider, {initialRegion:region},child));
+    console.log(JSON.stringify(["AU","IN","GB","US"].map(region => ({
+      region,
+      self:render(region,React.createElement(CrisisCard,{crisis:"self_harm",categories:["suicide_self_harm"],reference:"INC-SYNTHETIC"})),
+      others:render(region,React.createElement(CrisisCard,{crisis:"harm_to_others",categories:["violence_threat"]})),
+      sensitive:render(region,React.createElement(HelpResources,{categories:["sexual_exploitation"]})),
+    }))));
+  `], {cwd:process.cwd(), encoding:"utf8", env:{...process.env,NODE_OPTIONS:""}})
+  const rows = JSON.parse(output) as {region: typeof SUPPORT_REGIONS[number]["code"]; self:string; others:string; sensitive:string}[]
+  for (const row of rows) {
+    const emergency = supportRegion(row.region).emergency
+    for (const markup of [row.self,row.others]) {
+      assert.ok(markup.includes(`href="tel:${emergency}"`))
+      assert.ok(markup.includes('role="alert"'))
+    }
+    assert.ok(row.self.includes("INC-SYNTHETIC"))
+    if (row.region !== "AU") {
+      for (const markup of [row.self,row.others,row.sensitive]) assert.ok(!markup.includes('href="tel:000"'))
+    }
+    assert.ok(row.sensitive.includes(supportRegion(row.region).name))
+    if (row.region === "GB") assert.ok(row.self.includes('sms:85258?body=SHOUT'))
+    if (row.region === "US") {
+      assert.ok(row.self.includes('sms:741741?body=HOME'))
+      assert.ok(row.self.includes('href="tel:988"'))
+    }
+    if (row.region === "IN") {
+      assert.ok(row.self.includes('href="tel:14416"'))
+      assert.ok(row.self.includes('href="tel:1098"'))
+    }
+  }
 })
