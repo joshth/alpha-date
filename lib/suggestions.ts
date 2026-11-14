@@ -1,3 +1,4 @@
+import { MAX_INJECTION_INPUT_LENGTH } from "@/lib/safety/injection"
 import { redactPersonalInformation } from "@/lib/safety/privacy"
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { sanitizeUserText } from "@/lib/discovery/prompt"
@@ -13,6 +14,7 @@ interface SuggestionDependencies {
 
 export function createSuggestTerm(dependencies: SuggestionDependencies) {
   return async (rawTerm: string, rawContext?: string): Promise<ActionResult<SafetyVerdict>> => {
+    if (typeof rawTerm !== "string" || rawTerm.length > MAX_INJECTION_INPUT_LENGTH || (typeof rawContext === "string" && rawContext.length > MAX_INJECTION_INPUT_LENGTH)) return {success: false, message: "Please enter a shorter term or context."}
     const validatedTerm = sanitizeUserText(rawTerm, 100)
     const term = validatedTerm ? redactPersonalInformation(validatedTerm) : null
     if (!term || term.length < 2) return { success: false, message: "Please enter a term between 2 and 100 characters." }
@@ -26,6 +28,7 @@ export function createSuggestTerm(dependencies: SuggestionDependencies) {
     }
 
     const submission = rawContext === undefined ? rawTerm : `${rawTerm}\n${rawContext}`
+    if (submission.length > MAX_INJECTION_INPUT_LENGTH) return {success: false, message: "Please enter a shorter term or context."}
     const original = redactPersonalInformation(submission.length <= 10000 ? submission : prepareSafetyInput(submission))
     const verdict = await dependencies.checkInputSafety(
       `${redactPersonalInformation(prepareSafetyInput(rawTerm))}\n${redactPersonalInformation(prepareSafetyInput(rawContext ?? ""))}`, "suggestion", original,

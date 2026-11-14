@@ -20,8 +20,8 @@ export function createTrackedSafetyGate(
   record: (event: SafetyEvent) => Promise<void>,
   now: () => Date = () => new Date(),
 ): typeof checkInputSafety {
-  return async (text, surface = "search") => {
-    const verdict = await gate(text, surface)
+  return async (text, surface = "search", originalText) => {
+    const verdict = await (originalText === undefined ? gate(text, surface) : gate(text, surface, originalText))
     try {
       await record(safetyEventSchema.parse({
         outcome: verdict.action,

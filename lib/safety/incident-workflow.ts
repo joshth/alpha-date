@@ -16,7 +16,7 @@ export function createIncidentSafetyCheck(
   },
 ): RequestSafetyCheck {
   return async (text, surface, originalText) => {
-    const verdict = await check(text, surface)
+    const verdict = await check(text, surface, originalText)
     if (verdict.action !== "safeguarding" || !demo.enabled()) return verdict
 
     let incident: SafetyIncident

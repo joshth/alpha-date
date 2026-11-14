@@ -1,3 +1,4 @@
+import { MAX_INJECTION_INPUT_LENGTH } from "@/lib/safety/injection"
 import { redactPersonalInformation } from "@/lib/safety/privacy"
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { discoverTerm } from "@/lib/discovery/discover"
@@ -19,6 +20,7 @@ interface SearchDependencies {
 
 export function createSearchTerm(dependencies: SearchDependencies) {
   return async (raw: string): Promise<SearchOutcome> => {
+    if (typeof raw !== "string" || raw.length > MAX_INJECTION_INPUT_LENGTH) return {kind: "error", message: "Please enter a shorter slang term or phrase."}
     const validated = sanitizeUserText(raw, MAX_INPUT_LENGTH)
     const query = validated ? redactPersonalInformation(validated) : null
     if (!query) return { kind: "error", message: `Please enter a term (up to ${MAX_INPUT_LENGTH} characters).` }
