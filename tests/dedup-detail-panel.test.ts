@@ -27,7 +27,7 @@ const render = (id: string | null, threshold: number) => JSON.parse(execFileSync
 test("NodePanel shows heading, kind and submissions", () => {
   const html = render("brainrot", 0.3)
   assert.match(html, /<section[^>]*aria-label="Details for brainrot"/)
-  assert.match(html, /<h3[^>]*>brainrot<\/h3>/)
+  assert.match(html, /<h2[^>]*>brainrot<\/h2>/)
   assert.match(html, /suggestion/)
   assert.match(html, /5 submissions/)
 })

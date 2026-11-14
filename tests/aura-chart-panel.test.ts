@@ -24,7 +24,7 @@ const run = () => (cached ??= JSON.parse(execFileSync(process.execPath, ["--requ
 
 test("ChartPanel title and summary linked to the chart region", () => {
   const html = run().hidden
-  assert.match(html, /<h3[^>]*>Interest over time<\/h3>/)
+  assert.match(html, /<h2[^>]*>Interest over time<\/h2>/)
   const p = html.match(/<p[^>]*id="([^"]+)"[^>]*>Interest peaked in October\.<\/p>/)
   assert.ok(p, "summary <p> with id")
   assert.match(html, new RegExp(`(<figure|role="figure")[^>]*aria-describedby="${p![1]}"`))
