@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache"
 import { getSessionUser, isReviewer } from "@/lib/_stubs/auth"
-import { generateDiscoveryObject } from "@/lib/_stubs/llm"
+import { embedMany } from "ai"
+import { openai } from "@ai-sdk/openai"
+import { generateDiscoveryObject, isMockLlm } from "@/lib/_stubs/llm"
+import { createEmbedder } from "@/lib/dedup/embeddings"
+import { semanticEdges, type SemanticEdge } from "@/lib/dedup/semantic"
 import { moderate } from "@/lib/_stubs/moderation"
 import { createSafeDiscovery } from "@/lib/discovery/safe-discovery"
 import { createSafeTermLookup } from "@/lib/safety/safe-term-lookup"
@@ -13,7 +17,7 @@ import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
 import { recordSuggestion } from "@/lib/feedback"
 import type { DedupSavings } from "@/lib/dedup/savings"
-import type { DedupGraphData } from "@/lib/dedup/graph"
+import { similarityGraph, type DedupGraphData } from "@/lib/dedup/graph"
 import { readDedupRows, readDedupSavings } from "@/lib/dedup/store"
 import { loadGoldenSet } from "@/lib/eval/golden"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
@@ -87,6 +91,13 @@ export async function fitAuraTerm(raw: string): Promise<AuraFitOutcome> {
 export async function getDedupSavings(minutesPerReview = 2): Promise<DedupSavings> {
   const ok = Number.isFinite(minutesPerReview) && minutesPerReview >= 0 && minutesPerReview <= 10000
   return readDedupSavings(ok ? minutesPerReview : 2)
+}
+
+/** Reviewer hints only: separate from the lexical graph, so merge counts are never affected. */
+export async function getSemanticEdges(): Promise<SemanticEdge[]> {
+  const graph = similarityGraph(await readDedupRows(), await listPublishedTermNames(), 0.3)
+  const embed = createEmbedder({ mock: isMockLlm(), embed: (words) => embedMany({ model: openai.embedding("text-embedding-3-small"), values: words }).then((r) => r.embeddings) })
+  return semanticEdges(graph, await embed(graph.nodes.map((n) => n.label)))
 }
 
 export async function getDedupGraph(): Promise<DedupGraphData> {
