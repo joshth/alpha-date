@@ -25,5 +25,11 @@ export const LAB_NAV: NavGroup[] = [
       { href: "/lab/safety-activity", label: "Safety activity" },
     ],
   },
-  { label: "Analytics", items: [{ href: "/lab/aura", label: "Aura" }] },
+  {
+    label: "Analytics",
+    items: [
+      { href: "/lab/aura", label: "Aura" },
+      { href: "/lab/dedup", label: "Dedup" },
+    ],
+  },
 ]
