@@ -35,3 +35,33 @@ const CUES: Record<AuraStage, number[]> = {
 export function stageCue(stage: AuraStage): number[] {
   return CUES[stage].map(hz)
 }
+
+export const CUE_NOTE_SECONDS = 0.25
+
+/** Schedules the notes and the stage cue on a Web Audio context and returns a stop function. */
+export function playTrend(ctx: AudioContext, notes: Note[], cue: number[], volume: number, onEnd?: () => void): () => void {
+  if (!notes.length && !cue.length) {
+    onEnd?.()
+    return () => {}
+  }
+  const gain = ctx.createGain()
+  gain.gain.value = volume
+  gain.connect(ctx.destination)
+  const t0 = ctx.currentTime
+  const last = notes[notes.length - 1]
+  const end = last ? last.start + last.duration : 0
+  const all: Note[] = [
+    ...notes,
+    ...cue.map((freq, k) => ({ freq, start: end + k * CUE_NOTE_SECONDS, duration: CUE_NOTE_SECONDS })),
+  ]
+  const oscs = all.map((n) => {
+    const osc = ctx.createOscillator()
+    osc.frequency.value = n.freq
+    osc.connect(gain)
+    osc.start(t0 + n.start)
+    osc.stop(t0 + n.start + n.duration)
+    return osc
+  })
+  oscs[oscs.length - 1].onended = () => onEnd?.()
+  return () => oscs.forEach((o) => o.stop())
+}
