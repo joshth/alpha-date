@@ -14,7 +14,7 @@ export function ChartPanel({ title, summary, table, defaultShowTable = false, ch
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium">{title}</h3>
+        <h2 className="text-sm font-medium">{title}</h2>
         <button type="button" aria-pressed={showTable} onClick={() => setShowTable(!showTable)}
           className="rounded-md border border-lab-border px-2 py-1 text-xs hover:bg-lab-raised focus-visible:outline focus-visible:outline-2">
           {showTable ? "Show as chart" : "Show as table"}
