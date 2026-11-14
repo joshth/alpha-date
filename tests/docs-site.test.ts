@@ -253,3 +253,27 @@ test("the Lab and Aura audit report states its axe result, its fixes and what it
   const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
   assert.doesNotMatch(prose, /<\/?(div|span|a|table|svg|br|img|p|pre)[\s>]/)
 })
+
+test("the Aura and dedup dashboard page explains the fit flow, both tabs, the meaning hints and their limits", () => {
+  const file = "docs/features/aura-dashboard.md"
+  const text = read(file)
+  assert.match(text, /^---\n(?:.*\n)*?title: Aura and dedup dashboard\n/)
+  assert.match(text, /^# Aura and dedup dashboard(?: |$)/m)
+  for (const heading of ["Lifecycle tab", "How a fit runs", "Charts and their text alternatives", "Dedup tab", "Similarity graph and threshold", "Meaning matches", "Accessibility checks", "Limits"])
+    assert.match(text, new RegExp(`^## ${heading}$`, "m"), heading)
+  const flow = mermaidBlocks(file).find((diagram) => /fitAuraTerm/.test(diagram) && /fit_term/.test(diagram))
+  assert.ok(flow, "a diagram of term to server action to fit_term to charts")
+  assert.match(flow, /safety/i)
+  // The graph never changes stored data, and meaning matches never merge rows.
+  assert.match(text, /never merge rows/)
+  assert.match(text, /never changes stored data/i)
+  assert.match(text, /\]\(\.\.\/audits\/lab-aura-slop-audit\.md\)/)
+  const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
+  assert.doesNotMatch(prose, /<\/?(div|span|a|table|svg|br|img|p|pre)[\s>]/)
+})
+
+test("the Aura page and the introduction link to the dashboard page, and the Aura page no longer says the badge is still to come", () => {
+  assert.match(read("docs/features/aura.md"), /\]\(\.\/aura-dashboard\.md\)/)
+  assert.match(read("docs/intro.mdx"), /\]\(\.\/features\/aura-dashboard\.md\)/)
+  assert.doesNotMatch(read("docs/features/aura.md"), /AuraBadge[^\n]*still to come/)
+})
