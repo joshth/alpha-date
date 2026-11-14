@@ -5,18 +5,9 @@ import { readFileSync } from "node:fs"
 
 const src = readFileSync("app/lab/aura/page.tsx", "utf8")
 
-test("Aura page has Lifecycle and Dedup tabs", () => {
-  assert.match(src, /<TabsTrigger value="lifecycle"/)
-  assert.match(src, /<TabsTrigger value="dedup"[^>]*>\s*Dedup\s*<\/TabsTrigger>/)
-  assert.match(src, /<TabsContent value="dedup"[^>]*>[\s\S]*?<DedupTab/)
-  assert.match(src, /import \{[^}]*getDedupSavings[^}]*\} from "\.\.\/actions"/)
-  assert.match(src, /<LifecycleTab/)
-})
-
-test("both tabs stay mounted so a fit is not lost when switching tabs", () => {
-  for (const v of ["lifecycle", "dedup"]) {
-    const tag = src.match(new RegExp(`<TabsContent value="${v}"[^>]*>`))?.[0] ?? ""
-    assert.match(tag, /\bforceMount\b/, `${v} content is force-mounted`)
-    assert.match(tag, /data-\[state=inactive\]:hidden/, `${v} content is hidden, not unmounted, when inactive`)
-  }
+test("the Aura page is the Lifecycle view on its own, with Dedup moved to its own page", () => {
+  assert.match(src, /<LifecycleTab fitAction=\{fitAuraTerm\}/)
+  assert.match(src, /<h1[^>]*>Aura<\/h1>/)
+  assert.doesNotMatch(src, /DedupTab|getDedup|getSemanticEdges/, "no dedup on the Aura page")
+  assert.doesNotMatch(src, /Tabs(List|Trigger|Content)?\b/, "no tab strip for a single view")
 })
