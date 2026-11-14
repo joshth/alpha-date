@@ -4,7 +4,7 @@ import { CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, XAxis
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { ChartPanel } from "./chart-panel"
 import type { SirsFit } from "@/lib/aura/fit-command"
-import { lifecycleRows, trendSentence } from "@/lib/aura/trend-text"
+import { lifecycleRows, trendSentence, windowBounds } from "@/lib/aura/trend-text"
 
 type Series = { key: string; label: string; color: string; dash: string; shape: "dot" | "line" }
 const tok = (n: string) => `hsl(var(--lab-${n}))`
@@ -51,7 +51,7 @@ const tick = { fill: tok("text-muted"), fontSize: 12 }
 // An array, not a fragment: Recharts only registers axes and the grid when they are direct children.
 const axes = [
   <CartesianGrid key="grid" vertical={false} stroke={tok("border")} />,
-  <XAxis key="x" dataKey="week" tickLine={false} tickFormatter={(w: string) => w.slice(0, 7)} interval="preserveStartEnd" minTickGap={48} tick={tick} stroke={tok("border-strong")} />,
+  <XAxis key="x" dataKey="week" tickLine={false} tickFormatter={(w: string) => w.slice(0, 7)} interval="preserveStartEnd" minTickGap={48} padding={{ left: 4, right: 28 }} tick={tick} stroke={tok("border-strong")} />,
   <YAxis key="y" width={40} tickLine={false} tick={tick} tickFormatter={(v: number) => Number(v).toFixed(2)} domain={[0, "auto"]} stroke={tok("border-strong")} />,
   <ChartTooltip key="tip" content={<ChartTooltipContent />} />,
 ]
@@ -78,6 +78,7 @@ const cols = (series: Series[]) => [{ key: "week", label: "Week" }, ...series.ma
 
 export function LifecycleCharts({ fit }: { fit: SirsFit }) {
   const rows = useMemo(() => lifecycleRows(fit), [fit])
+  const win = useMemo(() => windowBounds(rows.map((r) => r.week), fit.windowStart, fit.now), [rows, fit.windowStart, fit.now])
   const summary = trendSentence(fit)
   const [focus, setFocus] = useState(rows.length - 1)
   const moved = useRef(false)
@@ -113,9 +114,9 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
           <ChartContainer config={config(MAIN_SERIES)} className="h-72 w-full">
             <ComposedChart data={rows}>
               {axes}
-              <ReferenceArea x1={fit.windowStart} x2={fit.now} fill={tok("text-muted")} fillOpacity={0.1} label="Last 180 days" />
-              <ReferenceLine x={fit.now} stroke={tok("border-strong")} label="Now" />
-              <ReferenceLine y={peak} stroke={tok("stage-peaking")} strokeDasharray="4 4" label="Peaking line (80% of peak)" />
+              {win && <ReferenceArea x1={win.from} x2={win.to} fill={tok("text-muted")} fillOpacity={0.1} label={{ value: "Last 180 days", position: "insideBottomRight", fill: tok("text-muted"), fontSize: 12 }} />}
+              {win && <ReferenceLine x={win.to} stroke={tok("border-strong")} label={{ value: "Now", position: "insideTopLeft", fill: tok("text-muted"), fontSize: 12 }} />}
+              <ReferenceLine y={peak} stroke={tok("stage-peaking")} strokeDasharray="4 4" label={{ value: "Peaking line (80% of peak)", position: "insideTopRight", fill: tok("text-muted"), fontSize: 12 }} />
               <Line dataKey="interest" stroke="none" isAnimationActive={false} activeDot={false}
                 dot={(p: { key?: string; cx?: number; cy?: number; index?: number; payload?: { week: string; interest: number; fitted: number } }) => (
                   <FocusDot key={p.index} cx={p.cx} cy={p.cy} index={p.index} payload={p.payload} tabbable={p.index === focus}
