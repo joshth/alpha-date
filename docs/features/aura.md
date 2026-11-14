@@ -34,7 +34,7 @@ export function scoreTermLifecycle(events: TermEvent[], now?: Date): AuraScore |
 
 :::warning[Status]
 
-The stage rule, the lifecycle charts and the TypeScript scorer all work today (see [The TypeScript scorer](#scorer)). Assistive tech can read the stage through the [MCP server](./mcp-server.md). The `<AuraBadge />` component is still to come.
+The stage rule, the lifecycle charts and the TypeScript scorer all work today (see [The TypeScript scorer](#scorer)). Assistive tech can read the stage through the [MCP server](./mcp-server.md). The `<AuraBadge />` component and the Lab dashboard that shows the fit are described in the [Aura and dedup dashboard](./aura-dashboard.md).
 
 :::
 
