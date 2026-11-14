@@ -37,6 +37,10 @@ test("breadcrumbs: root plus the matching nav page", () => {
 test("LabShellView renders header, search, avatar, nav, breadcrumb and main", () => {
   const { aura: html } = run()
   assert.match(html, /<header[^>]*>[\s\S]*Lexicon Lab[\s\S]*<\/header>/)
+  const header = html.match(/<header[^>]*>[\s\S]*?<\/header>/)?.[0] ?? ""
+  assert.ok(header.includes("Teaching scaffold"), "scaffold banner inside <header>")
+  assert.ok(header.includes("Lexicon Lab"), "Lexicon Lab inside <header>")
+  assert.match(header, /<form[^>]*role="search"/)
   const form = html.match(/<form[^>]*>/)?.[0] ?? ""
   assert.match(form, /role="search"/)
   assert.match(form, /action="\/lab\/search"/)
