@@ -21,3 +21,10 @@ export function lifecycleRows(fit: SirsFit) {
     }
   })
 }
+
+/** The 180-day window as two plotted weeks. A band on a weekly category axis only draws when both ends are real weeks. */
+export function windowBounds(weeks: string[], windowStart: string, now: string): { from: string; to: string } | null {
+  const from = weeks.find((w) => w >= windowStart)
+  const to = [...weeks].reverse().find((w) => w <= now)
+  return from && to && from <= to ? { from, to } : null
+}
