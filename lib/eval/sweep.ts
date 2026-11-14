@@ -3,6 +3,7 @@ import path from "node:path"
 import { type CostSummary, formatUsd, type RunTiming } from "@/lib/eval/cost"
 import type { DiscoveryEvaluation } from "@/lib/eval/discovery"
 import { formatRate, type Rate, rate } from "@/lib/eval/metrics"
+import { rocSvg } from "@/lib/eval/roc-chart"
 import type { RunConfig } from "@/lib/eval/report"
 
 // `pnpm eval --sweep --models llama3.2:1b,llama3.2:3b --temperatures 0,0.7,1.3 --repeats 3`.
@@ -16,13 +17,23 @@ import type { RunConfig } from "@/lib/eval/report"
 // same sample twice.
 //
 // The decision rule is fixed before any real run:
-// acceptable = H1 ≤ maxH1 and recall ≥ minRecall; recommend the cheapest
-// acceptable setting per 1,000 calls, then the fastest.
+// acceptable = H1 ≤ maxH1 and recall ≥ minRecall, and no more than
+// maxErrorRate of its calls failed; recommend the cheapest acceptable setting
+// per 1,000 calls, then the fastest. The error limit matters because errors are
+// left out of every rate: a setting that answered 24 of 128 calls can show 0%
+// H1 on almost no evidence (gpt-4o-mini over a slow VPN, 14 Nov 2026).
 
 export const DEFAULT_TEMPERATURES = [0, 0.7, 1.3]
 export const DEFAULT_REPEATS = 3
 export const DEFAULT_MAX_H1 = 0.1
 export const DEFAULT_MIN_RECALL = 0.5
+export const DEFAULT_MAX_ERROR_RATE = 0.1
+
+export interface SweepRule {
+  maxH1: number
+  minRecall: number
+  maxErrorRate?: number
+}
 
 export interface SweepSetting {
   model: string
@@ -35,6 +46,7 @@ export interface SweepOptions {
   repeats: number
   maxH1: number
   minRecall: number
+  maxErrorRate: number
 }
 
 function flagValue(argv: readonly string[], name: string): string | undefined {
@@ -92,6 +104,7 @@ export function parseSweepArgs(
     repeats: numberFlag(argv, "--repeats", DEFAULT_REPEATS, (n) => Number.isInteger(n) && n >= 1, "a whole number ≥ 1"),
     maxH1: numberFlag(argv, "--max-h1", DEFAULT_MAX_H1, between, "a fraction from 0 to 1"),
     minRecall: numberFlag(argv, "--min-recall", DEFAULT_MIN_RECALL, between, "a fraction from 0 to 1"),
+    maxErrorRate: numberFlag(argv, "--max-error-rate", DEFAULT_MAX_ERROR_RATE, between, "a fraction from 0 to 1"),
   }
 }
 
@@ -140,16 +153,163 @@ export interface SweepRow {
   falseAcceptRate: Rate
   sensitivityMislabelRate: Rate
   errors: number
+  // Calls made (answered + errors). `reliable` = errors ≤ maxErrorRate of them;
+  // an unreliable row is shown but never recommended.
+  calls: number
+  reliable: boolean
   costPer1000CallsUsd: number | null
   meanLatencyMs: number | null
   acceptable: boolean
+  // How well "how often it accepted the word" separates real slang from
+  // everything else: 1 = perfectly, 0.5 = no better than a coin flip.
+  auc: number | null
+  roc: RocPoint[]
+}
+
+export interface RocPoint {
+  fpr: number
+  tpr: number
+  // Accepted in at least this share of repeats; null for the (0, 0) start.
+  threshold: number | null
+}
+
+// Each word's score is the share of its answered repeats that accepted it.
+// Errors are skipped, as everywhere else. With one repeat (or temperature 0,
+// where repeats agree) every score is 0 or 1, and AUC is balanced accuracy.
+export function acceptanceScores(runs: readonly SweepRun[]): { score: number; positive: boolean }[] {
+  const byId = new Map<string, { yes: number; answered: number; positive: boolean }>()
+  for (const run of runs) {
+    for (const r of run.discovery.results) {
+      if (r.accepted === null) continue
+      const entry = byId.get(r.id) ?? { yes: 0, answered: 0, positive: r.isRealSlang }
+      entry.answered++
+      if (r.accepted) entry.yes++
+      byId.set(r.id, entry)
+    }
+  }
+  return [...byId.values()].map((e) => ({ score: e.yes / e.answered, positive: e.positive }))
+}
+
+// ROC points from the highest threshold down, and the area under them
+// (trapezoids, so a tie counts half: the same as the Mann-Whitney AUC).
+export function rocCurve(scores: readonly { score: number; positive: boolean }[]): { auc: number | null; points: RocPoint[] } {
+  const positives = scores.filter((s) => s.positive).length
+  const negatives = scores.length - positives
+  if (positives === 0 || negatives === 0) return { auc: null, points: [] }
+  const points: RocPoint[] = [{ fpr: 0, tpr: 0, threshold: null }]
+  for (const threshold of [...new Set(scores.map((s) => s.score))].sort((a, b) => b - a)) {
+    const above = scores.filter((s) => s.score >= threshold)
+    points.push({
+      fpr: above.filter((s) => !s.positive).length / negatives,
+      tpr: above.filter((s) => s.positive).length / positives,
+      threshold,
+    })
+  }
+  let auc = 0
+  for (let i = 1; i < points.length; i++) auc += ((points[i].fpr - points[i - 1].fpr) * (points[i].tpr + points[i - 1].tpr)) / 2
+  return { auc, points }
 }
 
 export interface SweepSummary {
-  rule: { maxH1: number; minRecall: number }
+  rule: Required<SweepRule>
   rows: SweepRow[]
   recommended: SweepRow | null
   closest: SweepRow | null
+  recommendations: Recommendation[]
+}
+
+// Business recommendations for the client: each names one setting and gives
+// the numbers behind it. The same setting can win more than one.
+export interface Recommendation {
+  title: string
+  setting: SweepSetting
+  why: string
+}
+
+const pctOf = (x: number | null) => (x === null ? "n/a" : `${(x * 100).toFixed(1)}%`)
+const name = (s: SweepSetting) => `${s.model} @ temperature ${s.temperature}`
+
+export function recommend(allRows: readonly SweepRow[], rule: SweepRule): Recommendation[] {
+  const out: Recommendation[] = []
+  // Rows with too many errors rest on too few answers to recommend or warn about.
+  const rows = allRows.filter((r) => r.reliable)
+  const acceptable = rows.filter((r) => r.acceptable)
+  const passRule = `H1 ${pctOf(rule.maxH1)} or less and recall ${pctOf(rule.minRecall)} or more`
+
+  const budget = [...acceptable].sort(
+    (a, b) => orUnknown(a.costPer1000CallsUsd) - orUnknown(b.costPer1000CallsUsd) || orUnknown(a.meanLatencyMs) - orUnknown(b.meanLatencyMs),
+  )[0]
+  if (budget) {
+    out.push({
+      title: "Budget pick",
+      setting: budget.setting,
+      why:
+        `cheapest of the ${acceptable.length} setting(s) that pass the rule (${passRule}): ` +
+        `${formatUsd(budget.costPer1000CallsUsd)} per 1,000 calls, H1 ${pctOf(budget.hallucinationRate.value)}, recall ${pctOf(budget.recall.value)}.`,
+    })
+  }
+
+  // Fewest made-up words, but only among settings that still find real slang:
+  // 0% H1 is easy if the model says "not slang" to everything.
+  const useful = rows.filter((r) => r.recall.value !== null && r.recall.value >= rule.minRecall && r.hallucinationRate.value !== null)
+  const safest = [...useful].sort(
+    (a, b) =>
+      (a.hallucinationRate.value ?? 1) - (b.hallucinationRate.value ?? 1) ||
+      (b.recall.value ?? 0) - (a.recall.value ?? 0) ||
+      orUnknown(a.costPer1000CallsUsd) - orUnknown(b.costPer1000CallsUsd),
+  )[0]
+  if (safest) {
+    out.push({
+      title: "Safest pick (fewest made-up meanings)",
+      setting: safest.setting,
+      why:
+        `lowest H1 (${pctOf(safest.hallucinationRate.value)}) of the settings that still find at least ${pctOf(rule.minRecall)} of real slang ` +
+        `(recall ${pctOf(safest.recall.value)}).`,
+    })
+  } else {
+    out.push({
+      title: "Safest pick (fewest made-up meanings)",
+      setting: [...rows].sort((a, b) => (a.hallucinationRate.value ?? 1) - (b.hallucinationRate.value ?? 1))[0]?.setting ?? { model: "none", temperature: 0 },
+      why: `no setting finds ${pctOf(rule.minRecall)} of real slang, so a low H1 here may only mean the model rejects most words.`,
+    })
+  }
+
+  const judged = rows.filter((r) => r.auc !== null)
+  const sharpest = [...judged].sort((a, b) => (b.auc ?? 0) - (a.auc ?? 0))[0]
+  if (sharpest && (sharpest.auc ?? 0) <= 0.55) {
+    out.push({
+      title: "Best judgement (highest AUC)",
+      setting: sharpest.setting,
+      why: `none: the best AUC is ${sharpest.auc!.toFixed(2)}, no better than a coin flip (0.50) at telling real slang from everything else.`,
+    })
+  } else if (sharpest) {
+    out.push({
+      title: "Best judgement (highest AUC)",
+      setting: sharpest.setting,
+      why:
+        `AUC ${sharpest.auc!.toFixed(2)}: best at telling real slang from made-up and ordinary words ` +
+        `(1.00 is perfect, 0.50 is a coin flip).`,
+    })
+  }
+
+  const fastest = [...acceptable].sort((a, b) => orUnknown(a.meanLatencyMs) - orUnknown(b.meanLatencyMs))[0]
+  if (fastest && fastest.meanLatencyMs !== null) {
+    out.push({
+      title: "Fastest pick",
+      setting: fastest.setting,
+      why: `quickest setting that passes the rule: ${(fastest.meanLatencyMs / 1000).toFixed(1)} s per word on average.`,
+    })
+  }
+
+  const worst = [...rows].filter((r) => r.hallucinationRate.value !== null).sort((a, b) => b.hallucinationRate.value! - a.hallucinationRate.value!)[0]
+  if (worst && worst.hallucinationRate.value! > rule.maxH1) {
+    out.push({
+      title: "Avoid",
+      setting: worst.setting,
+      why: `highest H1: it accepted ${pctOf(worst.hallucinationRate.value)} of made-up words as real slang.`,
+    })
+  }
+  return out
 }
 
 function pooled(runs: readonly SweepRun[], pick: (d: DiscoveryEvaluation) => Rate): Rate {
