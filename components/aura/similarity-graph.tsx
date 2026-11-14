@@ -4,6 +4,8 @@ import type { KeyboardEvent } from "react"
 import type { Graph } from "@/lib/dedup/graph"
 import { clusters, edgesAt } from "@/lib/dedup/nav"
 
+const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`
+
 type Pos = { x: number; y: number; r: number }
 type Key = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown"
 const tok = (n: string) => `hsl(var(--lab-${n}))`
@@ -32,7 +34,7 @@ export function GraphView({ graph, positions, selectedId, threshold, size, onSel
         const dim = selectedId && n.id !== selectedId && !linked.has(n.id)
         return (
           <g key={n.id} data-node-id={n.id} role="button" tabIndex={n.id === stop ? 0 : -1} aria-pressed={n.id === selectedId ? true : undefined}
-            aria-label={`${n.label}, ${n.kind}, ${n.count} submissions, ${matches} matches`} opacity={dim ? 0.25 : undefined}
+            aria-label={`${n.label}, ${n.kind}, ${plural(n.count, "submission")}, ${plural(matches, "match", "matches")}`} opacity={dim ? 0.25 : undefined}
             onClick={() => onSelect?.(n.id)} onKeyDown={keys(n.id)} className="cursor-pointer outline-none [&:focus-visible>circle]:stroke-[hsl(var(--lab-primary))]">
             <circle cx={p.x} cy={p.y} r={p.r} fill={n.kind === "suggestion" ? tok("text-muted") : "none"} stroke={tok("text")} strokeWidth={n.id === selectedId ? 3 : 1.5} />
             <text x={p.x} y={p.y + p.r + 12} textAnchor="middle" fontSize={11} fill={tok("text")}>{n.label}</text>
@@ -61,8 +63,8 @@ export function NodePanel({ graph, id, threshold }: { graph: Graph; id: string |
   if (!node) return <p className="text-sm text-lab-text-muted">Select a word to see what it merges with.</p>
   return (
     <section aria-label={`Details for ${node.label}`}>
-      <h3 className="font-semibold">{node.label}</h3>
-      <p className="text-sm text-lab-text-muted">{node.kind}, {node.count} submissions</p>
+      <h2 className="font-semibold">{node.label}</h2>
+      <p className="text-sm text-lab-text-muted">{node.kind}, {plural(node.count, "submission")}</p>
       <ul className="mt-2 space-y-1 text-sm">
         {edgesAt(graph, threshold).filter((e) => e.source === node.id || e.target === node.id).map((e) => {
           const other = graph.nodes.find((n) => n.id === (e.source === node.id ? e.target : e.source))!
