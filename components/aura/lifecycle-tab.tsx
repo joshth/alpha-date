@@ -31,7 +31,7 @@ export function LifecycleResult({ outcome, onPick }: { outcome: AuraFitOutcome; 
     )
   const { fit, source, stageNote } = outcome
   const stats: [string, React.ReactNode][] = [
-    ["Stage", <AuraBadge stage={fit.stage} confidence={fit.confidence} />],
+    ["Stage", <AuraBadge key="stage" stage={fit.stage} confidence={fit.confidence} />],
     ["r", fit.r.toFixed(2)], ["Δ", fit.delta.toFixed(2)], ["Peak week", fit.peakWeek], ["Confidence", `${Math.round(fit.confidence * 100)}%`],
   ]
   return (
