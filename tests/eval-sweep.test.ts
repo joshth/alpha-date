@@ -8,9 +8,16 @@ import type { GenerateDiscovery } from "@/lib/discovery/discover"
 import { summariseCost } from "@/lib/eval/cost"
 import { evaluateDiscovery } from "@/lib/eval/discovery"
 import { type GoldenCase, splitFor } from "@/lib/eval/golden"
+import { rate } from "@/lib/eval/metrics"
+import { rocSvg } from "@/lib/eval/roc-chart"
 import {
+  acceptanceScores,
+  combineSweeps,
   DEFAULT_TEMPERATURES,
   parseSweepArgs,
+  recommend,
+  rocCurve,
+  type SweepRow,
   type SweepRun,
   type SweepSetting,
   summariseSweep,
@@ -76,12 +83,12 @@ async function sweep(models: string[], temperatures: number[], repeats = 2): Pro
 
 test("sweep flags: defaults, lists and clear errors", () => {
   const defaults = parseSweepArgs(["--sweep"], "llama3.2:3b")
-  assert.deepEqual(defaults, { models: ["llama3.2:3b"], temperatures: DEFAULT_TEMPERATURES, repeats: 3, maxH1: 0.1, minRecall: 0.5 })
+  assert.deepEqual(defaults, { models: ["llama3.2:3b"], temperatures: DEFAULT_TEMPERATURES, repeats: 3, maxH1: 0.1, minRecall: 0.5, maxErrorRate: 0.1 })
   const custom = parseSweepArgs(
-    ["--sweep", "--models", "a, b", "--temperatures", "0,1.3", "--repeats", "3", "--max-h1", "0.05", "--min-recall", "0.6"],
+    ["--sweep", "--models", "a, b", "--temperatures", "0,1.3", "--repeats", "3", "--max-h1", "0.05", "--min-recall", "0.6", "--max-error-rate", "0.2"],
     "x",
   )
-  assert.deepEqual(custom, { models: ["a", "b"], temperatures: [0, 1.3], repeats: 3, maxH1: 0.05, minRecall: 0.6 })
+  assert.deepEqual(custom, { models: ["a", "b"], temperatures: [0, 1.3], repeats: 3, maxH1: 0.05, minRecall: 0.6, maxErrorRate: 0.2 })
   assert.throws(() => parseSweepArgs(["--temperatures", "0,3"], "x"), /--temperatures must be numbers from 0 to 2/)
   assert.throws(() => parseSweepArgs(["--repeats", "1.5"], "x"), /--repeats must be a whole number/)
   assert.throws(() => parseSweepArgs(["--max-h1", "10"], "x"), /--max-h1 must be a fraction/)
@@ -116,6 +123,75 @@ test("an openai: setting goes to OpenAI; a plain name goes to LLM_BASE_URL; both
     if (before === undefined) delete process.env.LLM_BASE_URL
     else process.env.LLM_BASE_URL = before
   }
+})
+
+test("AUC matches a hand-worked example and counts ties as half", () => {
+  // Real slang scored 1 and 0.5; non-slang scored 0.5 and 0.
+  // Pairs (real, not): (1,.5)=1, (1,0)=1, (.5,.5)=.5, (.5,0)=1 -> 3.5 / 4 = 0.875.
+  const { auc, points } = rocCurve([
+    { score: 1, positive: true },
+    { score: 0.5, positive: true },
+    { score: 0.5, positive: false },
+    { score: 0, positive: false },
+  ])
+  assert.equal(auc, 0.875)
+  assert.deepEqual(
+    points.map((p) => [p.fpr, p.tpr]),
+    [[0, 0], [0, 0.5], [0.5, 1], [1, 1]],
+  )
+  assert.deepEqual(rocCurve([{ score: 1, positive: true }]), { auc: null, points: [] }, "no AUC without both kinds of word")
+})
+
+test("each word's score is the share of answered repeats that accepted it", () => {
+  const run = (accepted: (boolean | null)[]) =>
+    ({ discovery: { results: accepted.map((a, i) => ({ id: `w${i}`, isRealSlang: i === 0, accepted: a })) } }) as unknown as SweepRun
+  const scores = acceptanceScores([run([true, false, null]), run([true, true, true])])
+  assert.deepEqual(scores, [
+    { score: 1, positive: true },
+    { score: 0.5, positive: false },
+    { score: 1, positive: false },
+  ])
+})
+
+test("the sweep gives AUC per setting and business recommendations with reasons", async () => {
+  const summary = summariseSweep(await sweep(["big", "small"], [0, 1.3]), { maxH1: 0.1, minRecall: 0.5 })
+  const auc = Object.fromEntries(summary.rows.map((r) => [`${r.setting.model}@${r.setting.temperature}`, r.auc]))
+  // big@1.3 accepts 3 of 4 made-up words: real 1 vs fakes (1,1,1,0) -> (0.5*3 + 1) / 4.
+  assert.deepEqual(auc, { "big@0": 1, "big@1.3": 0.625, "small@0": 1, "small@1.3": 0.5 })
+
+  const pick = Object.fromEntries(summary.recommendations.map((r) => [r.title, `${r.setting.model}@${r.setting.temperature}`]))
+  assert.equal(pick["Budget pick"], "small@0", "cheapest setting that passes the rule")
+  assert.equal(pick["Safest pick (fewest made-up meanings)"], "small@0", "0% H1, full recall, and cheaper than big@0")
+  assert.equal(pick["Best judgement (highest AUC)"], "big@0")
+  assert.equal(pick.Avoid, "small@1.3", "it accepted every made-up word")
+  assert.ok(summary.recommendations.every((r) => r.why.length > 20), "every recommendation says why")
+
+  const svg = rocSvg(summary.rows, "test chart")
+  assert.ok(svg?.includes("big @ 0 · AUC 1.00") && svg.includes("small @ 0 · AUC 1.00"), "one line per model, best temperature")
+  assert.equal(rocSvg([], "empty"), null)
+})
+
+test("a zero-H1 setting that misses real slang is not called the safest", () => {
+  const row = (model: string, h1: [number, number], recall: [number, number]): SweepRow => ({
+    setting: { model, temperature: 0 },
+    runs: 1,
+    hallucinationRate: rate(...h1),
+    hallucinationRange: null,
+    precision: rate(0, 0),
+    recall: rate(...recall),
+    falseAcceptRate: rate(0, 0),
+    sensitivityMislabelRate: rate(0, 0),
+    errors: 0,
+    calls: 10,
+    reliable: true,
+    costPer1000CallsUsd: 0,
+    meanLatencyMs: 1000,
+    acceptable: false,
+    auc: null,
+    roc: [],
+  })
+  const picks = recommend([row("says-no", [0, 10], [1, 20]), row("useful", [3, 10], [15, 20])], { maxH1: 0.1, minRecall: 0.5 })
+  assert.equal(picks.find((p) => p.title.startsWith("Safest"))?.setting.model, "useful")
 })
 
 test("every model is paired with every temperature", () => {
@@ -193,4 +269,76 @@ test("the sweep report keeps every answer so real outputs can be labelled", asyn
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
+})
+
+// Like sweep(), but `failing` models throw on every call except the first
+// `answered` words (a dropped connection, a rejected parameter).
+async function flakySweep(failing: Record<string, number>): Promise<SweepRun[]> {
+  const runs = await sweep(["big", "small"], [0], 1)
+  for (const run of runs) {
+    const answered = failing[run.setting.model]
+    if (answered === undefined) continue
+    let seen = 0
+    run.discovery = await evaluateDiscovery(cases, async (input) => {
+      if (seen++ >= answered) throw new Error("Cannot connect to API")
+      return fakeModel(input)
+    })
+  }
+  return runs
+}
+
+test("a setting with too many errors is shown but never recommended", async () => {
+  // small@0 answers 1 of 8 words. Errors are left out of the rates, so on its
+  // one answer it looks perfect and free, and would win without the guard.
+  const summary = summariseSweep(await flakySweep({ small: 1 }), { maxH1: 0.1, minRecall: 0.5 })
+  const small = summary.rows.find((r) => r.setting.model === "small")!
+  assert.deepEqual([small.errors, small.calls, small.reliable, small.acceptable], [7, 8, false, false])
+  assert.equal(summary.rows.find((r) => r.setting.model === "big")!.reliable, true)
+  assert.deepEqual(summary.recommended?.setting, { model: "big", temperature: 0 })
+  assert.ok(summary.recommendations.every((r) => r.setting.model === "big"), "no pick or warning rests on 1 answer")
+  const markdown = sweepMarkdown(
+    { datasetVersion: "9.9.9", datasetSha256: "abcdef0123456789", startedAt: "2026-11-01T00:00:00.000Z", promptVersion: "p", mock: false },
+    summary,
+  )
+  assert.match(markdown, /\| 7 of 8 ⚠ \|/)
+  assert.match(markdown, /Left out of every recommendation.*: small @ 0\. Rerun these/)
+  assert.match(markdown, /no more than 10\.0% of calls failed/)
+  // A looser limit lets it back in.
+  assert.equal(summariseSweep(await flakySweep({ small: 1 }), { maxH1: 0.1, minRecall: 0.5, maxErrorRate: 0.9 }).rows[1].reliable, true)
+})
+
+test("--combine keeps each model's runs from the last report that has it", async () => {
+  const base = { datasetVersion: "9.9.9", datasetSha256: "abcdef0123456789", promptVersion: "p", mock: false, split: "dev" }
+  const broken = await flakySweep({ small: 0 })
+  const rerun = await sweep(["small"], [0], 1)
+  const { meta, runs } = combineSweeps(
+    [
+      { ...base, file: "first.json", startedAt: "2026-11-01T00:00:00.000Z", runs: broken },
+      { ...base, file: "rerun.json", startedAt: "2026-11-02T00:00:00.000Z", runs: rerun },
+    ],
+    "2026-11-03T00:00:00.000Z",
+  )
+  assert.deepEqual(runs.map((r) => r.setting.model), ["big", "small"])
+  assert.equal(runs[1], rerun[0], "the rerun replaces the broken small rows")
+  assert.deepEqual(meta.combinedFrom, [
+    { file: "first.json", models: ["big"] },
+    { file: "rerun.json", models: ["small"] },
+  ])
+  const summary = summariseSweep(runs, { maxH1: 0.1, minRecall: 0.5 })
+  assert.ok(summary.rows.every((r) => r.reliable && r.errors === 0))
+  assert.match(sweepMarkdown(meta, summary), /Combined from 2 sweep reports.*`first\.json` \(big\); `rerun\.json` \(small\)/)
+  const dir = mkdtempSync(path.join(tmpdir(), "combine-"))
+  try {
+    assert.equal(path.basename(writeSweepReport(dir, meta, summary, runs).json), "2026-11-03T00-00-00-000-sweep-combined-big+small.json")
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("--combine refuses reports that asked different words", async () => {
+  const runs = await sweep(["big"], [0], 1)
+  const one = { file: "a.json", datasetVersion: "1", datasetSha256: "aaaaaaaaaaaaaaaa", startedAt: "t", promptVersion: "p", mock: false, split: "dev", runs }
+  assert.throws(() => combineSweeps([one, { ...one, file: "b.json", split: "held-out" }], "t"), /different split \(held-out vs dev\)/)
+  assert.throws(() => combineSweeps([one, { ...one, file: "b.json", datasetSha256: "bbbbbbbbbbbbbbbb" }], "t"), /different golden set/)
+  assert.throws(() => combineSweeps([], "t"), /needs at least one sweep report/)
 })
