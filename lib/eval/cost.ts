@@ -25,8 +25,8 @@ export const CHARS_PER_TOKEN = 4
 export const LIST_PRICES: Record<string, [number, number]> = {
   "gpt-4o-mini": [0.15, 0.6],
   "gpt-4o": [2.5, 10],
+  "gpt-6-astra": [10, 50],
 }
-
 export type { TokenUsage }
 
 export type TokenSource = "provider" | "estimate"

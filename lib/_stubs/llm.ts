@@ -88,8 +88,20 @@ export async function generateDiscoveryObject(
   // - Schema only in the prompt: llama3.2 often echoed the schema back instead
   //   of answering (2 of 3 calls failed, 3 Nov 2026).
   // - Schema only enforced: it answered "not slang" for every word, even "rizz".
+  // Hosted gpt-6 models go through OpenAI's Responses API. On Chat Completions
+  // gpt-6-astra rejected both ways the SDK asks for structured answers (14 Nov
+  // 2026): the default "function tool" ("not supported with reasoning_effort"),
+  // and strict json_schema, which needs every optional field listed as required.
+  // Responses with strictSchemas: false sends the same schema, not strict;
+  // store: false keeps OpenAI from saving the answers. gpt-4o/4o-mini unchanged.
+  const responsesApi = !config.baseURL && /^gpt-[6-9]/.test(config.model)
   const { object, usage } = await generateObject({
-    model: config.baseURL ? provider.chat(config.model, { structuredOutputs: true }) : provider.chat(config.model),
+    model: config.baseURL
+      ? provider.chat(config.model, { structuredOutputs: true })
+      : responsesApi
+        ? provider.responses(config.model)
+        : provider.chat(config.model),
+    ...(responsesApi ? { providerOptions: { openai: { strictSchemas: false, store: false } } } : {}),
     ...(config.baseURL
       ? {
           mode: "json" as const,
@@ -101,7 +113,10 @@ export async function generateDiscoveryObject(
     schema: discoverySchema,
     prompt: input.prompt,
     temperature: config.temperature ?? DEFAULT_DISCOVERY_TEMPERATURE,
-    maxTokens: MAX_DISCOVERY_OUTPUT_TOKENS,
+    // The cap is for local models, which sometimes ramble for 1,850+ tokens.
+    // Hosted OpenAI models don't need it, and newer ones reject `max_tokens`
+    // outright (gpt-6-astra failed every call with it, 14 Nov 2026).
+    ...(config.baseURL ? { maxTokens: MAX_DISCOVERY_OUTPUT_TOKENS } : {}),
     ...(config.seed !== null ? { seed: config.seed } : {}),
   })
   onUsage?.({ promptTokens: usage.promptTokens, completionTokens: usage.completionTokens })
