@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { GraphExplorer } from "@/components/aura/similarity-graph-explorer"
 import type { DedupGraphData } from "@/lib/dedup/graph"
 import type { DedupSavings } from "@/lib/dedup/savings"
+import type { SemanticEdge } from "@/lib/dedup/semantic"
 
 const mono = "font-mono tabular-nums whitespace-nowrap"
 const formatBytes = (b: number) => (b < 1024 ? `${b} B` : `${(b / 1024).toFixed(1)} kB`)
@@ -45,7 +46,7 @@ export function DedupResult({ savings, minutesPerReview, onMinutesChange }: { sa
   )
 }
 
-export function DedupTab({ savingsAction, graphAction }: { savingsAction: (minutesPerReview: number) => Promise<DedupSavings>; graphAction: () => Promise<DedupGraphData> }) {
+export function DedupTab({ savingsAction, graphAction, semanticAction }: { savingsAction: (minutesPerReview: number) => Promise<DedupSavings>; graphAction: () => Promise<DedupGraphData>; semanticAction?: () => Promise<SemanticEdge[]> }) {
   const [minutes, setMinutes] = useState(2)
   const [savings, setSavings] = useState<DedupSavings | null>(null)
   const [pending, start] = useTransition()
@@ -54,7 +55,7 @@ export function DedupTab({ savingsAction, graphAction }: { savingsAction: (minut
     <div className="space-y-6">
       <div role="status" aria-live="polite" className="sr-only">{pending ? "Updating…" : savings ? "Dedup counts updated" : ""}</div>
       {savings ? <DedupResult savings={savings} minutesPerReview={minutes} onMinutesChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /> : <><MinutesInput value={minutes} onChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /><Skeleton className="h-24" /></>}
-      <GraphExplorer graphAction={graphAction} />
+      <GraphExplorer graphAction={graphAction} semanticAction={semanticAction} />
     </div>
   )
 }
