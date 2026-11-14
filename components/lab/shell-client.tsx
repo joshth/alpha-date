@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { usePathname } from "next/navigation"
+import { drawerFocusTarget } from "./drawer-focus"
 import { LabShellView, shouldFocusSearch } from "./shell"
 
 export function LabShell(props: { userName: string; mockLlm: boolean; children: React.ReactNode }) {
@@ -10,6 +11,14 @@ export function LabShell(props: { userName: string; mockLlm: boolean; children: 
   const [collapsed, setCollapsed] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   useEffect(() => setDrawerOpen(false), [pathname])
+  // Focus order: into the drawer when it opens, back to the menu button when it closes.
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    const target = drawerFocusTarget(wasOpen.current, drawerOpen)
+    wasOpen.current = drawerOpen
+    if (target === "sidebar") document.querySelector<HTMLElement>("#lab-sidebar a")?.focus()
+    else if (target === "menu") document.querySelector<HTMLElement>('button[aria-controls="lab-sidebar"]')?.focus()
+  }, [drawerOpen])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (shouldFocusSearch({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey, target: e.target as HTMLElement | null })) {
