@@ -12,3 +12,11 @@ test("Aura page has Lifecycle and Dedup tabs", () => {
   assert.match(src, /import \{[^}]*getDedupSavings[^}]*\} from "\.\.\/actions"/)
   assert.match(src, /<LifecycleTab/)
 })
+
+test("both tabs stay mounted so a fit is not lost when switching tabs", () => {
+  for (const v of ["lifecycle", "dedup"]) {
+    const tag = src.match(new RegExp(`<TabsContent value="${v}"[^>]*>`))?.[0] ?? ""
+    assert.match(tag, /\bforceMount\b/, `${v} content is force-mounted`)
+    assert.match(tag, /data-\[state=inactive\]:hidden/, `${v} content is hidden, not unmounted, when inactive`)
+  }
+})
