@@ -236,3 +236,20 @@ test("the Introduction and the Aura page link to the MCP server page", () => {
   assert.match(read("docs/intro.mdx"), /\]\(\.\/features\/mcp-server\.md\)/)
   assert.match(read("docs/features/aura.md"), /\]\(\.\/mcp-server\.md\)/)
 })
+
+test("the Lab and Aura audit report states its axe result, its fixes and what it could not verify", () => {
+  const text = read("docs/audits/lab-aura-slop-audit.md")
+  assert.match(text, /^---\n(?:.*\n)*?title: Lab and Aura design audit\n/)
+  assert.match(text, /^# Lab and Aura design audit(?: |$)/m)
+  for (const heading of ["What was checked, and how", "Findings and fixes", "Scores", "Not verified", "Known gaps"])
+    assert.match(text, new RegExp(`^## ${heading}$`, "m"), heading)
+  assert.match(text, /\*\*0 violations\*\*/)
+  // Honest about the checks that could not be run: narrow-width screenshots and screen readers.
+  const notVerified = text.split(/^## Not verified$/m)[1]?.split(/^## /m)[0] ?? ""
+  assert.match(notVerified, /375/)
+  assert.match(notVerified, /[Ss]creen readers/)
+  assert.match(text, /\b[0-9a-f]{7}\b/, "findings point at the commits that fixed them")
+  assert.equal(JSON.parse(read("docs/audits/_category_.json") || "{}").label, "Audits")
+  const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
+  assert.doesNotMatch(prose, /<\/?(div|span|a|table|svg|br|img|p|pre)[\s>]/)
+})
