@@ -23,3 +23,8 @@ test("the Lab sidebar has an Aura page in its own group", () => {
   assert.equal(group.items.find((i) => i.href === "/lab/aura")?.label, "Aura")
   assert.ok(LAB_NAV.length > 1 && LAB_NAV.every((g) => g.label && g.items.length), "nav is grouped")
 })
+
+test("Dedup is its own Lab page in the Analytics group, beside Aura", () => {
+  const group = LAB_NAV.find((g) => g.label === "Analytics")
+  assert.deepEqual(group?.items.map((i) => [i.href, i.label]), [["/lab/aura", "Aura"], ["/lab/dedup", "Dedup"]])
+})
