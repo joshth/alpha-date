@@ -1,8 +1,10 @@
+import type { AuraStage } from "./index"
+
 export const MAX_NOTES = 24
 
-export const SCALE: number[] = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81, 84].map(
-  (m) => 440 * 2 ** ((m - 69) / 12),
-)
+const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
+
+export const SCALE: number[] = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81, 84].map(hz)
 
 export type Note = { freq: number; start: number; duration: number }
 
@@ -20,4 +22,16 @@ export function trendNotes(I: number[], seconds = 3): Note[] {
       duration,
     }
   })
+}
+
+const CUES: Record<AuraStage, number[]> = {
+  emerging: [60, 67],
+  peaking: [60, 64, 67, 72],
+  declining: [67, 60],
+  parent_territory: [60, 66],
+}
+
+/** A short motif played after the curve so the stage is heard as well as the shape. */
+export function stageCue(stage: AuraStage): number[] {
+  return CUES[stage].map(hz)
 }
