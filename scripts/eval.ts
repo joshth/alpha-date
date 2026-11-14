@@ -14,6 +14,7 @@
 //   report you can commit (never include raw safety-case inputs in shared
 //   reports beyond the case id).
 // - stretch: compare two prompt versions side by side.
+import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { discoveryModelConfig, generateDiscoveryObject } from "@/lib/_stubs/llm"
 import {
@@ -32,7 +33,9 @@ import { DEFAULT_GOLDEN_SET_PATH, EVAL_CATEGORIES, type GoldenSet, loadGoldenSet
 import { formatRate } from "@/lib/eval/metrics"
 import { type RunMeta, sha256File, writeReport } from "@/lib/eval/report"
 import {
+  combineSweeps,
   parseSweepArgs,
+  type SavedSweep,
   type SweepRun,
   summariseSweep,
   sweepSettings,
@@ -43,6 +46,7 @@ import {
 const validateOnly = process.argv.includes("--validate-only")
 const writeReportFiles = process.argv.includes("--report")
 const sweep = process.argv.includes("--sweep")
+const flagCombine = process.argv.indexOf("--combine")
 
 const flagFile = process.argv.indexOf("--file")
 const file = flagFile >= 0 && process.argv[flagFile + 1] ? process.argv[flagFile + 1] : DEFAULT_GOLDEN_SET_PATH
@@ -215,10 +219,36 @@ async function runSweep() {
     runs,
   )
   console.log(`\n${written.markdownText}`)
-  console.log(`Report written: ${path.relative(process.cwd(), written.json)} and ${path.relative(process.cwd(), written.markdown)}`)
+  const files = [written.json, written.markdown, written.roc].filter((f): f is string => f !== null)
+  console.log(`Report written: ${files.map((f) => path.relative(process.cwd(), f)).join(", ")}`)
 }
 
-if (!validateOnly) {
+// `pnpm eval --combine a.json,b.json`: merge saved sweeps into one report
+// (lib/eval/sweep.ts combineSweeps). Makes no model calls.
+function runCombine() {
+  const names = (process.argv[flagCombine + 1] ?? "").split(",").map((f) => f.trim()).filter(Boolean)
+  const reports = path.join(process.cwd(), "eval", "reports")
+  const saved: SavedSweep[] = names.map((name) => {
+    const full = [name, path.join(reports, name)].find((f) => existsSync(f))
+    if (!full) throw new Error(`--combine: no such report: ${name}`)
+    return { ...JSON.parse(readFileSync(full, "utf8")), file: path.basename(full) }
+  })
+  const { meta, runs } = combineSweeps(saved, new Date().toISOString())
+  const summary = summariseSweep(runs, parseSweepArgs(process.argv, "unused", {}))
+  const written = writeSweepReport(reports, meta, summary, runs)
+  console.log(`\n${written.markdownText}`)
+  const files = [written.json, written.markdown, written.roc].filter((f): f is string => f !== null)
+  console.log(`Report written: ${files.map((f) => path.relative(process.cwd(), f)).join(", ")}`)
+}
+
+if (flagCombine >= 0) {
+  try {
+    runCombine()
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : "Combine failed.")
+    process.exitCode = 1
+  }
+} else if (!validateOnly) {
 
   process.env.MOCK_LLM_LATENCY_MS ??= "0"
   process.env.MOCK_LLM_FAILURE_RATE ??= "0"

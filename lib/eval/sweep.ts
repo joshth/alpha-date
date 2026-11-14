@@ -327,7 +327,8 @@ function mean(values: readonly (number | null)[]): number | null {
 const sameSetting = (a: SweepSetting, b: SweepSetting) => a.model === b.model && a.temperature === b.temperature
 const orUnknown = (value: number | null) => value ?? Number.POSITIVE_INFINITY
 
-export function summariseSweep(runs: readonly SweepRun[], rule: { maxH1: number; minRecall: number }): SweepSummary {
+export function summariseSweep(runs: readonly SweepRun[], given: SweepRule): SweepSummary {
+  const rule = { maxH1: given.maxH1, minRecall: given.minRecall, maxErrorRate: given.maxErrorRate ?? DEFAULT_MAX_ERROR_RATE }
   const settings: SweepSetting[] = []
   for (const run of runs) if (!settings.some((s) => sameSetting(s, run.setting))) settings.push(run.setting)
 
@@ -336,7 +337,13 @@ export function summariseSweep(runs: readonly SweepRun[], rule: { maxH1: number;
     const hallucinationRate = pooled(mine, (d) => d.hallucinationRate)
     const recall = pooled(mine, (d) => d.recall)
     const perRun = mine.map((r) => r.discovery.hallucinationRate.value).filter((v): v is number => v !== null)
+    const { auc, points } = rocCurve(acceptanceScores(mine))
+    const errors = mine.reduce((sum, r) => sum + r.discovery.errorIds.length, 0)
+    const calls = mine.reduce((sum, r) => sum + r.discovery.total, 0)
+    const reliable = calls > 0 && errors / calls <= rule.maxErrorRate
     return {
+      auc,
+      roc: points,
       setting,
       runs: mine.length,
       hallucinationRate,
@@ -345,10 +352,13 @@ export function summariseSweep(runs: readonly SweepRun[], rule: { maxH1: number;
       recall,
       falseAcceptRate: pooled(mine, (d) => d.falseAcceptRate),
       sensitivityMislabelRate: pooled(mine, (d) => d.sensitivityMislabelRate),
-      errors: mine.reduce((sum, r) => sum + r.discovery.errorIds.length, 0),
+      errors,
+      calls,
+      reliable,
       costPer1000CallsUsd: mean(mine.map((r) => r.cost.costPer1000CallsUsd)),
       meanLatencyMs: mean(mine.map((r) => r.discovery.latency.meanMs)),
       acceptable:
+        reliable &&
         hallucinationRate.value !== null &&
         hallucinationRate.value <= rule.maxH1 &&
         recall.value !== null &&
@@ -366,19 +376,27 @@ export function summariseSweep(runs: readonly SweepRun[], rule: { maxH1: number;
       )[0] ?? null
   const closest = recommended
     ? null
-    : ([...rows].sort(
+    : ([...(rows.some((r) => r.reliable) ? rows.filter((r) => r.reliable) : rows)].sort(
         (a, b) =>
           orUnknown(a.hallucinationRate.value) - orUnknown(b.hallucinationRate.value) ||
           (b.recall.value ?? -1) - (a.recall.value ?? -1),
       )[0] ?? null)
-  return { rule, rows, recommended, closest }
+  return { rule, rows, recommended, closest, recommendations: recommend(rows, rule) }
 }
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`
 const settingLabel = (s: SweepSetting, mock: boolean) => `${mock ? "mock, as " : ""}${s.model} @ ${s.temperature}`
 
 export function sweepMarkdown(
-  meta: { datasetVersion: string; datasetSha256: string; startedAt: string; promptVersion: string; mock: boolean; split?: string },
+  meta: {
+    datasetVersion: string
+    datasetSha256: string
+    startedAt: string
+    promptVersion: string
+    mock: boolean
+    split?: string
+    combinedFrom?: { file: string; models: string[] }[]
+  },
   summary: SweepSummary,
 ): string {
   const label = (s: SweepSetting) => settingLabel(s, meta.mock)
@@ -389,14 +407,20 @@ export function sweepMarkdown(
     `- Prompt: \`${meta.promptVersion}\``,
     `- Started: ${meta.startedAt}`,
     ...(meta.split ? [`- Split: ${meta.split} cases only`] : []),
-    `- Rule: acceptable when H1 ≤ ${pct(summary.rule.maxH1)} and recall ≥ ${pct(summary.rule.minRecall)}; ` +
-      "then cheapest per 1,000 calls, then fastest.",
+    ...(meta.combinedFrom
+      ? [
+          `- Combined from ${meta.combinedFrom.length} sweep reports (each model's rows come from one report): ` +
+            meta.combinedFrom.map((c) => `\`${c.file}\` (${c.models.join(", ")})`).join("; "),
+        ]
+      : []),
+    `- Rule: acceptable when H1 ≤ ${pct(summary.rule.maxH1)} and recall ≥ ${pct(summary.rule.minRecall)}` +
+      `, with no more than ${pct(summary.rule.maxErrorRate)} of calls failed; then cheapest per 1,000 calls, then fastest.`,
     meta.mock
       ? "- The mock ignores model and temperature, so every row is the same by design."
       : "- Local models are weaker than the production model, so these absolute rates will not transfer; compare the rows with each other.",
     "",
-    "| Setting | Runs | H1 made-up accepted (pooled) | H1 per-run range | Precision | Recall | Mislabels | Errors | Cost / 1,000 calls | Mean latency | Acceptable |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| Setting | Runs | H1 made-up accepted (pooled) | H1 per-run range | False-accept | Precision | Recall | AUC | Mislabels | Errors | Cost / 1,000 calls | Mean latency | Acceptable |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...summary.rows.map(
       (r) =>
         `| ${[
@@ -404,17 +428,35 @@ export function sweepMarkdown(
         r.runs,
         formatRate(r.hallucinationRate),
         r.hallucinationRange ? `${pct(r.hallucinationRange[0])}–${pct(r.hallucinationRange[1])}` : "n/a",
+        formatRate(r.falseAcceptRate),
         formatRate(r.precision),
         formatRate(r.recall),
+        r.auc === null ? "n/a" : r.auc.toFixed(2),
         formatRate(r.sensitivityMislabelRate),
-        r.errors,
+        r.calls ? `${r.errors} of ${r.calls}${r.reliable ? "" : " ⚠"}` : r.errors,
         formatUsd(r.costPer1000CallsUsd),
         r.meanLatencyMs === null ? "n/a" : `${r.meanLatencyMs.toFixed(0)} ms`,
           r.acceptable ? "yes" : "no",
         ].join(" | ")} |`,
     ),
     "",
+    ...(summary.rows.some((r) => !r.reliable)
+      ? [
+          `⚠ Left out of every recommendation, because more than ${pct(summary.rule.maxErrorRate)} of their calls failed and the rates rest on too few answers: ` +
+            `${summary.rows.filter((r) => !r.reliable).map((r) => label(r.setting)).join(", ")}. Rerun these before comparing them.`,
+          "",
+        ]
+      : []),
     "Pooled intervals count every repeat as a separate draw of the same words, so they are narrower than a fresh set of words would give.",
+    "",
+    "AUC scores each word by the share of repeats that accepted it, then asks how well that score ranks real slang above made-up and ordinary words " +
+      "(1.00 perfect, 0.50 a coin flip). With one repeat, or at temperature 0 where repeats agree, every score is 0 or 1 and AUC equals balanced accuracy.",
+    "",
+    "## Business recommendations",
+    "",
+    ...(summary.recommendations.length
+      ? summary.recommendations.map((r) => `- **${r.title}: ${label(r.setting)}**: ${r.why}`)
+      : ["- Not enough results to recommend anything yet."]),
     "",
     "## Decision summary (W18EDATE-72)",
     "",
@@ -437,7 +479,56 @@ type SweepMeta = Parameters<typeof sweepMarkdown>[0]
 export function sweepBaseName(meta: SweepMeta, summary: SweepSummary): string {
   const stamp = meta.startedAt.replace(/[:.]/g, "-").replace(/Z$/, "")
   const models = meta.mock ? "mock" : [...new Set(summary.rows.map((r) => r.setting.model))].join("+")
-  return `${stamp}-sweep-${models.replace(/[^a-z0-9.+-]+/gi, "_")}`
+  return `${stamp}-sweep${meta.combinedFrom ? "-combined" : ""}-${models.replace(/[^a-z0-9.+-]+/gi, "_")}`
+}
+
+// `pnpm eval --combine a.json,b.json`: one table and chart from several saved
+// sweeps. Each model's runs come from the LAST report that has that model, so a
+// rerun of a few models replaces their old rows and keeps everyone else's.
+// Reports only combine when they asked the same words the same way (same
+// golden-set hash, prompt and split), or the comparison would not be fair.
+export interface SavedSweep {
+  file: string
+  datasetVersion: string
+  datasetSha256: string
+  startedAt: string
+  promptVersion: string
+  mock: boolean
+  split?: string
+  runs: SweepRun[]
+}
+
+export function combineSweeps(saved: readonly SavedSweep[], startedAt: string): { meta: SweepMeta; runs: SweepRun[] } {
+  if (saved.length === 0) throw new Error("--combine needs at least one sweep report (.json)")
+  const first = saved[0]
+  for (const s of saved.slice(1)) {
+    const differs = [
+      s.datasetSha256 !== first.datasetSha256 && `golden set (sha256 ${s.datasetSha256.slice(0, 12)} vs ${first.datasetSha256.slice(0, 12)})`,
+      s.promptVersion !== first.promptVersion && `prompt (${s.promptVersion} vs ${first.promptVersion})`,
+      (s.split ?? "all") !== (first.split ?? "all") && `split (${s.split ?? "all"} vs ${first.split ?? "all"})`,
+      s.mock !== first.mock && "mock vs real model",
+    ].filter(Boolean)
+    if (differs.length) throw new Error(`Can't combine ${s.file} with ${first.file}: different ${differs.join(", ")}. Rerun them on the same words.`)
+  }
+  const source = new Map<string, number>()
+  saved.forEach((s, i) => s.runs.forEach((r) => source.set(r.setting.model, i)))
+  const order = [...new Set(saved.flatMap((s) => s.runs.map((r) => r.setting.model)))]
+  const runs = order.flatMap((model) => saved[source.get(model)!].runs.filter((r) => r.setting.model === model))
+  const combinedFrom = saved
+    .map((s, i) => ({ file: s.file, models: order.filter((m) => source.get(m) === i) }))
+    .filter((c) => c.models.length > 0)
+  return {
+    meta: {
+      datasetVersion: first.datasetVersion,
+      datasetSha256: first.datasetSha256,
+      startedAt,
+      promptVersion: first.promptVersion,
+      mock: first.mock,
+      ...(first.split ? { split: first.split } : {}),
+      combinedFrom,
+    },
+    runs,
+  }
 }
 
 
@@ -447,5 +538,7 @@ export function writeSweepReport(dir: string, meta: SweepMeta, summary: SweepSum
   const markdownText = sweepMarkdown(meta, summary)
   writeFileSync(`${base}.json`, `${JSON.stringify({ ...meta, summary, runs }, null, 2)}\n`)
   writeFileSync(`${base}.md`, markdownText)
-  return { json: `${base}.json`, markdown: `${base}.md`, markdownText }
+  const svg = rocSvg(summary.rows, meta.mock ? "ROC (mock model: checks the chart, not a real result)" : "ROC: real slang vs everything else")
+  if (svg) writeFileSync(`${base}.roc.svg`, svg)
+  return { json: `${base}.json`, markdown: `${base}.md`, roc: svg ? `${base}.roc.svg` : null, markdownText }
 }
