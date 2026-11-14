@@ -45,7 +45,8 @@ export function LabShellView({ pathname, userName, mockLlm, children, collapsed 
   const crumbs = breadcrumbs(pathname)
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center gap-4 border-b border-lab-border bg-lab-chrome px-4">
+      <header className="flex flex-col border-b border-lab-border bg-lab-chrome">
+       <div className="flex h-14 items-center gap-4 px-4">
         <button type="button" aria-controls="lab-sidebar" aria-expanded={drawerOpen} onClick={onToggleDrawer} className={`flex h-8 w-8 items-center justify-center rounded text-lab-muted hover:bg-lab-raised md:hidden ${ring}`}>
           <Menu aria-hidden="true" className="h-4 w-4" />
           <span className="sr-only">Open menu</span>
@@ -58,11 +59,12 @@ export function LabShellView({ pathname, userName, mockLlm, children, collapsed 
         </form>
         <span title={userName} aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-lab-control text-xs font-medium">{initials}</span>
         <span className="sr-only">Signed in as {userName}</span>
-      </header>
-      <p className="bg-lab-raised px-4 py-1 text-xs text-lab-muted">
+       </div>
+       <p className="bg-lab-raised px-4 py-1 text-xs text-lab-muted">
         Teaching scaffold · signed in as mock user &quot;{userName}&quot; ·{" "}
         {mockLlm ? "mock AI and moderation" : "real AI and moderation (your own key)"}
-      </p>
+       </p>
+      </header>
       <div className="flex flex-1">
         {drawerOpen && <div data-drawer-backdrop aria-hidden="true" onClick={onToggleDrawer} className="fixed inset-0 z-30 bg-lab-chrome/70 md:hidden" />}
         <aside id="lab-sidebar" className={`shrink-0 flex-col border-r border-lab-border bg-lab-chrome ${drawerOpen ? "fixed inset-y-0 left-0 z-40 flex w-60" : `hidden md:flex ${collapsed ? "md:w-14" : "w-60"}`}`}>
