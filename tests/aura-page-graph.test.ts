@@ -17,3 +17,10 @@ test("aura page wires getDedupGraph into DedupTab", () => {
   assert.match(page, /<DedupTab[^>]*graphAction=\{getDedupGraph\}/)
   assert.match(page, /getDedupGraph/)
 })
+
+test("the page hands the semantic edges action to the Dedup tab, which passes it to the explorer", () => {
+  assert.match(page, /import \{[^}]*getSemanticEdges[^}]*\} from "\.\.\/actions"/)
+  assert.match(page, /<DedupTab[^>]*semanticAction=\{getSemanticEdges\}/)
+  assert.match(tab, /semanticAction\??\s*:/)
+  assert.match(tab, /<GraphExplorer[^>]*semanticAction=\{semanticAction\}/)
+})
