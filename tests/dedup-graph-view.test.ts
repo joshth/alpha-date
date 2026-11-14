@@ -4,7 +4,7 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 const ids = ["brainrot", "brain rot", "skibidi", "rizz", "lonely"]
 const graph = {
-  nodes: ids.map((id, i) => ({ id, label: id, kind: i < 3 ? "suggestion" : "lexicon", count: [5, 2, 3, 0, 0][i] })),
+  nodes: ids.map((id, i) => ({ id, label: id, kind: i < 3 ? "suggestion" : "lexicon", count: [5, 1, 3, 0, 0][i] })),
   edges: [
     { id: "e1", source: "brainrot", target: "brain rot", score: 1, reason: "same_key" },
     { id: "e2", source: "brainrot", target: "skibidi", score: 0.62, reason: "trigram" },
@@ -32,6 +32,12 @@ test("GraphView renders a labelled svg group with circle, button role and label 
   assert.match(g, /<text[^>]*>brainrot<\/text>/)
   assert.equal(view.split("data-node-id=").length, 6)
   assert.doesNotMatch(view, /<animate/)
+})
+
+test("node aria-labels use singular for 1 submission and 1 match", () => {
+  const { view } = out("brainrot")
+  assert.match(group(view, "brain rot"), /aria-label="brain rot, suggestion, 1 submission, 1 match"/)
+  assert.match(group(view, "skibidi"), /aria-label="skibidi, suggestion, 3 submissions, 1 match"/)
 })
 
 test("roving tabindex: selected node, else first node, is the only tab stop", () => {
