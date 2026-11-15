@@ -26,7 +26,7 @@ test("concurrent dashboard requests share one precomputation and cache its rows"
     async () => ["bussin", "new word"],
     async (terms) => {
       builds++
-      return terms.map((term) => ({ term, stage: term === "bussin" ? "emerging" as const : null }))
+      return terms.map((term) => ({ term, stage: term === "bussin" ? "emerging" as const : null, confidence: null }))
     },
     () => new Date("2026-11-15T00:00:00Z"),
   )
