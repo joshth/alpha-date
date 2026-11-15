@@ -1,5 +1,5 @@
 "use client"
-import { useId, useState, useTransition } from "react"
+import { useId, useMemo, useState, useTransition } from "react"
 import { AuraBadge } from "./aura-badge"
 import { AuraTrend } from "./aura-trend"
 import { LifecycleCharts } from "./lifecycle-charts"
@@ -11,8 +11,35 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 
 const SOURCE = { vendored: "Google Trends", synthetic: "this site's search events" }
 const mono = "font-mono tabular-nums whitespace-nowrap"
+type DashboardSortKey = "term" | "aura"
+type SortDirection = "ascending" | "descending"
+
+export function sortAuraDashboardRows(rows: AuraDashboardRow[], key: DashboardSortKey, direction: SortDirection) {
+  return rows
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => {
+      const value = (row: AuraDashboardRow) => key === "term" ? row.term : row.stage ? AURA_STAGE_LABELS[row.stage] : "No stage yet"
+      const compared = value(a.row).localeCompare(value(b.row), "en-AU", { sensitivity: "base" })
+      return compared === 0 ? a.index - b.index : direction === "ascending" ? compared : -compared
+    })
+    .map(({ row }) => row)
+}
 
 export function AuraDashboardTable({ rows }: { rows: AuraDashboardRow[] }) {
+  const [sortKey, setSortKey] = useState<DashboardSortKey>("term")
+  const [direction, setDirection] = useState<SortDirection>("ascending")
+  const sortedRows = useMemo(() => sortAuraDashboardRows(rows, sortKey, direction), [rows, sortKey, direction])
+  const sortBy = (key: DashboardSortKey) => {
+    if (sortKey === key) setDirection((current) => current === "ascending" ? "descending" : "ascending")
+    else { setSortKey(key); setDirection("ascending") }
+  }
+  const header = (key: DashboardSortKey, label: string) => (
+    <TableHead scope="col" aria-sort={sortKey === key ? direction : "none"}>
+      <button type="button" onClick={() => sortBy(key)} className="inline-flex items-center gap-1 hover:underline focus-visible:outline focus-visible:outline-2">
+        {label}<span aria-hidden="true">{sortKey === key ? direction === "ascending" ? "↑" : "↓" : "↕"}</span>
+      </button>
+    </TableHead>
+  )
   return (
     <section aria-labelledby="aura-dashboard-heading" className="space-y-3">
       <h2 id="aura-dashboard-heading" className="text-base font-semibold">Aura by term</h2>
@@ -20,10 +47,10 @@ export function AuraDashboardTable({ rows }: { rows: AuraDashboardRow[] }) {
         <Table>
           <TableCaption>Aura lifecycle stage for every term with recorded search data</TableCaption>
           <TableHeader><TableRow>
-            <TableHead scope="col">Term</TableHead>
-            <TableHead scope="col">Aura</TableHead>
+            {header("term", "Term")}
+            {header("aura", "Aura")}
           </TableRow></TableHeader>
-          <TableBody>{rows.map(({ term, stage }) => (
+          <TableBody>{sortedRows.map(({ term, stage }) => (
             <TableRow key={term}>
               <TableCell>{term}</TableCell>
               <TableCell>{stage ? AURA_STAGE_LABELS[stage] : "No stage yet"}</TableCell>
@@ -76,7 +103,10 @@ export function LifecycleResult({ outcome, onPick }: { outcome: AuraFitOutcome; 
   )
 }
 
-export function LifecycleTab({ fitAction }: { fitAction: (term: string) => Promise<AuraFitOutcome> }) {
+export function LifecycleTab({ fitAction, dashboardRows }: {
+  fitAction: (term: string) => Promise<AuraFitOutcome>
+  dashboardRows?: AuraDashboardRow[]
+}) {
   const id = useId()
   const [term, setTerm] = useState("")
   const [outcome, setOutcome] = useState<AuraFitOutcome | null>(null)
@@ -95,6 +125,7 @@ export function LifecycleTab({ fitAction }: { fitAction: (term: string) => Promi
         </div>
         <button type="submit" disabled={pending} className="h-9 rounded bg-lab-text px-4 text-sm font-medium text-lab-surface disabled:opacity-50">Fit</button>
       </form>
+      {dashboardRows && <AuraDashboardTable rows={dashboardRows} />}
       <div role="status" aria-live="polite" className="sr-only">{status}</div>
       {pending ? <Skeleton className="h-64" /> : outcome && (
         <>
