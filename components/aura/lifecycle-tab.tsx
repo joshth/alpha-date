@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useId, useMemo, useState, useTransition } from "react"
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import { AuraBadge } from "./aura-badge"
 import { AuraTrend } from "./aura-trend"
 import { LifecycleCharts } from "./lifecycle-charts"
@@ -112,9 +112,13 @@ export function LifecycleTab({ initialTerm = "", fitAction, dashboardRows }: {
   const [term, setTerm] = useState(initialTerm)
   const [outcome, setOutcome] = useState<AuraFitOutcome | null>(null)
   const [pending, start] = useTransition()
+  const initialFitStarted = useRef(false)
   const run = (t: string) => { setTerm(t); start(async () => setOutcome(await fitAction(t))) }
   useEffect(() => {
-    if (initialTerm) start(async () => setOutcome(await fitAction(initialTerm)))
+    if (initialTerm && !initialFitStarted.current) {
+      initialFitStarted.current = true
+      start(async () => setOutcome(await fitAction(initialTerm)))
+    }
   }, [fitAction, initialTerm])
   const status = pending ? "Fitting the SIRS model…" : !outcome ? "" : outcome.kind === "fit"
     ? `Fitted ${outcome.fit.term}: ${outcome.fit.stage ? AURA_STAGE_LABELS[outcome.fit.stage] : "No stage yet"}`
