@@ -60,7 +60,10 @@ test("LabShellView renders header, search, avatar, nav, breadcrumb and main", ()
       assert.match(link, /<svg[^>]*aria-hidden="true"/)
     }
   }
-  assert.ok(nav.includes('href="/docs"'))
+  const docs = nav.match(/<a [^>]*href="http:\/\/localhost:3001"[^>]*>[\s\S]*?<\/a>/)?.[0] ?? ""
+  assert.ok(docs, "Docs link points to the local Docusaurus server")
+  assert.match(docs, /target="_blank"/)
+  assert.match(docs, /rel="noopener noreferrer"/)
   assert.deepEqual(current(html).map((a) => a.match(/href="([^"]+)"/)?.[1]), ["/lab/aura"])
   assert.match(html, /<button[^>]*aria-expanded="true"[^>]*>[\s\S]*?Collapse sidebar/)
   const crumb = html.match(/<nav aria-label="Breadcrumb"[\s\S]*?<\/nav>/)?.[0] ?? ""
