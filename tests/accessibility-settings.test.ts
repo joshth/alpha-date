@@ -32,6 +32,13 @@ test("the high-contrast shortcut is exposed to assistive technology", () => {
   assert.match(markup, /aria-keyshortcuts="Control\+Shift\+H Meta\+Shift\+H"/)
 })
 
+test("a visible top-right accessibility symbol opens the settings panel", () => {
+  const trigger = markup.match(/<button(?=[^>]*aria-label="Accessibility options")(?=[^>]*aria-controls="accessibility-options")[^>]*>/)
+  assert.ok(trigger, "the icon button has an accessible name and controls the settings panel")
+  assert.match(trigger[0], /fixed right-4 top-4/, "the icon button is fixed in the top-right corner")
+  assert.match(markup, /<svg[^>]*aria-hidden="true"/, "the symbol is decorative to assistive technology")
+})
+
 test("presets change the intended settings and individual edits become custom", () => {
   const vision = applyPreset("Vision")
   assert.equal(vision.highContrast, true)
