@@ -4,7 +4,7 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { LAB_NAV } from "../components/lab/nav"
 
-type Out = { keys: boolean[]; dflt: string; collapsed: string; drawer: string }
+type Out = { keys: boolean[]; dflt: string; collapsed: string; drawer: string; progress: string; idle: string }
 let cached: Out | undefined
 const run = () => (cached ??= JSON.parse(execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
   const React = require("react");
@@ -24,6 +24,7 @@ const run = () => (cached ??= JSON.parse(execFileSync(process.execPath, ["--requ
       f({ key: "a", target: t("BODY") }), f({ key: "/", target: null }),
     ],
     dflt: view({}), collapsed: view({ collapsed: true }), drawer: view({ drawerOpen: true }),
+    progress: view({ navigationProgress: 42 }), idle: view({ navigationProgress: null }),
   }));
 `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })))
 
@@ -66,4 +67,18 @@ test("drawerOpen: fixed (not hidden) sidebar, expanded menu button, backdrop", (
   assert.ok(c.includes("fixed") && !c.includes("hidden"), c.join(" "))
   assert.match(menuBtn(h), /aria-expanded="true"/)
   assert.match(h, /<[a-z]+ [^>]*data-drawer-backdrop/)
+})
+
+test("navigation progress appears directly under the header and uses a reduced-motion-safe transform", () => {
+  const { progress, idle } = run()
+  assert.doesNotMatch(idle, /aria-label="Loading page"/)
+  const bar = progress.match(/<div role="progressbar"[^>]*>[\s\S]*?<\/div>/)?.[0] ?? ""
+  assert.match(bar, /aria-label="Loading page"/)
+  assert.match(bar, /aria-valuemin="0"/)
+  assert.match(bar, /aria-valuemax="100"/)
+  assert.match(bar, /aria-valuenow="42"/)
+  assert.match(bar, /scaleX\(0\.42\)/)
+  assert.match(bar, /motion-reduce:transition-none/)
+  assert.ok(progress.indexOf("</header>") < progress.indexOf('aria-label="Loading page"'))
+  assert.ok(progress.indexOf('aria-label="Loading page"') < progress.indexOf('<div class="flex flex-1">'))
 })
