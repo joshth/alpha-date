@@ -17,3 +17,7 @@ test("accessibility panel offers presets, display settings and a live result pre
   assert.ok(markup.includes("rizz"), "the preview uses a real result term")
   assert.ok(markup.includes("Peaking"), "the preview includes an Aura badge")
 })
+
+test("the high-contrast shortcut is exposed to assistive technology", () => {
+  assert.match(markup, /aria-keyshortcuts="Control\+Shift\+H Meta\+Shift\+H"/)
+})
