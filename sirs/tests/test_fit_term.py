@@ -122,5 +122,8 @@ def test_cli_batch_fits_many_terms_with_one_shared_dataset_and_synthetic_fallbac
 
     assert main(["--batch", "--json", "--now", "2026-11-13"]) == 0
     output = json.loads(capsys.readouterr().out)
-    assert output["bussin"] == fit_term("bussin", "2026-11-13")
-    assert output["new synthetic"] == fit_counts("new synthetic", weeks, counts, now="2026-11-13")
+    assert output["bussin"] == {"kind": "fit", "source": "vendored", "fit": fit_term("bussin", "2026-11-13")}
+    assert output["new synthetic"] == {
+        "kind": "fit", "source": "synthetic",
+        "fit": fit_counts("new synthetic", weeks, counts, now="2026-11-13"),
+    }

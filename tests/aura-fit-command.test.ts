@@ -55,8 +55,11 @@ test("parseFit maps the no_data error line", () => {
 })
 
 test("parseFitBatch validates each result and preserves no_data outcomes", () => {
-  const parsed = parseFitBatch(JSON.stringify({ bussin: fixture, unknown: { error: "no_data" } }))
-  assert.deepEqual(parsed.bussin, { kind: "fit", fit: fixture })
+  const parsed = parseFitBatch(JSON.stringify({
+    bussin: { kind: "fit", source: "vendored", fit: fixture },
+    unknown: { kind: "no_data" },
+  }))
+  assert.deepEqual(parsed.bussin, { kind: "fit", source: "vendored", fit: fixture })
   assert.deepEqual(parsed.unknown, { kind: "no_data" })
 })
 
