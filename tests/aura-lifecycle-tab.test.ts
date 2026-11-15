@@ -27,6 +27,7 @@ const html: Record<string, string> = JSON.parse(execFileSync(process.execPath, [
   const out = {};
   for (const [k, outcome] of Object.entries(${JSON.stringify(outcomes)})) out[k] = r(React.createElement(LifecycleResult, { outcome }));
   out.tab = r(React.createElement(LifecycleTab, { fitAction: async () => ({}) }));
+  out.initialTab = r(React.createElement(LifecycleTab, { initialTerm: "rizz & roll", fitAction: async () => ({}) }));
   console.log(JSON.stringify(out));
 `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } }))
 const esc = (s: string) => s.replace(/'/g, "&#x27;")
@@ -68,6 +69,11 @@ test("LifecycleTab: labelled form, Fit button, empty polite live region", () => 
   assert.match(h, /<form/)
   assert.match(h, /<button[^>]*type="submit"[^>]*>\s*Fit\s*<\/button>/)
   assert.match(h, /<div[^>]*(role="status"[^>]*aria-live="polite"|aria-live="polite"[^>]*role="status")[^>]*><\/div>/)
+})
+
+test("LifecycleTab: initial term is prefilled and fitted on mount", () => {
+  assert.match(html.initialTab, /<input[^>]*value="rizz &amp; roll"/)
+  assert.match(readFileSync("components/aura/lifecycle-tab.tsx", "utf8"), /useEffect\([\s\S]*initialTerm[\s\S]*fitAction/)
 })
 
 test("pending text lives in the module", () => {
