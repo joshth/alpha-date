@@ -40,3 +40,12 @@ export function applyThemePref(
   else el.setAttribute("data-theme", pref)
   el.setAttribute("data-resolved-theme", resolveTheme(pref, osPrefersLight))
 }
+
+/**
+ * Runs before first paint (inlined by app/lab/layout.tsx) so the right theme shows with no flash.
+ * Explicit light or dark sets data-theme; "system" removes it so the CSS follows the OS.
+ * data-resolved-theme always carries the theme actually in effect, for scripts that need it (e.g. image export).
+ */
+export function themeInitScript(): string {
+  return '(function(){var e=document.documentElement,p;try{p=localStorage.getItem("lab-theme")}catch(_){}var x=p==="light"||p==="dark";x?e.setAttribute("data-theme",p):e.removeAttribute("data-theme");e.setAttribute("data-resolved-theme",x?p:matchMedia("(prefers-color-scheme: light)").matches?"light":"dark")})()'
+}
