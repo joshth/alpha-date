@@ -1,6 +1,6 @@
 import type React from "react"
 import Link from "next/link"
-import { Activity, BarChart3, BookOpen, ClipboardCheck, Database, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, type LucideIcon } from "lucide-react"
+import { Activity, ArrowLeft, BarChart3, BookOpen, ClipboardCheck, Database, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, type LucideIcon } from "lucide-react"
 import { LAB_NAV } from "./nav"
 import { ThemeToggle } from "./theme-toggle"
 import type { ThemePref } from "./theme"
@@ -24,6 +24,12 @@ function activeHref(pathname: string) {
 export function breadcrumbs(pathname: string): { href: string; label: string }[] {
   const href = pathname === "/lab" ? undefined : activeHref(pathname)
   const item = items.find((i) => i.href === href)
+  const auraTermPath = pathname.startsWith("/lab/aura/") ? pathname.slice("/lab/aura/".length).split("/")[0] : ""
+  if (item?.href === "/lab/aura" && auraTermPath) {
+    let term = auraTermPath
+    try { term = decodeURIComponent(auraTermPath) } catch { /* keep the raw path segment */ }
+    return [ROOT, { href: item.href, label: item.label }, { href: pathname, label: term }]
+  }
   return item ? [ROOT, { href: item.href, label: item.label }] : [ROOT]
 }
 
@@ -54,6 +60,7 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
   const initials = userName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
   const active = activeHref(pathname)
   const crumbs = breadcrumbs(pathname)
+  const isAuraTerm = pathname.startsWith("/lab/aura/")
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex flex-col border-b border-lab-border bg-lab-chrome">
@@ -119,14 +126,21 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
         </aside>
         <div className="flex min-w-0 flex-1 flex-col bg-background">
           <nav aria-label="Breadcrumb" className="px-6 pt-4 text-sm text-lab-muted">
-            <ol className="flex gap-2">
-              {crumbs.map((c, i) => (
-                <li key={c.href} className="flex gap-2">
-                  {i > 0 && <span aria-hidden="true">/</span>}
-                  {i < crumbs.length - 1 ? <Link href={c.href} className={ring}>{c.label}</Link> : <span aria-current="page">{c.label}</span>}
-                </li>
-              ))}
-            </ol>
+            <div className="flex items-center gap-3">
+              {isAuraTerm && (
+                <Link href="/lab/aura" aria-label="Back to Aura dashboard" className={`flex h-8 w-8 items-center justify-center rounded hover:bg-lab-raised ${ring}`}>
+                  <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                </Link>
+              )}
+              <ol className="flex gap-2">
+                {crumbs.map((c, i) => (
+                  <li key={c.href} className="flex gap-2">
+                    {i > 0 && <span aria-hidden="true">/</span>}
+                    {i < crumbs.length - 1 ? <Link href={c.href} className={ring}>{c.label}</Link> : <span aria-current="page">{c.label}</span>}
+                  </li>
+                ))}
+              </ol>
+            </div>
           </nav>
           <main id="main-content" className="flex-1 px-6 py-6">{children}</main>
           <footer className="px-6 pb-6 text-xs text-lab-muted">

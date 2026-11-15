@@ -62,12 +62,12 @@ test("blocked and invalid: role=alert with the message", () => {
   assert.match(html.invalid, /role="alert"[^>]*>[^<]*Enter a term between 2 and 100 characters\./)
 })
 
-test("LifecycleTab: labelled form, Fit button, empty polite live region", () => {
+test("LifecycleTab: labelled search form, Search button, empty polite live region", () => {
   const h = html.tab
   const id = h.match(/<label[^>]*for="([^"]+)"[^>]*>\s*Term\s*<\/label>/)?.[1]
   assert.ok(id && /<input[^>]*name="term"/.test(h) && new RegExp(`<input[^>]*id="${id}"`).test(h))
   assert.match(h, /<form/)
-  assert.match(h, /<button[^>]*type="submit"[^>]*>\s*Fit\s*<\/button>/)
+  assert.match(h, /<button[^>]*type="submit"[^>]*>\s*Search\s*<\/button>/)
   assert.match(h, /<div[^>]*(role="status"[^>]*aria-live="polite"|aria-live="polite"[^>]*role="status")[^>]*><\/div>/)
 })
 

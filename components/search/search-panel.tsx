@@ -41,7 +41,7 @@ function TermCard({ term, badge, note, query }: { term: SlangTerm; badge: string
             ))}
           </ul>
         )}
-        <Link href={`/lab/aura?term=${encodeURIComponent(query)}`} className="inline-flex min-h-6 items-center text-sm underline underline-offset-4">
+        <Link href={`/lab/aura/${encodeURIComponent(query)}`} className="inline-flex min-h-6 items-center text-sm underline underline-offset-4">
           View Aura lifecycle
         </Link>
       </CardContent>
