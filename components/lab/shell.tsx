@@ -88,6 +88,8 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
                         <TooltipTrigger asChild>
                           <Link
                             href={item.href}
+                            target={item.external ? "_blank" : undefined}
+                            rel={item.external ? "noopener noreferrer" : undefined}
                             aria-current={item.href === active ? "page" : undefined}
                             title={item.label}
                             className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${ring} ${item.href === active ? "bg-lab-raised text-lab-text" : "text-lab-muted hover:bg-lab-raised hover:text-lab-text"}`}
