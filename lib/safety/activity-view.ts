@@ -25,7 +25,7 @@ export function createSafetyActivityView(dependencies: {
     const user = await dependencies.getSessionUser()
     if (!user || !dependencies.isReviewer(user)) return { status: "forbidden" }
 
-    const custom = params.period === undefined && (params.from !== undefined || params.to !== undefined)
+    const custom = params.period === "custom" || (params.period === undefined && (params.from !== undefined || params.to !== undefined))
     let fields: PeriodFields
     try {
       fields = custom ? {
