@@ -13,3 +13,7 @@ test("the first two page controls offer search, then accessibility options", () 
   assert.ok(options > search, "the accessibility options entry follows the search link")
   assert.ok(layout.includes('focus:not-sr-only'), "both links become visible on focus")
 })
+
+test("the root page mounts the interactive accessibility controls", () => {
+  assert.match(layout, /AccessibilityControls/)
+})
