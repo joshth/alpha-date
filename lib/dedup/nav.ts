@@ -18,6 +18,13 @@ export function clusters(g: Graph, threshold: number): GraphNode[][] {
     .sort((a, b) => b.length - a.length || a[0].label.localeCompare(b[0].label))
 }
 
+export const CLUSTER_COLUMNS = [
+  { key: "cluster", label: "Cluster" }, { key: "word", label: "Word" }, { key: "kind", label: "Kind" }, { key: "submissions", label: "Submissions", numeric: true },
+]
+
+export const clusterRows = (g: Graph, threshold: number) =>
+  clusters(g, threshold).flatMap((c, i) => c.map((n) => ({ cluster: i + 1, word: n.label, kind: n.kind, submissions: n.count })))
+
 export function nextNeighbour(g: Graph, pos: Record<string, { x: number; y: number }>, id: string, key: "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown"): string | null {
   const from = pos[id]
   let best: string | null = null

@@ -1,0 +1,7 @@
+Each dot is one week of search interest for a word, shown from two years ago to now.
+The teal curve is the fitted SIRS model, I(t), drawn through the dots.
+The last 180 days are shaded. A dashed peaking line sits at 80% of the curve's peak.
+r is now divided by peak: how close today is to the top.
+Δ is the change over those 180 days divided by peak: which way it is heading.
+Stage rule: peaking if r ≥ 0.80. Else emerging if Δ ≥ +0.20, declining if Δ ≤ −0.20, otherwise parent territory.
+Here r is 0.75 and Δ is −0.24, so the word is declining.

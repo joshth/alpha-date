@@ -1,24 +1,33 @@
 "use client"
-import { useId, useState, type ReactNode } from "react"
+import { useId, useRef, useState, type ReactNode } from "react"
+import { ExportMenu } from "@/components/aura/export-menu"
+import { GraphInfoButton } from "@/components/aura/graph-info"
+import type { GraphInfoId } from "@/lib/aura/graph-info"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 type Col = { key: string; label: string; numeric?: boolean }
 const fmt = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 3 })
 
-export function ChartPanel({ title, summary, table, defaultShowTable = false, children }: {
-  title: string; summary: string; defaultShowTable?: boolean; children: ReactNode
+export function ChartPanel({ title, summary, table, defaultShowTable = false, infoId, children }: {
+  title: string; summary: string; defaultShowTable?: boolean; infoId?: GraphInfoId; children: ReactNode
   table: { caption: string; columns: Col[]; rows: Record<string, string | number | boolean>[] }
 }) {
   const [showTable, setShowTable] = useState(defaultShowTable)
   const summaryId = useId()
+  const figureRef = useRef<HTMLElement>(null)
+  const getSvg = () => figureRef.current?.querySelector<SVGSVGElement>("svg.recharts-surface") ?? null
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium">{title}</h2>
-        <button type="button" aria-pressed={showTable} onClick={() => setShowTable(!showTable)}
-          className="rounded-md border border-lab-border px-2 py-1 text-xs hover:bg-lab-raised focus-visible:outline focus-visible:outline-2">
-          {showTable ? "Show as chart" : "Show as table"}
-        </button>
+        <div className="flex items-center gap-2">
+          {infoId && <GraphInfoButton id={infoId} />}
+          <ExportMenu filename={title} columns={table.columns} rows={table.rows} getSvg={showTable ? undefined : getSvg} />
+          <button type="button" aria-pressed={showTable} onClick={() => setShowTable(!showTable)}
+            className="rounded-md border border-lab-border px-2 py-1 text-xs hover:bg-lab-raised focus-visible:outline focus-visible:outline-2">
+            {showTable ? "Show as chart" : "Show as table"}
+          </button>
+        </div>
       </div>
       <p id={summaryId} className="text-sm text-lab-muted">{summary}</p>
       {showTable ? (
@@ -40,7 +49,7 @@ export function ChartPanel({ title, summary, table, defaultShowTable = false, ch
             </TableBody>
           </Table>
         </div>
-      ) : <figure aria-describedby={summaryId}>{children}</figure>}
+      ) : <figure ref={figureRef} aria-describedby={summaryId}>{children}</figure>}
     </section>
   )
 }
