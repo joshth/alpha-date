@@ -15,6 +15,7 @@ test("an Aura term route fits the term without rendering the index table", () =>
   assert.ok(existsSync(termPagePath), "a dynamic Aura term route should exist")
   const termPage = readFileSync(termPagePath, "utf8")
   assert.match(termPage, /fitAuraTerm/)
-  assert.match(termPage, /initialTerm=\{term\}/)
+  assert.match(termPage, /decodeAuraTerm\(term\)/)
+  assert.match(termPage, /initialTerm=\{decodedTerm\}/)
   assert.doesNotMatch(termPage, /getAuraDashboardRows|dashboardRows/)
 })
