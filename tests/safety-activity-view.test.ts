@@ -16,11 +16,11 @@ function dependencies(readSafetyActivity = async (_period: { from: string; to: s
   return { getSessionUser: async () => user, isReviewer: () => true, readSafetyActivity, now: () => new Date("2026-11-02T12:00:00Z") }
 }
 
-test("default view requests the last 24 hours in UTC", async () => {
+test("default view requests today as a complete UTC calendar day", async () => {
   const calls: unknown[] = []
   const load = createSafetyActivityView(dependencies(async period => { calls.push(period); return activity }))
-  assert.deepEqual(await load({}), { status: "ready", from: "2026-11-01T12:00:00", to: "2026-11-02T12:00:01", activity })
-  assert.deepEqual(calls, [{ from: "2026-11-01T12:00:00Z", to: "2026-11-02T12:00:01Z" }])
+  assert.deepEqual(await load({}), { status: "ready", from: "2026-11-02T00:00:00", to: "2026-11-03T00:00:00", preset: {period: "day", date: "2026-11-02"}, activity })
+  assert.deepEqual(calls, [{ from: "2026-11-02T00:00:00Z", to: "2026-11-03T00:00:00Z" }])
 })
 
 for (const [name, from, to, expected] of [
@@ -100,7 +100,7 @@ test("summary rendering has labelled UTC filters, semantic counts, empty and dis
   const [ready, empty, error, forbidden] = render([
     { status: "ready", ...fields, activity },
     { status: "ready", ...fields, activity: { ...activity, evaluated: 0, allowed: 0, blocked: 0, blockedRate: null,
-      byOutcome: { safe: 0, refuse: 0, safeguarding: 0, gentle_support: 0 } } },
+      byOutcome: { safe: 0, refuse: 0, safeguarding: 0, gentle_support: 0 }, supportCategories: { suicide_self_harm: 0, violence_threat: 0, eating_disorder: 0, sexual_exploitation: 0, bullying_harassment: 0, multiple: 0, uncategorized: 0 }, } },
     { status: "error", ...fields, message: "Could not load safety activity." }, { status: "forbidden" },
   ])
   assert.match(ready, /method="get"/)
@@ -144,11 +144,12 @@ test("invalid filter values are escaped in rendered markup", () => {
 })
 
 for (const instant of ["2026-11-02T12:00:00.000Z", "2026-11-02T12:00:00.999Z"]) {
-  test(`default exclusive end includes a newly recorded event at ${instant}`, async () => {
+  test(`default calendar-day end includes a newly recorded event at ${instant}`, async () => {
     const now = new Date(instant)
     const load = createSafetyActivityView({ ...dependencies(async period => {
       assert.ok(Date.parse(period.to) > now.getTime())
-      assert.ok(Date.parse(period.to) - now.getTime() <= 1000)
+      assert.ok(Date.parse(period.to) - now.getTime() <= 86400000)
+      assert.equal(period.from, "2026-11-02T00:00:00Z")
       return activity
     }), now: () => now })
     assert.equal((await load({})).status, "ready")
