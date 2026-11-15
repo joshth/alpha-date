@@ -1,0 +1,4 @@
+I(t) is the share of people using the word. It rises as the word spreads, while Γ(t) starts low.
+After the peak, Γ keeps rising and pulls I(t) down.
+The more people have used it, the faster they move on.
+Γ is the recovery rate: how fast people in I move to R. In this model it grows over time.

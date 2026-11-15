@@ -1,0 +1,16 @@
+WEBVTT
+
+00:00:00.400 --> 00:00:04.400
+Eight suggestions from the data. Are any of them the same word?
+
+00:00:04.400 --> 00:00:08.800
+Step 1, normalise each word to a key: brain rot becomes brainrot, and brainrottt becomes brainrott.
+
+00:00:08.800 --> 00:00:14.800
+Step 2, find edges: solid means the same key, dashed means similar trigrams, dotted means the same stem.
+
+00:00:14.800 --> 00:00:23.400
+Step 3, move the threshold: weak edges fade, so fewer pairs are flagged. In this example, 14 pairs drop to 6.
+
+00:00:23.600 --> 00:00:28.000
+A pair is a match, not a merge. A reviewer decides.

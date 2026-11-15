@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.400 --> 00:00:04.800
+Each dot is a person in one of three groups: S has not used the word, I is using it, R is tired of it.
+
+00:00:04.800 --> 00:00:09.200
+β, spreading: people in S pick the word up from people in I, and move to I.
+
+00:00:09.200 --> 00:00:13.200
+Γ, getting tired: people in I grow tired of the word and move to R.
+
+00:00:13.200 --> 00:00:17.600
+ξ, forgetting: some people in R forget the word, and can pick it up again.
+
+00:00:17.800 --> 00:00:24.200
+Count each group over time and stack the counts: this is how S, I and R change.
+
+00:00:24.200 --> 00:00:29.000
+Everyone is in exactly one group, so S + I + R always adds up to 1.

@@ -1,5 +1,5 @@
 import "server-only"
-import { and, count, desc, eq, getTableColumns, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, getTableColumns, notInArray, sql } from "drizzle-orm"
 import type { SlangTerm } from "@/app/types"
 import { getDb } from "@/lib/_stubs/db"
 import { termEvents, terms } from "@/lib/_stubs/schema"
@@ -131,4 +131,15 @@ export async function getTermEvents(termText: string): Promise<{ eventType: stri
     .select({ eventType: termEvents.eventType, createdAt: termEvents.createdAt })
     .from(termEvents)
     .where(eq(termEvents.termLower, termText.trim().toLowerCase()))
+}
+
+/** Distinct safe-search terms with activity that contributes to Aura fits. */
+export async function listTermsWithSearchData(): Promise<string[]> {
+  const db = await getDb()
+  const rows = await db
+    .selectDistinct({ term: termEvents.termLower })
+    .from(termEvents)
+    .where(notInArray(termEvents.eventType, ["llm_generated", "prompt_generated"]))
+    .orderBy(asc(termEvents.termLower))
+  return rows.map((row) => row.term)
 }
