@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { AccessibilityControls } from "@/components/accessibility/accessibility-controls"
+import { accessibilityInitScript } from "@/components/accessibility/preferences"
 
 export const metadata: Metadata = {
   title: {
@@ -16,7 +17,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-AU" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: accessibilityInitScript() }} />
         <AccessibilityControls />
         {children}
         <Toaster />
