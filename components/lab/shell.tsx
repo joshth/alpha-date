@@ -1,10 +1,16 @@
 import type React from "react"
 import Link from "next/link"
-import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { Activity, BarChart3, BookOpen, ClipboardCheck, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, type LucideIcon } from "lucide-react"
 import { LAB_NAV } from "./nav"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const ROOT = { href: "/lab", label: "Lexicon Lab" }
 const items = LAB_NAV.flatMap((g) => g.items)
+const icons: Record<string, LucideIcon> = {
+  Dashboard: LayoutDashboard, Search, "Review queue": ClipboardCheck,
+  Evaluation: BarChart3, "Safety activity": Activity,
+  "Safety incidents": ShieldAlert, Aura: Activity, Docs: BookOpen,
+}
 
 // Longest-prefix match; "/lab" (Dashboard) only matches exactly.
 function activeHref(pathname: string) {
@@ -69,24 +75,36 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
       <div className="flex flex-1">
         {drawerOpen && <div data-drawer-backdrop aria-hidden="true" onClick={onToggleDrawer} className="fixed inset-0 z-30 bg-lab-chrome/70 md:hidden" />}
         <aside id="lab-sidebar" className={`shrink-0 flex-col border-r border-lab-border bg-lab-chrome ${drawerOpen ? "fixed inset-y-0 left-0 z-40 flex w-60" : `hidden md:flex ${collapsed ? "md:w-14" : "w-60"}`}`}>
+          <TooltipProvider>
           <nav aria-label="Lab" className="flex-1 overflow-y-auto p-2">
             {LAB_NAV.map((group) => (
               <div key={group.label}>
                 <h2 className={`${collapsed ? "sr-only" : ""} px-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-lab-muted`}>{group.label}</h2>
                 <ul>
-                  {group.items.filter((item) => !item.demoOnly || showDemoPages).map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        aria-current={item.href === active ? "page" : undefined}
-                        className={`block rounded px-2 py-1.5 text-sm ${ring} ${item.href === active ? "bg-lab-raised text-lab-text" : "text-lab-muted hover:bg-lab-raised hover:text-lab-text"}`}
-                      >{collapsed ? <><span className="sr-only">{item.label}</span><span aria-hidden="true">{item.label[0]}</span></> : item.label}</Link>
+                  {group.items.filter((item) => !item.demoOnly || showDemoPages).map((item) => {
+                    const Icon = icons[item.label]
+                    return <li key={item.href}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={item.href}
+                            aria-current={item.href === active ? "page" : undefined}
+                            title={item.label}
+                            className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${ring} ${item.href === active ? "bg-lab-raised text-lab-text" : "text-lab-muted hover:bg-lab-raised hover:text-lab-text"}`}
+                          >
+                            <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+                            {collapsed ? <span className="sr-only">{item.label}</span> : <span>{item.label}</span>}
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{item.label}</TooltipContent>
+                      </Tooltip>
                     </li>
-                  ))}
+                  })}
                 </ul>
               </div>
             ))}
           </nav>
+          </TooltipProvider>
           <button type="button" aria-expanded={!collapsed} aria-controls="lab-sidebar" onClick={onToggleCollapsed} className={`m-2 flex items-center gap-2 rounded px-2 py-1.5 text-sm text-lab-muted hover:bg-lab-raised hover:text-lab-text ${ring}`}>
             {collapsed ? <PanelLeftOpen aria-hidden="true" className="h-4 w-4" /> : <PanelLeftClose aria-hidden="true" className="h-4 w-4" />}
             {collapsed ? <span className="sr-only">Expand sidebar</span> : "Collapse sidebar"}
