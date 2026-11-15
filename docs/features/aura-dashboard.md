@@ -5,11 +5,11 @@ title: Aura and dedup dashboard
 
 # Aura and dedup dashboard
 
-The Aura page in the Lexicon Lab (`/lab/aura`) lets a reviewer or educator see where a slang term sits in its lifecycle, and what normalisation and deduplication did to the suggestions. It has two tabs, **Lifecycle** and **Dedup**. Both stay mounted, so a fit is not lost when you switch tabs.
+The Aura page in the Lexicon Lab (`/lab/aura`) lets a reviewer or educator see where a slang term sits in its lifecycle. The Dedup page (`/lab/dedup`), listed beside it under Analytics in the sidebar, shows what normalisation and deduplication did to the suggestions.
 
 It uses the dashboard design language in `DESIGN.md`: a dark header and sidebar around a content surface, IBM Plex type, and Okabe-Ito stage colours. Every stage also has a shape and a text label, so colour is never the only channel.
 
-## Lifecycle tab
+## Lifecycle page
 
 Type a term and press **Fit**. The page shows the stage badge, a stat row (`r`, `Δ`, peak week and confidence), a one-sentence summary, and three charts. The stage rule is the one in [Aura](./aura.md).
 
@@ -60,7 +60,7 @@ Each chart has:
 
 Chart points use a roving tab stop: one Tab press enters the chart and the arrow keys, Home and End move between points, with the focused point shown in text above the chart.
 
-## Dedup tab
+## Dedup page
 
 The counter shows what normalisation did to the suggestions table. The table already merges exact matches on trimmed lower case, so that is the baseline. The counter then shows:
 
@@ -69,7 +69,7 @@ The counter shows what normalisation did to the suggestions table. The table alr
 - storage saved in bytes, measured with `pg_column_size`;
 - review items saved.
 
-A time figure is labelled **Estimate**, shows its assumption ("2 min per review"), and the assumption can be edited. Numbers are read when the tab loads and again when the assumption changes.
+A time figure is labelled **Estimate**, shows its assumption ("2 min per review"), and the assumption can be edited. Numbers are read when the page loads and again when the assumption changes.
 
 ## Similarity graph and threshold
 
@@ -90,9 +90,25 @@ These are hints for a reviewer. Meaning matches never merge rows and never chang
 - In mock-LLM mode the vectors come from a small hand-made table in `lib/dedup/embeddings.ts`. It covers nine words, is illustrative and not real embeddings, and needs no key. Tests and CI use it.
 - With a key and mock mode off, the vectors come from the AI SDK's `embedMany`. This sends the suggestion words to the embedding provider, and it is not exercised by the tests.
 
+## Light and dark mode
+
+A **Light, Dark or System** toggle sits in the Lab header. System follows the operating system and is the default, and the choice is remembered on the device. A tiny script sets the theme before the first paint, so the page never flashes the wrong colours. Light mode uses darker versions of the four stage colours, so the stage shapes keep at least 3.6:1 contrast on every light surface.
+
+## Export
+
+Next to every "Show as table" is an **Export** menu with **CSV**, **Excel** (.xlsx) and, while a chart or graph is on screen, **Image** (PNG). CSV and Excel hold the same numbers as the table view, and the similarity graph exports its clusters.
+
+Suggestion text is user-submitted, so a CSV cell that starts with `=`, `+`, `-` or `@` gets a leading apostrophe and a spreadsheet never runs it as a formula. An Excel file stores such text as plain text. The Excel library loads only when you choose Excel. The image export inlines the theme colours and adds a background, so it looks the same outside the page, and it never embeds scripts or foreign content.
+
+## About this chart
+
+Every chart, and the similarity graph, has an **(i)** button. It opens a dialog with a short plain-English explanation, how to read the graph, a silent explainer video of about half a minute with captions, and a transcript. The video plays only when you press play: it never autoplays and is not loaded until the dialog opens. The transcript is the same text as the captions.
+
+There are four videos: search interest, population shares, feedback and the similarity graph. They were made with a Remotion toolkit kept outside this repository, and the files live in `public/explainers/`. The feedback video draws its curve by hand and says so ("illustrative model"); it is not a model run.
+
 ## Accessibility checks
 
-axe-core reports no violations on either tab (WCAG 2.0, 2.1 and 2.2 A and AA rules plus best practice), with a fitted term loaded. Names, roles and live regions are asserted in tests, and the keyboard paths were driven in a browser. See the [design audit](../audits/lab-aura-slop-audit.md) for the findings, the fixes and what was not verified.
+axe-core reports no violations on either page (WCAG 2.0, 2.1 and 2.2 A and AA rules plus best practice), with a fitted term loaded, and again on the Dedup page in light mode. Names, roles and live regions are asserted in tests, and the keyboard paths were driven in a browser. See the [design audit](../audits/lab-aura-slop-audit.md) for the findings, the fixes and what was not verified.
 
 ## Limits
 
@@ -100,4 +116,5 @@ axe-core reports no violations on either tab (WCAG 2.0, 2.1 and 2.2 A and AA rul
 - A weak fit is shown as it is, with its confidence, instead of being tidied up.
 - The golden set has eight dedup cases, so the precision and recall figures are rough.
 - Narrow-width screenshots (375 and 768 px) and screen-reader testing were not done.
+- The export files and the PNG image are covered by tests of the code that builds them, but they have not yet been opened in Excel or checked in a browser.
 - The "signature" animation of the curve drawing in once is not built. Charts do not animate.
