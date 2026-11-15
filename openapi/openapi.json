@@ -1,0 +1,122 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Gen Alpha Decoder | Date lexicon API",
+    "version": "0.1.0",
+    "description": "HTTP routes over the Lexicon Lab's safety-gated search and suggestion flows. Local teaching scaffold: no authentication or rate limiting, so never expose it publicly."
+  },
+  "servers": [{ "url": "http://localhost:3000", "description": "pnpm dev" }],
+  "paths": {
+    "/api/search": {
+      "get": {
+        "summary": "Search for a slang term",
+        "description": "Runs the input safety gate first, then the lexicon lookup, then AI discovery (output moderated). A discovered term is saved as awaiting review.",
+        "operationId": "searchTerm",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "description": "The term to look up.", "schema": { "type": "string", "minLength": 1 }, "example": "rizz" }
+        ],
+        "responses": {
+          "200": {
+            "description": "The search outcome. Check `kind` to see which stage answered.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchOutcome" } } }
+          },
+          "400": {
+            "description": "`q` is missing or blank.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/suggestions": {
+      "post": {
+        "summary": "Suggest a missing term",
+        "description": "Screens the term and context with the input safety gate before recording the suggestion for reviewers.",
+        "operationId": "suggestTerm",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["term"],
+                "properties": {
+                  "term": { "type": "string", "minLength": 2, "maxLength": 100 },
+                  "context": { "type": "string", "maxLength": 500 }
+                }
+              },
+              "example": { "term": "glazing", "context": "Heard it in class" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The suggestion was recorded.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionResult" } } }
+          },
+          "400": {
+            "description": "The body is not a JSON object (`Error`), or validation or the safety screen rejected it (`ActionResult` with `success: false`; `data` holds the verdict when the screen decided).",
+            "content": { "application/json": { "schema": { "oneOf": [{ "$ref": "#/components/schemas/ActionResult" }, { "$ref": "#/components/schemas/Error" }] } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } }
+      },
+      "SafetyVerdict": {
+        "type": "object",
+        "required": ["action", "categories", "crisis", "decidedBy", "reason"],
+        "properties": {
+          "action": { "type": "string", "enum": ["safe", "refuse", "safeguarding"] },
+          "categories": { "type": "array", "items": { "type": "string" } },
+          "crisis": { "type": ["string", "null"], "enum": ["self_harm", "harm_to_others", null] },
+          "decidedBy": { "type": "string", "enum": ["rules", "moderation", "fail_closed"] },
+          "reason": { "type": "string", "description": "Short machine-readable reason. Never the input text." }
+        }
+      },
+      "SlangTerm": {
+        "type": "object",
+        "required": ["id", "term", "definition", "examples", "originAndContext", "commonSentiment", "sensitivityRating"],
+        "properties": {
+          "id": { "type": "string" },
+          "term": { "type": "string" },
+          "pronunciation": { "type": "string" },
+          "definition": { "type": "string" },
+          "examples": { "type": "array", "items": { "type": "string" } },
+          "originAndContext": { "type": "string" },
+          "commonSentiment": { "type": "string" },
+          "sensitivityRating": { "type": "string", "enum": ["Vulgar", "Offensive", "Mature Themes", "Use With Caution", "Generally Harmless"] },
+          "cautionaryNotes": { "type": ["string", "null"] },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "SearchOutcome": {
+        "type": "object",
+        "required": ["kind"],
+        "description": "`safeguarding`: crisis input, show help resources. `refused`: the gate refused the input. `found`: in the lexicon. `discovered`: found by AI discovery and saved for review. `not_found`: neither. `error`: the search failed.",
+        "properties": {
+          "kind": { "type": "string", "enum": ["safeguarding", "refused", "found", "discovered", "not_found", "error"] },
+          "verdict": { "$ref": "#/components/schemas/SafetyVerdict" },
+          "term": { "$ref": "#/components/schemas/SlangTerm" },
+          "message": { "type": "string" },
+          "note": { "type": "string" },
+          "query": { "type": "string" }
+        }
+      },
+      "ActionResult": {
+        "type": "object",
+        "required": ["success", "message"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/SafetyVerdict" }
+        }
+      }
+    }
+  }
+}

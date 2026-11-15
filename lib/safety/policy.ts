@@ -1,3 +1,4 @@
+import { isReviewedSafeLookup } from "@/lib/safety/reviewed-lookups"
 import type { ModerationResult } from "@/lib/_stubs/moderation"
 import type { SafetyAssessment, SafetyCategory } from "@/lib/safety/classify"
 import type { SafetyVerdict } from "@/lib/safety/gate"
@@ -24,7 +25,7 @@ const SAFEGUARDING_CATEGORIES = new Set([
   "harassment/threatening",
 ])
 
-export function decideSafetyVerdict(assessment: SafetyAssessment, moderation: ModerationResult): SafetyVerdict {
+export function decideSafetyVerdict(assessment: SafetyAssessment, moderation: ModerationResult, text = ""): SafetyVerdict {
   if (assessment.crisis) {
     return {
       action: "safeguarding",
@@ -51,7 +52,7 @@ export function decideSafetyVerdict(assessment: SafetyAssessment, moderation: Mo
       ...base,
       action: "safe",
       decidedBy: "moderation",
-      reason: categories.size ? "sensitive_lookup" : "no_signal",
+      reason: categories.size ? "sensitive_lookup" : isReviewedSafeLookup(text) ? "reviewed_lookup" : "no_signal",
     }
   }
 

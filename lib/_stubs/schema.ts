@@ -1,4 +1,6 @@
 import { sql } from "drizzle-orm"
+import type { SafetyIncident } from "@/lib/safety/incidents"
+import type { SafetyEvent } from "@/lib/safety/events"
 import { bigint, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
 
 // STUDENT-FACING STUB SCHEMA. Only the three tables this slice touches, with
@@ -97,4 +99,44 @@ export const termFeedback = pgTable(
     uniqueIndex("term_feedback_term_idx").on(t.suggestedTerm),
     index("term_feedback_status_idx").on(t.status),
   ],
+)
+
+// Synthetic reference fixtures, separate from public terms and anonymous events.
+// Never insert user searches into this table. Actions are expected demo labels.
+export const safetyExamples = pgTable("safety_examples", {
+  id: text("id").primaryKey(),
+  phrase: text("phrase").notNull(),
+  expectedAction: text("expected_action").notNull(),
+  categories: jsonb("categories").$type<string[]>().notNull().default([]),
+  crisis: text("crisis"),
+  rationale: text("rationale").notNull(),
+  source: text("source").notNull().default("synthetic-context-v1"),
+})
+
+export const safetyEvents = pgTable(
+  "safety_events",
+  {
+    outcome: text("outcome", { enum: ["safe", "refuse", "safeguarding", "gentle_support"] }).notNull(),
+    categories: jsonb("categories").$type<SafetyEvent["categories"]>().notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("safety_events_recorded_at_idx").on(t.recordedAt)],
+)
+
+export const safetyIncidents = pgTable(
+  "safety_incidents",
+  {
+    referenceId: text("reference_id").primaryKey(),
+    query: text("query_text").notNull(),
+    surface: text("surface").$type<SafetyIncident["surface"]>().notNull(),
+    crisis: text("crisis").$type<SafetyIncident["crisis"]>(),
+    categories: jsonb("categories").$type<SafetyIncident["categories"]>().notNull(),
+    recordedAtUtc: timestamp("recorded_at_utc", { withTimezone: true }).notNull(),
+    recordedAtSydney: text("recorded_at_sydney").notNull(),
+    localTimezone: text("local_timezone").$type<SafetyIncident["localTimezone"]>().notNull(),
+    triageLevel: text("triage_level").$type<SafetyIncident["triageLevel"]>().notNull(),
+    status: text("status").$type<SafetyIncident["status"]>().notNull(),
+    alertStatus: text("alert_status").$type<SafetyIncident["alertStatus"]>().notNull(),
+  },
+  table => [index("safety_incidents_recorded_at_idx").on(table.recordedAtUtc)],
 )

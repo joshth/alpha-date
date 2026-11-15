@@ -22,6 +22,27 @@
       "when": 1791845978702,
       "tag": "0002_careless_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793239460941,
+      "tag": "0003_safety_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793774206953,
+      "tag": "0004_yummy_lenny_balinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793830668317,
+      "tag": "0005_safety_incidents",
+      "breakpoints": true
     }
   ]
 }

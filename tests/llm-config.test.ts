@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { createServer } from "node:http"
 import type { AddressInfo } from "node:net"
 import { test } from "node:test"
-import { discoveryModelConfig, generateDiscoveryObject, isMockDiscovery, isMockLlm } from "@/lib/_stubs/llm"
+import { DISCOVERY_SAFETY_SYSTEM, discoveryModelConfig, generateDiscoveryObject, isMockDiscovery, isMockLlm } from "@/lib/_stubs/llm"
 
 const KEYS = ["MOCK_LLM", "OPENAI_API_KEY", "OPENAI_MODEL", "LLM_BASE_URL", "LLM_MODEL", "LLM_TEMPERATURE", "LLM_SEED"]
 
@@ -122,6 +122,8 @@ test("the configured model, temperature and seed reach an OpenAI-compatible serv
   assert.deepEqual(format.json_schema.schema.required, ["isLegit"])
   const [system] = requests[0].body.messages as Array<{ role: string; content: string }>
   assert.equal(system.role, "system")
-  assert.match(system.content, /^JSON schema:\n\{.*"isLegit"/)
+  // Rishabh's safety instruction (W18EDATE-146) comes first, then the schema.
+  assert.ok(system.content.startsWith(`${DISCOVERY_SAFETY_SYSTEM}\n`), system.content)
+  assert.match(system.content, /\nJSON schema:\n\{.*"isLegit"/)
   assert.deepEqual(usages, [{ promptTokens: 10, completionTokens: 5 }])
 })

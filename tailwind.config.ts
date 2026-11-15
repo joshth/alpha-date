@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import { fontFamily } from "tailwindcss/defaultTheme"
 
 const config = {
   darkMode: ["class"],
@@ -19,7 +20,28 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-plex-sans)", ...fontFamily.sans],
+        mono: ["var(--font-plex-mono)", ...fontFamily.mono],
+      },
       colors: {
+        lab: {
+          chrome: "hsl(var(--lab-chrome))",
+          surface: "hsl(var(--lab-surface))",
+          raised: "hsl(var(--lab-surface-raised))",
+          input: "hsl(var(--lab-input))",
+          border: "hsl(var(--lab-border))",
+          "border-strong": "hsl(var(--lab-border-strong))",
+          control: "hsl(var(--lab-control))",
+          text: "hsl(var(--lab-text))",
+          muted: "hsl(var(--lab-text-muted))",
+        },
+        stage: {
+          emerging: "hsl(var(--lab-stage-emerging))",
+          peaking: "hsl(var(--lab-stage-peaking))",
+          declining: "hsl(var(--lab-stage-declining))",
+          parent: "hsl(var(--lab-stage-parent-territory))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

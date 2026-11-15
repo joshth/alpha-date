@@ -2,6 +2,7 @@ import { discoverTerm, type GenerateDiscovery } from "@/lib/discovery/discover"
 import { buildDiscoveryPrompt } from "@/lib/discovery/prompt"
 import { type EvalCategory, type GoldenCase, RATING_ORDER, type Split, type WordType } from "@/lib/eval/golden"
 import { type Rate, rate } from "@/lib/eval/metrics"
+import { isPromptInjection } from "@/lib/safety/injection"
 
 // Discovery evaluation (W18EDATE-65, part of W18EDATE-29).
 //
@@ -16,6 +17,7 @@ import { type Rate, rate } from "@/lib/eval/metrics"
 //   H1; it is counted in falseAcceptRate (accepted non-slang / all non-slang).
 // - sensitivity mislabel = an accepted case with a minSensitivity whose model
 //   rating ranks lower in RATING_ORDER (e.g. "unalive" rated harmless).
+// - a term the app refuses as an instruction (W18EDATE-146) counts as rejected.
 // - a provider error is neither accepted nor rejected: the case is listed in
 //   errorIds and left out of every denominator, so outages can't pass as
 //   "the model said no".
@@ -119,7 +121,11 @@ export async function evaluateDiscovery(
       definition = found?.term.definition ?? null
       rating = found?.term.sensitivityRating ?? null
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : "Discovery failed."
+      // The app refuses instructions posing as a word before any model runs
+      // (W18EDATE-146). That is the app saying "not slang", so it is scored as
+      // a rejection, not as a provider error.
+      if (isPromptInjection(entry.input)) accepted = false
+      else error = caught instanceof Error ? caught.message : "Discovery failed."
     }
     const latencyMs = now() - started
     const minSensitivity = entry.discovery.minSensitivity ?? null

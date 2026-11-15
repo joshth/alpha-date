@@ -1,3 +1,8 @@
+---
+sidebar_label: Golden set
+sidebar_position: 7
+---
+
 Golden set: format, checks, review and privacy
 
 Our answer key, or “golden set” is the golden set (`eval/golden-set.json`), which is a hand-labelled list of inputs on which we know the correct answer. The evaluation harness is used to test the AI against it. It's is common to all pipeline:

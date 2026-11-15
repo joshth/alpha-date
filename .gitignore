@@ -23,3 +23,17 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# vendored SIRS plotter (sirs/): local venv and Python caches
+/sirs/.venv/
+__pycache__/
+.pytest_cache/
+
+# CI outputs (.gitlab-ci.yml)
+/.pnpm-store/
+/junit.xml
+/eval-report.txt
+
+# macOS
+.DS_Store
+

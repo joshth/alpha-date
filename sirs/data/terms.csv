@@ -1,0 +1,81 @@
+term,generation,query,first_popular_year,wiktionary_title,wikipedia_title,notes
+groovy,boomer,groovy,1967,groovy,Groovy (slang),Archetypal 1960s counterculture slang; distinctive enough as a bare query (the Groovy programming language adds some noise).
+far out,boomer,far out meaning,1967,far out,,Phrase is also literal ('far out at sea'); disambiguated with 'meaning'.
+bummer,boomer,bummer,1967,bummer,,1960s slang for a disappointment; bare query is dominated by the slang sense.
+the fuzz,boomer,the fuzz meaning,1960,fuzz,,Slang for police; bare query collides with the film Hot Fuzz so disambiguated with 'meaning'.
+daddy-o,boomer,daddy o,1955,daddy-o,,Beatnik-era address term; hyphen dropped because Trends tokenises it.
+copacetic,boomer,copacetic,1960,copacetic,,Distinctive word; peaked in mid-century American slang.
+flower power,boomer,flower power,1967,flower power,Flower power,Hippie-era slogan; distinctive phrase.
+hunky dory,boomer,hunky dory meaning,1960,hunky-dory,,Bare query is dominated by the 1971 David Bowie album; disambiguated with 'meaning'.
+cool cat,boomer,cool cat meaning,1955,cool cat,,Bare query collides with the 2021 Cool Cats NFT collection; disambiguated with 'meaning'.
+jive turkey,boomer,jive turkey,1972,jive turkey,,1970s insult; distinctive phrase.
+keep on truckin,boomer,keep on truckin,1972,keep on truckin',Keep On Truckin' (comics),Robert Crumb catchphrase of the early 1970s; distinctive.
+can you dig it,boomer,can you dig it,1965,dig,,'dig' alone is an ordinary word so the full catchphrase is used.
+right on,boomer,right on meaning,1968,right on,,Phrase is also literal; disambiguated with 'meaning'.
+outta sight,boomer,outta sight,1965,out of sight,,1960s approval slang; spelling is distinctive.
+sock it to me,boomer,sock it to me,1968,sock it to me,,Laugh-In catchphrase (1968); distinctive.
+fab,boomer,fab meaning,1964,fab,,Short form popularised by the 'Fab Four'; bare query is an ordinary word/brand so 'meaning' is used.
+gnarly,gen_x,gnarly,1982,gnarly,,1980s surfer/valley slang; distinctive.
+tubular,gen_x,tubular,1982,tubular,,Valley-girl slang; bare word also technical (tubular steel) but the slang sense dominates searches.
+grody,gen_x,grody,1982,grody,,Valley-girl slang ('grody to the max'); distinctive.
+bodacious,gen_x,bodacious,1985,bodacious,,Late-1980s slang (Bill & Ted); distinctive.
+gag me with a spoon,gen_x,gag me with a spoon,1982,gag me with a spoon,,Valley-girl catchphrase; distinctive.
+da bomb,gen_x,da bomb meaning,1995,da bomb,,Bare query collides with 'Da Bomb' hot sauce (Hot Ones); disambiguated with 'meaning'.
+phat,gen_x,phat meaning,1992,phat,,Homophone of 'fat' and an acronym; disambiguated with 'meaning'.
+talk to the hand,gen_x,talk to the hand,1996,talk to the hand,,Mid-1990s dismissal; distinctive.
+all that and a bag of chips,gen_x,all that and a bag of chips,1996,all that and a bag of chips,,1990s compliment; distinctive.
+booyah,gen_x,booyah meaning,1995,booyah,,Bare query collides with the Booyah streaming app and Free Fire; disambiguated with 'meaning'.
+dweeb,gen_x,dweeb,1983,dweeb,,1980s insult; distinctive.
+chill pill,gen_x,chill pill,1985,chill pill,,1980s 'take a chill pill'; distinctive.
+cowabunga,gen_x,cowabunga,1987,cowabunga,Cowabunga,Surfer slang popularised by TMNT (1987); TMNT franchise searches are part of the slang's own spread.
+as if,gen_x,as if meaning,1995,as if,,Ordinary phrase; slang use from Clueless (1995); disambiguated with 'meaning'.
+rad,gen_x,rad meaning,1983,rad,,Also a radiation unit and an acronym; disambiguated with 'meaning'.
+wassup,gen_x,wassup,1999,wassup,Whassup?,Late-1990s greeting (Budweiser ads); distinctive spelling.
+yolo,millennial,yolo,2011,YOLO,YOLO (aphorism),Early-2010s acronym; the YOLO object detector adds minor noise.
+fomo,millennial,fomo,2012,FOMO,Fear of missing out,Acronym slang; distinctive.
+bae,millennial,bae meaning,2013,bae,,Bare query collides with BAE Systems; disambiguated with 'meaning'.
+on fleek,millennial,on fleek,2014,on fleek,On fleek,2014 viral slang (Vine); distinctive.
+totes,millennial,totes meaning,2012,totes,,Bare query collides with tote bags; disambiguated with 'meaning'.
+cray cray,millennial,cray cray,2012,cray-cray,,Early-2010s slang; distinctive.
+swag,millennial,swag meaning,2010,swag,,Ordinary word (free merchandise); disambiguated with 'meaning'.
+ratchet,millennial,ratchet meaning,2012,ratchet,,Ordinary word (tool); disambiguated with 'meaning'.
+turnt,millennial,turnt,2013,turnt,,Early-2010s party slang; distinctive.
+pwned,millennial,pwned meaning,2005,pwned,,Bare query dominated by haveibeenpwned.com since 2013; disambiguated with 'meaning'.
+noob,millennial,noob,2005,noob,Newbie,2000s gaming slang; distinctive.
+bromance,millennial,bromance,2008,bromance,Bromance,Late-2000s portmanteau; distinctive.
+frenemy,millennial,frenemy,2008,frenemy,,Late-2000s portmanteau; distinctive.
+humblebrag,millennial,humblebrag,2011,humblebrag,,2011 coinage; distinctive.
+netflix and chill,millennial,netflix and chill,2015,Netflix and chill,Netflix and chill,2015 meme phrase; distinctive.
+throwing shade,millennial,throwing shade,2012,throw shade,,Ballroom slang mainstreamed early 2010s; distinctive phrase.
+no cap,gen_z,no cap meaning,2018,no cap,,Bare query collides with salary caps; disambiguated with 'meaning'.
+sus,gen_z,sus meaning,2020,sus,,Short and ambiguous (abbreviation of suspicious; Among Us surge 2020); disambiguated with 'meaning'.
+yeet,gen_z,yeet,2017,yeet,Yeet,Late-2010s exclamation; distinctive.
+simp,gen_z,simp,2019,simp,,2019-2020 slang; distinctive.
+stan,gen_z,stan meaning,2017,stan,,Also a given name; disambiguated with 'meaning'.
+bussin,gen_z,bussin,2020,bussin',,TikTok-era food slang; distinctive.
+slay,gen_z,slay meaning,2021,slay,,Ordinary verb; disambiguated with 'meaning'.
+periodt,gen_z,periodt,2019,periodt,,Distinctive spelling.
+vibe check,gen_z,vibe check,2019,vibe check,,2019 meme phrase; distinctive.
+ok boomer,gen_z,ok boomer,2019,OK boomer,OK boomer,Late-2019 retort; distinctive.
+lowkey,gen_z,lowkey,2016,lowkey,,Mid-2010s adverb; closed spelling is mostly slang.
+finsta,gen_z,finsta,2016,finsta,,Fake-Instagram account; distinctive.
+deadass,gen_z,deadass,2017,deadass,,New York slang mainstreamed late 2010s; distinctive.
+understood the assignment,gen_z,understood the assignment,2021,understood the assignment,,2021 TikTok phrase; distinctive.
+it's giving,gen_z,it's giving meaning,2021,it's giving,,Ordinary phrase fragment; disambiguated with 'meaning'.
+rent free,gen_z,rent free meaning,2020,rent-free,,Ordinary phrase (housing); disambiguated with 'meaning'.
+skibidi,gen_alpha,skibidi,2023,skibidi,Skibidi Toilet,From the Skibidi Toilet web series (2023); distinctive.
+rizz,gen_alpha,rizz,2022,rizz,,Oxford Word of the Year 2023; spans late Gen Z and Gen Alpha; distinctive.
+gyatt,gen_alpha,gyatt,2023,gyatt,,Streamer-originated exclamation; distinctive.
+fanum tax,gen_alpha,fanum tax,2023,Fanum tax,,Streamer-originated phrase; distinctive.
+sigma,gen_alpha,sigma meaning,2023,sigma,,Greek letter and statistics term; disambiguated with 'meaning'.
+mewing,gen_alpha,mewing,2024,mewing,Mewing,Jawline meme; distinctive.
+mogging,gen_alpha,mogging,2024,mog,,Looksmaxxing slang; distinctive.
+aura points,gen_alpha,aura points,2024,aura,,'aura' alone is an ordinary word; the 'aura points' meme phrase is distinctive.
+delulu,gen_alpha,delulu,2023,delulu,,Short for delusional; K-pop fandom origin spreading to Gen Alpha in 2023; distinctive.
+griddy,gen_alpha,griddy,2022,griddy,Griddy,Dance popularised by Fortnite/NFL; distinctive.
+6 7,gen_alpha,6 7 meaning,2025,6-7,6-7 (meme),2025 meme; bare digits are meaningless as a query so 'meaning' is used.
+brainrot,gen_alpha,brainrot,2024,brainrot,Brain rot,Oxford Word of the Year 2024; closed spelling chosen.
+looksmaxxing,gen_alpha,looksmaxxing,2023,looksmaxxing,Looksmaxxing,Distinctive.
+glazing,gen_alpha,glazing meaning,2024,glaze,,Ordinary word (ceramics/windows); disambiguated with 'meaning'.
+chopped,gen_alpha,chopped meaning,2025,chopped,,Ordinary word and a TV show; disambiguated with 'meaning'.
+goofy ahh,gen_alpha,goofy ahh,2022,goofy ahh,,Distinctive phrase.
