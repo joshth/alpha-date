@@ -51,6 +51,34 @@ test("AuraBadge confidence wording", () => {
   assert.match(r.low, /border-dashed/)
 })
 
+test("AuraBadge exposes a complete accessible name and distinct SVG icons", () => {
+  const r = run()
+  assert.match(r.emerging, /aria-label="Aura: Emerging, high confidence"/)
+  assert.match(r.low, /aria-label="Aura: Peaking, low confidence"/)
+  assert.match(r.null, /aria-label="Aura: No stage yet, high confidence"/)
+  for (const k of ["emerging", "peaking", "declining", "parent_territory", "null"]) {
+    assert.match(r[k], /<svg[^>]*aria-hidden="true"/)
+  }
+  const icons = ["emerging", "peaking", "declining", "parent_territory", "null"]
+    .map((k) => r[k].match(/data-aura-icon="([^"]+)"/)?.[1])
+  assert.equal(new Set(icons).size, 5)
+})
+
+test("AuraGlossary lists every Aura state and its meaning", () => {
+  const html = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react");
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { AuraGlossary } = require("./components/aura/aura-badge.tsx");
+    console.log(renderToStaticMarkup(React.createElement(AuraGlossary, { open: true })));
+  `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
+  assert.match(html, /What does this mean\?/)
+  for (const label of ["Emerging", "Peaking", "Declining", "Parent territory", "No stage yet"]) {
+    assert.ok(html.includes(label), `${label} appears in the glossary`)
+  }
+  assert.match(html, /role="dialog"/)
+  assert.match(html, /aria-modal="true"/)
+})
+
 test("AuraBadge has no raw hex", () => {
   for (const html of Object.values(run()) as string[]) assert.doesNotMatch(html, /#[0-9a-fA-F]{3,8}\b/)
 })
