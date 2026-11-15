@@ -1,0 +1,5 @@
+Eight suggestions from the data. Are any of them the same word?
+Step 1, normalise each word to a key: brain rot becomes brainrot, and brainrottt becomes brainrott.
+Step 2, find edges: solid means the same key, dashed means similar trigrams, dotted means the same stem.
+Step 3, move the threshold: weak edges fade, so fewer pairs are flagged. In this example, 14 pairs drop to 6.
+A pair is a match, not a merge. A reviewer decides.
