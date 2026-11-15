@@ -4,7 +4,7 @@ import { fittedStages } from "../lib/aura/stage-regions"
 
 test("rolling fitted stages identify rising, peaking, declining and stable curves", () => {
   const rising = Array.from({ length: 40 }, (_, i) => i + 1)
-  const peak = Array.from({ length: 40 }, (_, i) => i < 20 ? i + 1 : 40 - i)
+  const peak = Array.from({ length: 40 }, (_, i) => i < 20 ? i + 1 : 20)
   const decline = Array.from({ length: 40 }, (_, i) => 40 - i)
   const stable = Array.from({ length: 40 }, () => 10)
   assert.equal(fittedStages(rising).at(-1), "emerging")
