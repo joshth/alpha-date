@@ -116,5 +116,5 @@ axe-core reports no violations on either page (WCAG 2.0, 2.1 and 2.2 A and AA ru
 - A weak fit is shown as it is, with its confidence, instead of being tidied up.
 - The golden set has eight dedup cases, so the precision and recall figures are rough.
 - Narrow-width screenshots (375 and 768 px) and screen-reader testing were not done.
-- The export files and the PNG image are covered by tests of the code that builds them, but they have not yet been opened in Excel or checked in a browser.
+- The CSV, Excel and PNG exports were generated in a browser and inspected (the CSV columns, a valid .xlsx file, the PNG in both themes), but the .xlsx file has not been opened in Excel itself.
 - The "signature" animation of the curve drawing in once is not built. Charts do not animate.
