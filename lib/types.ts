@@ -8,6 +8,7 @@ export interface ActionResult<T = undefined> {
 }
 
 export type SearchOutcome =
+  | { kind: "gentle_support"; verdict: SafetyVerdict; message: string }
   | { kind: "safeguarding"; verdict: SafetyVerdict }
   | { kind: "refused"; verdict: SafetyVerdict; message: string }
   | { kind: "found"; term: SlangTerm; verdict: SafetyVerdict }

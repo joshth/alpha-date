@@ -53,7 +53,7 @@ test("LabShellView renders header, search, avatar, nav, breadcrumb and main", ()
   const nav = html.match(/<nav aria-label="Lab"[\s\S]*?<\/nav>/)?.[0] ?? ""
   for (const g of LAB_NAV) {
     assert.ok(nav.includes(g.label), g.label)
-    for (const i of g.items) assert.ok(nav.includes(`>${i.label}<`), i.label)
+    for (const i of g.items.filter((x) => !x.demoOnly)) assert.ok(nav.includes(`>${i.label}<`), i.label)
   }
   assert.deepEqual(current(html).map((a) => a.match(/href="([^"]+)"/)?.[1]), ["/lab/aura"])
   assert.match(html, /<button[^>]*aria-expanded="true"[^>]*>[\s\S]*?Collapse sidebar/)
@@ -68,4 +68,18 @@ test("Dashboard link is current on /lab", () => {
   const { dash } = run()
   assert.ok(current(dash).some((a) => a.includes('href="/lab"')))
   assert.ok(!current(dash).some((a) => a.includes('href="/lab/aura"')))
+})
+
+test("demo-only nav items stay hidden unless the server turns the demo on", () => {
+  const demo = items.filter((i) => i.demoOnly)
+  assert.deepEqual(demo.map((i) => i.href), ["/lab/safety-incidents"])
+  const nav = (flag: boolean) => execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react");
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { LabShellView } = require("./components/lab/shell.tsx");
+    globalThis.React = React;
+    console.log(renderToStaticMarkup(React.createElement(LabShellView, { pathname: "/lab", userName: "x", mockLlm: true, showDemoPages: ${flag}, children: null })));
+  `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
+  assert.ok(!nav(false).includes(">Safety incidents<"))
+  assert.ok(nav(true).includes(">Safety incidents<"))
 })

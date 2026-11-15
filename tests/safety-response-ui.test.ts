@@ -14,9 +14,10 @@ test("safety response renders support, crisis and outage states", () => {
       render(base, "Support is available below."),
       render({ ...base, categories: ["suicide_self_harm"], crisis: "self_harm" }, "Support"),
       render({ ...base, action: "refuse", categories: [], decidedBy: "fail_closed", reason: "moderation_unavailable" }, "Please try again."),
+      render({ ...base, action: "gentle_support", categories: [], decidedBy: "rules", reason: "context:distress" }, "You deserve kindness and support."),
     ]));
   `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
-  const [support, crisis, outage] = JSON.parse(output) as string[]
+  const [support, crisis, outage, gentle] = JSON.parse(output) as string[]
   assert.match(support, /Support is available below/)
   assert.match(support, /role="alert"/)
   assert.match(support, /Support is available/)
@@ -24,4 +25,8 @@ test("safety response renders support, crisis and outage states", () => {
   assert.match(crisis, /People you can talk to/)
   assert.match(outage, /Please try again/)
   assert.doesNotMatch(outage, /Support is available|tel:000/)
+  assert.match(gentle, /A gentle check-in/)
+  assert.match(gentle, /role="status"/)
+  assert.match(gentle, /You deserve kindness and support/)
+  assert.doesNotMatch(gentle, /tel:000|role="alert"/)
 })
