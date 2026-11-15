@@ -59,3 +59,8 @@ test("source: Sheet dialog, Close button, no hex", () => {
   assert.match(src, /Close/)
   assert.doesNotMatch(src, /#[0-9a-fA-F]{3,8}\b/)
 })
+
+test("the portalled info sheet resolves its Lab theme tokens", () => {
+  const src = readFileSync("components/aura/graph-info.tsx", "utf8")
+  assert.match(src, /<SheetContent className="lab [^"]*bg-lab-chrome[^"]*text-lab-text/)
+})
