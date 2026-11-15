@@ -214,7 +214,7 @@ export function AccessibilityControls() {
             Calm motion
           </label>
           <label className="flex min-h-11 items-center gap-3 text-sm">
-            <input type="checkbox" checked={resolved.highContrast} onChange={(event) => setSetting("highContrast", event.target.checked, "High contrast")} className="h-5 w-5" />
+            <input type="checkbox" aria-keyshortcuts="Control+Shift+H Meta+Shift+H" checked={resolved.highContrast} onChange={(event) => setSetting("highContrast", event.target.checked, "High contrast")} className="h-5 w-5" />
             High contrast
           </label>
           <label className="flex min-h-11 items-center gap-3 text-sm">
