@@ -13,8 +13,9 @@ function labRoutes(dir = "app/lab", base = "/lab"): string[] {
 
 const items = LAB_NAV.flatMap((group) => group.items)
 
-test("the Lab sidebar lists every Lab page, and every nav link has a page", () => {
-  assert.deepEqual(items.map((i) => i.href).sort(), labRoutes().sort())
+test("the Lab sidebar lists every Lab page and links to Docs", () => {
+  assert.deepEqual(items.filter((i) => i.href.startsWith("/lab")).map((i) => i.href).sort(), labRoutes().sort())
+  assert.equal(items.find((i) => i.label === "Docs")?.href, "http://localhost:3001")
 })
 
 test("the Lab sidebar has an Aura page in its own group", () => {

@@ -53,8 +53,17 @@ test("LabShellView renders header, search, avatar, nav, breadcrumb and main", ()
   const nav = html.match(/<nav aria-label="Lab"[\s\S]*?<\/nav>/)?.[0] ?? ""
   for (const g of LAB_NAV) {
     assert.ok(nav.includes(g.label), g.label)
-    for (const i of g.items.filter((x) => !x.demoOnly)) assert.ok(nav.includes(`>${i.label}<`), i.label)
+    for (const i of g.items.filter((x) => !x.demoOnly)) {
+      assert.ok(nav.includes(`>${i.label}</span>`), i.label)
+      const link = nav.match(new RegExp(`<a [^>]*href="${i.href}"[^>]*>[\\s\\S]*?</a>`))?.[0] ?? ""
+      assert.ok(link.includes(`title="${i.label}"`), `${i.label} hover/focus label`)
+      assert.match(link, /<svg[^>]*aria-hidden="true"/)
+    }
   }
+  const docs = nav.match(/<a [^>]*href="http:\/\/localhost:3001"[^>]*>[\s\S]*?<\/a>/)?.[0] ?? ""
+  assert.ok(docs, "Docs link points to the local Docusaurus server")
+  assert.match(docs, /target="_blank"/)
+  assert.match(docs, /rel="noopener noreferrer"/)
   assert.deepEqual(current(html).map((a) => a.match(/href="([^"]+)"/)?.[1]), ["/lab/aura"])
   assert.match(html, /<button[^>]*aria-expanded="true"[^>]*>[\s\S]*?Collapse sidebar/)
   const crumb = html.match(/<nav aria-label="Breadcrumb"[\s\S]*?<\/nav>/)?.[0] ?? ""

@@ -1,11 +1,13 @@
 "use client"
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
-import { CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, XAxis, YAxis } from "recharts"
+import { Area, CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { ChartPanel } from "./chart-panel"
 import type { GraphInfoId } from "@/lib/aura/graph-info"
 import type { SirsFit } from "@/lib/aura/fit-command"
 import { lifecycleRows, trendSentence, windowBounds } from "@/lib/aura/trend-text"
+import { AURA_STAGE_LABELS, type AuraStage } from "@/lib/aura"
+import { fittedStages } from "@/lib/aura/stage-regions"
 
 type Series = { key: string; label: string; color: string; dash: string; shape: "dot" | "line" }
 const tok = (n: string) => `hsl(var(--lab-${n}))`
@@ -49,6 +51,12 @@ export function FocusDot({ cx, cy, index, payload, tabbable, active, onFocusPoin
 const config = (...s: Series[][]): ChartConfig =>
   Object.fromEntries(s.flat().map((x) => [x.key, { label: x.label, color: x.color }]))
 const tick = { fill: tok("text-muted"), fontSize: 12 }
+const STAGES: { key: AuraStage; token: string; pattern: "diagonal" | "dots" | "cross" | "horizontal" }[] = [
+  { key: "emerging", token: "stage-emerging", pattern: "diagonal" },
+  { key: "peaking", token: "stage-peaking", pattern: "dots" },
+  { key: "declining", token: "stage-declining", pattern: "cross" },
+  { key: "parent_territory", token: "stage-parent-territory", pattern: "horizontal" },
+]
 // An array, not a fragment: Recharts only registers axes and the grid when they are direct children.
 const axes = [
   <CartesianGrid key="grid" vertical={false} stroke={tok("border")} />,
@@ -79,6 +87,12 @@ const cols = (series: Series[]) => [{ key: "week", label: "Week" }, ...series.ma
 
 export function LifecycleCharts({ fit }: { fit: SirsFit }) {
   const rows = useMemo(() => lifecycleRows(fit), [fit])
+  const stages = useMemo(() => fittedStages(rows.map((row) => row.fitted)), [rows])
+  const stagedRows = useMemo(() => rows.map((row, i) => ({
+    ...row,
+    stage: stages[i] ? AURA_STAGE_LABELS[stages[i]!] : "Insufficient history",
+    ...Object.fromEntries(STAGES.map(({ key }) => [`region_${key}`, stages[i] === key ? row.fitted : null])),
+  })), [rows, stages])
   const win = useMemo(() => windowBounds(rows.map((r) => r.week), fit.windowStart, fit.now), [rows, fit.windowStart, fit.now])
   const summary = trendSentence(fit)
   const [focus, setFocus] = useState(rows.length - 1)
@@ -107,14 +121,27 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
   )
   return (
     <div className="space-y-8">
-      <ChartPanel title="Search interest and fitted curve" infoId="interest" summary={summary} table={table("Weekly search interest and fitted curve", MAIN_SERIES)}>
+      <ChartPanel title="Search interest and fitted curve" infoId="interest" summary={summary} table={{
+        caption: "Weekly search interest, fitted curve and fitted stage",
+        columns: [...cols(MAIN_SERIES), { key: "stage", label: "Fitted stage" }], rows: stagedRows,
+      }}>
         <div ref={box}>
           <div aria-hidden="true" className="mb-1 font-mono text-xs tabular-nums text-lab-muted">
             {f.week} · interest {f.interest.toFixed(2)} · fitted {f.fitted.toFixed(2)}
           </div>
           <ChartContainer config={config(MAIN_SERIES)} className="h-72 w-full">
-            <ComposedChart data={rows}>
+            <ComposedChart data={stagedRows}>
               {axes}
+              <defs>
+                {STAGES.map(({ key, token, pattern }) => <pattern key={key} id={`aura-${key}`} width="8" height="8" patternUnits="userSpaceOnUse">
+                  <rect width="8" height="8" fill={tok(token)} fillOpacity="0.18" />
+                  {pattern === "dots" ? <circle cx="2" cy="2" r="1" fill={tok(token)} /> :
+                    pattern === "cross" ? <path d="M0 0L8 8M8 0L0 8" stroke={tok(token)} strokeWidth="0.8" /> :
+                    pattern === "horizontal" ? <path d="M0 2H8M0 6H8" stroke={tok(token)} strokeWidth="0.8" /> :
+                    <path d="M-2 8L8 -2M2 10L10 2" stroke={tok(token)} strokeWidth="0.8" />}
+                </pattern>)}
+              </defs>
+              {STAGES.map(({ key, token }) => <Area key={key} dataKey={`region_${key}`} type="monotone" stroke={tok(token)} strokeWidth={0} fill={`url(#aura-${key})`} connectNulls={false} isAnimationActive={false} />)}
               {win && <ReferenceArea x1={win.from} x2={win.to} fill={tok("text-muted")} fillOpacity={0.1} label={{ value: "Last 180 days", position: "insideBottomRight", fill: tok("text-muted"), fontSize: 12 }} />}
               {win && <ReferenceLine x={win.to} stroke={tok("border-strong")} label={{ value: "Now", position: "insideTopLeft", fill: tok("text-muted"), fontSize: 12 }} />}
               <ReferenceLine y={peak} stroke={tok("stage-peaking")} strokeDasharray="4 4" label={{ value: "Peaking line (80% of peak)", position: "insideTopRight", fill: tok("text-muted"), fontSize: 12 }} />
@@ -127,6 +154,13 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
             </ComposedChart>
           </ChartContainer>
           <SeriesLegend series={MAIN_SERIES} />
+          <ul aria-label="Aura stage regions" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-lab-muted">
+            {STAGES.map(({ key, token, pattern }) => <li key={key} className="flex items-center gap-1.5">
+              <svg aria-hidden="true" width="16" height="12"><rect width="16" height="12" fill={tok(token)} fillOpacity="0.18" />
+                {pattern === "dots" ? <circle cx="4" cy="4" r="1.5" fill={tok(token)} /> : <path d={pattern === "cross" ? "M0 0L8 8M8 0L0 8" : pattern === "horizontal" ? "M0 3H16M0 9H16" : "M0 12L12 0M6 12L16 2"} stroke={tok(token)} strokeWidth="1" />}</svg>
+              {AURA_STAGE_LABELS[key]}
+            </li>)}
+          </ul>
         </div>
       </ChartPanel>
       {share("Population shares", SHARE_SERIES, "Susceptible, infected and recovered shares by week", "shares")}
