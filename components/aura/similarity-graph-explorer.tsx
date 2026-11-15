@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { ExportMenu } from "@/components/aura/export-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 import { ClusterTable, GraphLegend, GraphView, NodePanel } from "@/components/aura/similarity-graph"
 import { similarityGraph, type DedupGraphData, type Graph } from "@/lib/dedup/graph"
 import type { SemanticEdge } from "@/lib/dedup/semantic"
 import { layoutGraph } from "@/lib/dedup/layout"
-import { mergeCount, nextNeighbour } from "@/lib/dedup/nav"
+import { CLUSTER_COLUMNS, clusterRows, mergeCount, nextNeighbour } from "@/lib/dedup/nav"
 import { mergeQuality } from "@/lib/dedup/threshold"
 import { MATCH_THRESHOLD } from "@/lib/normalise"
 
@@ -24,6 +25,8 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
   semanticOn?: boolean; onToggleSemantic?: () => void; semanticEdges?: SemanticEdge[]
   showTable: boolean; onToggleTable?: () => void; quality: Quality; onSelect?: (id: string) => void; onMove?: (key: Key) => void
 }) {
+  const graphRef = useRef<HTMLDivElement>(null)
+  const getSvg = () => graphRef.current?.querySelector<SVGSVGElement>('svg[aria-label="Similarity graph"]') ?? null
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -34,13 +37,14 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
         <p aria-live="polite" className="text-sm">{mergeCount(graph, threshold)} merges at this threshold</p>
         <p className="text-xs text-lab-muted">Changing the threshold never changes stored data.</p>
         <p className="text-xs text-lab-muted">{quality ? `Merge precision ${fmt(quality.precision)} · recall ${fmt(quality.recall)} on ${quality.cases} golden cases` : "No golden dedup cases loaded."}</p>
-        <button type="button" aria-pressed={showTable} onClick={onToggleTable} className="h-9 rounded border border-lab-border-strong px-3 text-sm">Show as table</button>
+        <ExportMenu filename="similarity-clusters" columns={CLUSTER_COLUMNS} rows={clusterRows(graph, threshold)} getSvg={showTable ? undefined : getSvg} />
+        <button type="button" aria-pressed={showTable} onClick={onToggleTable} className="ml-2 h-9 rounded border border-lab-border-strong px-3 text-sm">Show as table</button>
         <button type="button" aria-pressed={!!semanticOn} onClick={onToggleSemantic} className="ml-2 h-9 rounded border border-lab-border-strong px-3 text-sm">Show meaning matches</button>
         <p className="text-xs text-lab-muted">Meaning matches are hints for a reviewer. They never merge rows.</p>
       </div>
       {showTable ? <ClusterTable graph={graph} threshold={threshold} /> : (
         <div className="space-y-3">
-          <GraphView graph={graph} positions={positions} selectedId={selectedId} threshold={threshold} onSelect={onSelect} onMove={onMove} semanticEdges={semanticOn ? semanticEdges : undefined} />
+          <div ref={graphRef}><GraphView graph={graph} positions={positions} selectedId={selectedId} threshold={threshold} onSelect={onSelect} onMove={onMove} semanticEdges={semanticOn ? semanticEdges : undefined} /></div>
           <GraphLegend semantic={semanticOn} />
           <NodePanel graph={graph} id={selectedId} threshold={threshold} />
         </div>
