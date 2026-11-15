@@ -1,5 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import { fittedStages } from "../lib/aura/stage-regions"
 
 test("rolling fitted stages identify rising, peaking, declining and stable curves", () => {
@@ -19,4 +20,15 @@ test("a stage transition is assigned at the corresponding week", () => {
   assert.equal(stages.length, values.length)
   assert.equal(stages.at(-1), "declining")
   assert.ok(stages.some((stage, i) => i > 0 && stage !== stages[i - 1]))
+})
+
+test("lifecycle chart shades fitted stages with tokens, patterns and a table alternative", () => {
+  const source = readFileSync("components/aura/lifecycle-charts.tsx", "utf8")
+  for (const [stage, token] of [["emerging", "stage-emerging"], ["peaking", "stage-peaking"], ["declining", "stage-declining"], ["parent_territory", "stage-parent-territory"]]) {
+    assert.ok(source.includes(`key: "${stage}"`))
+    assert.ok(source.includes(`token: "${token}"`))
+  }
+  assert.match(source, /<Area[^>]*fill=\{`url\(#aura-\$\{key\}\)`\}/)
+  assert.match(source, /aria-label="Aura stage regions"/)
+  assert.match(source, /label: "Fitted stage"/)
 })

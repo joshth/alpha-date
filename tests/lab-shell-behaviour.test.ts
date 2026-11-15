@@ -55,6 +55,8 @@ test("collapsed: narrow rail, labels kept as sr-only", () => {
   for (const i of LAB_NAV.flatMap((g) => g.items).filter((x) => !x.demoOnly)) {
     const link = tag(nav, new RegExp(`<a [^>]*href="${i.href}"[^>]*>[\\s\\S]*?</a>`))
     assert.ok(link.includes(`<span class="sr-only">${i.label}</span>`), i.label)
+    assert.ok(link.includes(`title="${i.label}"`), `${i.label} tooltip`)
+    assert.match(link, /<svg[^>]*aria-hidden="true"/)
   }
 })
 
