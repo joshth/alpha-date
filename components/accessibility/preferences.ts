@@ -37,6 +37,10 @@ export const DEFAULT_ACCESSIBILITY_PREFERENCES: AccessibilityPreferences = {
   largeControls: false,
 }
 
+export function accessibilityInitScript(): string {
+  return `(function(){var d=document.documentElement,b=document.body,p={};try{var raw=localStorage.getItem("${ACCESSIBILITY_STORAGE_KEY}");if(raw)p=JSON.parse(raw)||{}}catch(_){}var calm=typeof p.calmMotion==="boolean"?p.calmMotion:matchMedia("(prefers-reduced-motion: reduce)").matches;var contrast=typeof p.highContrast==="boolean"?p.highContrast:matchMedia("(prefers-contrast: more)").matches;d.setAttribute("data-high-contrast",String(contrast));d.setAttribute("data-text-size",String([100,125,150,200].includes(p.textSize)?p.textSize:100));b.setAttribute("data-accessibility-font",["system","atkinson","opendyslexic"].includes(p.font)?p.font:"system");b.setAttribute("data-line-spacing",["normal","relaxed","wide"].includes(p.lineSpacing)?p.lineSpacing:"normal");b.setAttribute("data-calm-motion",String(calm));b.setAttribute("data-large-controls",String(Boolean(p.largeControls)))})()`
+}
+
 const PRESETS: Record<Exclude<AccessibilityPreset, "Custom">, Omit<AccessibilityPreferences, "preset">> = {
   Vision: { font: "system", textSize: 125, lineSpacing: "normal", calmMotion: null, highContrast: true, largeControls: false },
   Motor: { font: "system", textSize: 100, lineSpacing: "normal", calmMotion: true, highContrast: null, largeControls: true },
