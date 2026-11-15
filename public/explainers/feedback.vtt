@@ -1,0 +1,13 @@
+WEBVTT
+
+00:00:00.400 --> 00:00:06.800
+I(t) is the share of people using the word. It rises as the word spreads, while Γ(t) starts low.
+
+00:00:06.800 --> 00:00:11.600
+After the peak, Γ keeps rising and pulls I(t) down.
+
+00:00:11.600 --> 00:00:17.800
+The more people have used it, the faster they move on.
+
+00:00:18.000 --> 00:00:25.000
+Γ is the recovery rate: how fast people in I move to R. In this model it grows over time.
