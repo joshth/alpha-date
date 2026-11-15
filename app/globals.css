@@ -145,6 +145,10 @@
     --lab-text: 250 9% 13%;
     --lab-text-muted: 249 4% 37%;
     --lab-on-primary: 0 0% 100%;
+    --lab-stage-emerging: 164 100% 24%;
+    --lab-stage-peaking: 39 100% 33%;
+    --lab-stage-declining: 202 100% 35%;
+    --lab-stage-parent-territory: 320 35% 49%;
   }
 }
 
@@ -181,4 +185,8 @@
   --lab-text: 250 9% 13%;
   --lab-text-muted: 249 4% 37%;
   --lab-on-primary: 0 0% 100%;
+  --lab-stage-emerging: 164 100% 24%;
+  --lab-stage-peaking: 39 100% 33%;
+  --lab-stage-declining: 202 100% 35%;
+  --lab-stage-parent-territory: 320 35% 49%;
 }
