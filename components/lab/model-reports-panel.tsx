@@ -123,3 +123,135 @@ function ModelDetail({ model, rule }: { model: ModelView; rule: ModelReports["ru
   )
 }
 
+function SettingsTable({ model, selected, onSelect }: { model: ModelView; selected: number; onSelect: (i: number) => void }) {
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Every setting for {model.label}</CardTitle></CardHeader>
+      <CardContent className="overflow-x-auto">
+        <table className="w-full min-w-[640px] text-left text-sm">
+          <thead><tr className="text-lab-muted"><th className="py-1">Temperature</th><th>H1</th><th>Recall</th><th>AUC</th><th>Rated too safe</th><th>Failed calls</th><th>Time</th><th>Result</th></tr></thead>
+          <tbody>
+            {model.settings.map((s, i) => (
+              <tr key={s.temperature} className={`border-t border-lab-border ${i === selected ? "bg-lab-raised" : ""}`}>
+                <td className="py-1"><button type="button" className="font-mono underline-offset-2 hover:underline" onClick={() => onSelect(i)}>{s.temperature}</button></td>
+                <td className="font-mono tabular-nums">{pct(s.hallucination.value)}</td>
+                <td className="font-mono tabular-nums">{pct(s.recall.value)}</td>
+                <td className="font-mono tabular-nums">{s.auc === null ? "n/a" : s.auc.toFixed(2)}</td>
+                <td className="font-mono tabular-nums">{pct(s.mislabel.value)}</td>
+                <td className="font-mono tabular-nums">{s.errors}/{s.calls}{s.reliable ? "" : " ⚠"}</td>
+                <td className="font-mono tabular-nums">{secs(s.meanLatencyMs)}</td>
+                <td><Badge variant={status(s).variant}>{status(s).text}</Badge></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
+  )
+}
+
+function CompareAll({ reports, onPick }: { reports: ModelReports; onPick: (id: string) => void }) {
+  const rows = compareRows(reports.models)
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle className="text-base">What the harness recommends</CardTitle></CardHeader>
+        <CardContent>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {reports.recommendations.map((r) => (
+              <li key={r.title} className="rounded-lg border border-lab-border p-3 text-sm">
+                <p className="font-medium">{r.title}</p>
+                <button type="button" className="font-mono text-sm text-lab-text underline-offset-2 hover:underline" onClick={() => onPick(r.setting.model)}>
+                  {reports.models.find((m) => m.id === r.setting.model)?.label ?? r.setting.model} @ {r.setting.temperature}
+                </button>
+                <p className="mt-1 text-lab-muted">{r.why}</p>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+      <Card><CardContent className="pt-6"><CompareH1RecallChart rows={rows} /></CardContent></Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card><CardContent className="pt-6"><CompareAucChart rows={rows} /></CardContent></Card>
+        <Card><CardContent className="pt-6"><CompareCostChart rows={rows} /></CardContent></Card>
+        <Card><CardContent className="pt-6"><CompareSpeedChart rows={rows} /></CardContent></Card>
+      </div>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Each model at its best setting</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead><tr className="text-lab-muted"><th className="py-1">Model</th><th>Temp.</th><th>H1</th><th>Recall</th><th>AUC</th><th>Cost / 1,000</th><th>Time</th><th>Result</th></tr></thead>
+            <tbody>
+              {reports.models.map((m) => {
+                const s = m.settings[m.bestIndex]
+                return (
+                  <tr key={m.id} className="border-t border-lab-border">
+                    <td className="py-1"><button type="button" className="underline-offset-2 hover:underline" onClick={() => onPick(m.id)}>{m.label}</button></td>
+                    <td className="font-mono tabular-nums">{s.temperature}</td>
+                    <td className="font-mono tabular-nums">{pct(s.hallucination.value)}</td>
+                    <td className="font-mono tabular-nums">{pct(s.recall.value)}</td>
+                    <td className="font-mono tabular-nums">{s.auc === null ? "n/a" : s.auc.toFixed(2)}</td>
+                    <td className="font-mono tabular-nums">{money(s.costPer1000Usd, !m.hosted)}</td>
+                    <td className="font-mono tabular-nums">{secs(s.meanLatencyMs)}</td>
+                    <td><Badge variant={status(s).variant}>{status(s).text}</Badge></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function ModelReportsPanel({ reports, initialModel }: { reports: ModelReports; initialModel?: string }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const valid = (id?: string) => id === ALL || reports.models.some((m) => m.id === id)
+  const [selected, setSelected] = useState(valid(initialModel) ? initialModel! : ALL)
+  const pick = (id: string) => {
+    setSelected(id)
+    router.replace(id === ALL ? pathname : `${pathname}?model=${encodeURIComponent(id)}`, { scroll: false })
+  }
+  const model = reports.models.find((m) => m.id === selected)
+  const date = new Date(reports.startedAt).toLocaleString("en-AU", { dateStyle: "medium", timeStyle: "short", timeZone: "Australia/Perth" })
+  const words = reports.models[0]?.settings[0]
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] font-semibold">Model reports</h1>
+          <p className="text-sm text-lab-muted">
+            Which AI should decode slang? {reports.models.length} models tested on the same answer key, from the saved sweep report.
+          </p>
+        </div>
+        <div className="w-64 space-y-1">
+          <label id="model-select-label" className="text-xs text-lab-muted">Model</label>
+          <Select value={selected} onValueChange={pick}>
+            <SelectTrigger aria-labelledby="model-select-label" className="bg-lab-input"><SelectValue /></SelectTrigger>
+            {/* No portal: the menu stays inside .lab, so it gets the Lab theme and fonts. */}
+            <SelectPrimitive.Content position="popper" sideOffset={4}
+              className="relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-lab-border bg-lab-raised text-lab-text shadow-md">
+              <SelectPrimitive.Viewport className="w-full min-w-[var(--radix-select-trigger-width)] p-1">
+              <SelectItem value={ALL}>All {reports.models.length} models (compare)</SelectItem>
+              <SelectSeparator />
+              {reports.models.map((m) => (
+                <SelectItem key={m.id} value={m.id}>{m.label}<span className="ml-2 text-xs text-lab-muted">{m.hosted ? "OpenAI" : "local"}</span></SelectItem>
+              ))}
+              </SelectPrimitive.Viewport>
+            </SelectPrimitive.Content>
+          </Select>
+        </div>
+      </div>
+
+      <p className="text-xs text-lab-muted">
+        Saved report {date} (Perth) · {reports.split} split{words ? `, ${words.calls / words.runs} words × ${words.runs} repeats per setting` : ""} · answer key v{reports.datasetVersion} · prompt {reports.promptVersion}
+        {reports.mock && " · MOCK model"} · rule: H1 ≤ {pct(reports.rule.maxH1)}, recall ≥ {pct(reports.rule.minRecall)}, failed calls ≤ {pct(reports.rule.maxErrorRate)} ·{" "}
+        <span className="font-mono text-xs" title={`eval/reports/${reports.file}`}>{reports.file.split("-sweep-")[0]} combined report</span>
+      </p>
+
+      {model ? <ModelDetail key={model.id} model={model} rule={reports.rule} /> : <CompareAll reports={reports} onPick={pick} />}
+    </div>
+  )
+}
