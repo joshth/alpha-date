@@ -12,15 +12,21 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 
 const SOURCE = { vendored: "Google Trends", synthetic: "this site's search events" }
 const mono = "font-mono tabular-nums whitespace-nowrap"
-type DashboardSortKey = "term" | "aura"
+type DashboardSortKey = "term" | "aura" | "confidence"
 type SortDirection = "ascending" | "descending"
 
 export function sortAuraDashboardRows(rows: AuraDashboardRow[], key: DashboardSortKey, direction: SortDirection) {
   return rows
     .map((row, index) => ({ row, index }))
     .sort((a, b) => {
-      const value = (row: AuraDashboardRow) => key === "term" ? row.term : row.stage ? AURA_STAGE_LABELS[row.stage] : "No stage yet"
-      const compared = value(a.row).localeCompare(value(b.row), "en-AU", { sensitivity: "base" })
+      if (key === "confidence" && (a.row.confidence === null || b.row.confidence === null)) {
+        if (a.row.confidence !== b.row.confidence) return a.row.confidence === null ? 1 : -1
+        return a.index - b.index
+      }
+      const compared = key === "confidence"
+        ? a.row.confidence! - b.row.confidence!
+        : (key === "term" ? a.row.term : a.row.stage ? AURA_STAGE_LABELS[a.row.stage] : "No stage yet")
+          .localeCompare(key === "term" ? b.row.term : b.row.stage ? AURA_STAGE_LABELS[b.row.stage] : "No stage yet", "en-AU", { sensitivity: "base" })
       return compared === 0 ? a.index - b.index : direction === "ascending" ? compared : -compared
     })
     .map(({ row }) => row)
@@ -46,15 +52,17 @@ export function AuraDashboardTable({ rows }: { rows: AuraDashboardRow[] }) {
       <h2 id="aura-dashboard-heading" className="text-base font-semibold">Aura by term</h2>
       {rows.length ? (
         <Table>
-          <TableCaption>Aura lifecycle stage for every term with recorded search data</TableCaption>
+          <TableCaption>Aura lifecycle stage and fit confidence for every term with recorded search data</TableCaption>
           <TableHeader><TableRow>
             {header("term", "Term")}
             {header("aura", "Aura")}
+            {header("confidence", "Confidence")}
           </TableRow></TableHeader>
-          <TableBody>{sortedRows.map(({ term, stage }) => (
+          <TableBody>{sortedRows.map(({ term, stage, confidence }) => (
             <TableRow key={term}>
               <TableCell>{term}</TableCell>
               <TableCell>{stage ? AURA_STAGE_LABELS[stage] : "No stage yet"}</TableCell>
+              <TableCell className="font-mono tabular-nums">{confidence == null ? "—" : `${Math.round(confidence * 100)}%`}</TableCell>
             </TableRow>
           ))}</TableBody>
         </Table>

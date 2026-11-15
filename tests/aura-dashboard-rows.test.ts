@@ -8,15 +8,15 @@ test("Aura dashboard rows keep every term and show no stage for unusable fits", 
   assert.equal(typeof makeRows, "function", "Aura dashboard should map fit outcomes into table rows")
 
   const rows = await makeRows(["bussin", "unknown", "steady"], async (term: string) => {
-    if (term === "bussin") return { kind: "fit", fit: { stage: "emerging" } }
+    if (term === "bussin") return { kind: "fit", fit: { stage: "emerging", confidence: 0.82 } }
     if (term === "unknown") return { kind: "no_data", term, suggestions: [] }
-    return { kind: "fit", fit: { stage: null } }
+    return { kind: "fit", fit: { stage: null, confidence: 0.27 } }
   })
 
   assert.deepEqual(rows, [
-    { term: "bussin", stage: "emerging" },
-    { term: "unknown", stage: null },
-    { term: "steady", stage: null },
+    { term: "bussin", stage: "emerging", confidence: 0.82 },
+    { term: "unknown", stage: null, confidence: null },
+    { term: "steady", stage: null, confidence: 0.27 },
   ])
 })
 
@@ -26,7 +26,7 @@ test("concurrent dashboard requests share one precomputation and cache its rows"
     async () => ["bussin", "new word"],
     async (terms) => {
       builds++
-      return terms.map((term) => ({ term, stage: term === "bussin" ? "emerging" as const : null }))
+      return terms.map((term) => ({ term, stage: term === "bussin" ? "emerging" as const : null, confidence: null }))
     },
     () => new Date("2026-11-15T00:00:00Z"),
   )

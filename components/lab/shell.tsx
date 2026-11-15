@@ -44,7 +44,7 @@ export function shouldFocusSearch(e: {
   return !(t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName ?? "")))
 }
 
-export function LabShellView({ pathname, userName, mockLlm, showDemoPages = false, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer, themePref = "system", onThemeChange }: {
+export function LabShellView({ pathname, userName, mockLlm, showDemoPages = false, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer, themePref = "system", onThemeChange, navigationProgress = null, navigationComplete = false }: {
   pathname: string
   userName: string
   mockLlm: boolean
@@ -56,6 +56,8 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
   onToggleDrawer?: () => void
   themePref?: ThemePref
   onThemeChange?: (pref: ThemePref) => void
+  navigationProgress?: number | null
+  navigationComplete?: boolean
 }) {
   const initials = userName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
   const active = activeHref(pathname)
@@ -84,6 +86,21 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
         {mockLlm ? "mock AI and moderation" : "real AI and moderation (your own key)"}
        </p>
       </header>
+      <div
+        role={navigationProgress === null ? undefined : "progressbar"}
+        aria-label={navigationProgress === null ? undefined : "Loading page"}
+        aria-valuemin={navigationProgress === null ? undefined : 0}
+        aria-valuemax={navigationProgress === null ? undefined : 100}
+        aria-valuenow={navigationProgress === null ? undefined : navigationProgress}
+        aria-hidden={navigationComplete || undefined}
+        className="h-0.5 bg-transparent"
+      >
+        <span
+          aria-hidden="true"
+          className={`block h-full origin-left bg-primary transition-transform transition-opacity duration-150 ease-out motion-reduce:transition-none ${navigationProgress === null || navigationComplete ? "opacity-0" : "opacity-100"}`}
+          style={{ transform: `scaleX(${(navigationProgress ?? 0) / 100})` }}
+        />
+      </div>
       <div className="flex flex-1">
         {drawerOpen && <div data-drawer-backdrop aria-hidden="true" onClick={onToggleDrawer} className="fixed inset-0 z-30 bg-lab-chrome/70 md:hidden" />}
         <aside id="lab-sidebar" className={`shrink-0 flex-col border-r border-lab-border bg-lab-chrome ${drawerOpen ? "fixed inset-y-0 left-0 z-40 flex w-60" : `hidden md:flex ${collapsed ? "md:w-14" : "w-60"}`}`}>

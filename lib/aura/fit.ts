@@ -7,7 +7,7 @@ export type AuraFitResult =
   | { kind: "fit"; fit: SirsFit; source: "vendored" | "synthetic"; stageNote: string | null }
   | { kind: "no_data"; term: string; suggestions: string[] }
 
-export type AuraDashboardRow = { term: string; stage: AuraStage | null }
+export type AuraDashboardRow = { term: string; stage: AuraStage | null; confidence: number | null }
 
 export async function createAuraDashboardRows(
   terms: string[],
@@ -16,9 +16,13 @@ export async function createAuraDashboardRows(
   return Promise.all(terms.map(async (term) => {
     try {
       const outcome = await fitTerm(term)
-      return { term, stage: outcome.kind === "fit" ? outcome.fit.stage : null }
+      return {
+        term,
+        stage: outcome.kind === "fit" ? outcome.fit.stage : null,
+        confidence: outcome.kind === "fit" ? outcome.fit.confidence : null,
+      }
     } catch {
-      return { term, stage: null }
+      return { term, stage: null, confidence: null }
     }
   }))
 }
