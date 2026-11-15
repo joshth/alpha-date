@@ -9,6 +9,7 @@ const activity: SafetyActivity = {
   period: { from: "2026-11-01T12:00:00.000Z", to: "2026-11-02T12:00:00.000Z" },
   evaluated: 5, allowed: 2, blocked: 3, blockedRate: 0.6,
   byOutcome: { safe: 2, refuse: 1, safeguarding: 1, gentle_support: 1 },
+  supportCategories: { suicide_self_harm: 0, violence_threat: 0, eating_disorder: 0, sexual_exploitation: 0, bullying_harassment: 0, multiple: 1, uncategorized: 1 },
 }
 const user = { id: "fixture-reviewer", name: "Synthetic reviewer", email: "reviewer@example.test" }
 function dependencies(readSafetyActivity = async (_period: { from: string; to: string }) => activity) {
