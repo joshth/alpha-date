@@ -76,6 +76,13 @@ test("LifecycleTab: initial term is prefilled and fitted on mount", () => {
   assert.match(readFileSync("components/aura/lifecycle-tab.tsx", "utf8"), /useEffect\([\s\S]*initialTerm[\s\S]*fitAction/)
 })
 
+test("LifecycleTab keeps a search form that opens the term route", () => {
+  const source = readFileSync("components/aura/lifecycle-tab.tsx", "utf8")
+  assert.match(source, /auraTermPath\(value\)/)
+  assert.match(source, /window\.location\.assign/)
+  assert.match(html.tab, /role="search"/)
+})
+
 test("pending text lives in the module", () => {
   assert.ok(readFileSync("components/aura/lifecycle-tab.tsx", "utf8").includes("Fitting the SIRS model…"))
 })
