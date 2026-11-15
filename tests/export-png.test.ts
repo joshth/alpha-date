@@ -51,3 +51,12 @@ test("pngFilename", () => {
   assert.equal(pngFilename("Similarity Graph", new Date(2026, 10, 4, 12)), "similarity-graph-2026-11-04.png")
   assert.equal(pngFilename("", new Date(2026, 10, 4, 12)), "export-2026-11-04.png")
 })
+
+// An image cannot use the page's web fonts, so without a family the text falls back to a serif face.
+test("prepareSvgForExport gives the image a sans-serif font family, and keeps one that is already set", () => {
+  const out = prepareSvgForExport('<svg viewBox="0 0 10 10"><text>2026-01</text></svg>', { width: 10, height: 10 }, "white")
+  assert.match(out, /<svg[^>]*\sfont-family="[^"]*sans-serif"/)
+  const kept = prepareSvgForExport('<svg font-family="Courier" viewBox="0 0 10 10"></svg>', { width: 10, height: 10 }, "white")
+  assert.equal((kept.match(/font-family=/g) ?? []).length, 1)
+  assert.match(kept, /font-family="Courier"/)
+})
