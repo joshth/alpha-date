@@ -60,6 +60,33 @@ Each chart has:
 
 Chart points use a roving tab stop: one Tab press enters the chart and the arrow keys, Home and End move between points, with the focused point shown in text above the chart.
 
+## Trend you can read or hear
+
+Under the stat row, the trend sentence is always shown. Below it, a closed disclosure called **Trend table and sound** opens to show a **Play trend** button, a **Volume** slider, and a table of the weekly fitted points in the 180-day window. The table has a caption and header cells.
+
+Pressing **Play trend** plays the fitted curve `I(t)` as pitch over about 3 seconds. A higher value is a higher note. The curve is cut to at most 24 notes, and each note is snapped to a C major pentatonic scale over two octaves, so it sounds like a tune and not a siren.
+
+After the curve, a short cue for the stage plays:
+
+| Stage | Cue |
+|---|---|
+| Emerging | Two rising notes (C up to G) |
+| Peaking | A rising four-note chime (C, E, G, C) |
+| Declining | Two falling notes (G down to C) |
+| Parent territory | A tritone (C then F sharp), which sounds unsettled |
+
+Sound never plays on its own. It starts only when the button is pressed, the button turns into **Stop** while it plays, and the slider sets the volume for the next play. This follows WCAG 1.4.2 Audio Control.
+
+A term with "No stage yet" keeps the sentence and the table but has no **Play trend** button.
+
+The idea comes from Enhanced Listen Mode in The Last of Us Part II, where pitch follows height.
+
+Files:
+
+- `lib/aura/sonify.ts` turns the curve into notes, builds the stage cues, and plays them with Web Audio.
+- `components/aura/trend-player.tsx` holds the button and volume.
+- `components/aura/aura-trend.tsx` renders the sentence, disclosure and table.
+
 ## Dedup page
 
 The counter shows what normalisation did to the suggestions table. The table already merges exact matches on trimmed lower case, so that is the baseline. The counter then shows:

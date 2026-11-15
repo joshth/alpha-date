@@ -7,7 +7,7 @@ import { drawerFocusTarget } from "./drawer-focus"
 import { applyThemePref, readThemePref, writeThemePref, type ThemePref } from "./theme"
 import { LabShellView, shouldFocusSearch } from "./shell"
 
-export function LabShell(props: { userName: string; mockLlm: boolean; children: React.ReactNode }) {
+export function LabShell(props: { userName: string; mockLlm: boolean; showDemoPages?: boolean; children: React.ReactNode }) {
   const pathname = usePathname() ?? "/lab"
   const [collapsed, setCollapsed] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)

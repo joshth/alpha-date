@@ -52,7 +52,7 @@ test("collapsed: narrow rail, labels kept as sr-only", () => {
   assert.match(collapseBtn(h), /aria-expanded="false"[\s\S]*Expand sidebar/)
   assert.ok(classes(aside(h)).includes("md:w-14"))
   const nav = tag(h, /<nav aria-label="Lab"[\s\S]*?<\/nav>/)
-  for (const i of LAB_NAV.flatMap((g) => g.items)) {
+  for (const i of LAB_NAV.flatMap((g) => g.items).filter((x) => !x.demoOnly)) {
     const link = tag(nav, new RegExp(`<a [^>]*href="${i.href}"[^>]*>[\\s\\S]*?</a>`))
     assert.ok(link.includes(`<span class="sr-only">${i.label}</span>`), i.label)
   }

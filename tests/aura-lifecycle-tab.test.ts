@@ -73,3 +73,13 @@ test("LifecycleTab: labelled form, Fit button, empty polite live region", () => 
 test("pending text lives in the module", () => {
   assert.ok(readFileSync("components/aura/lifecycle-tab.tsx", "utf8").includes("Fitting the SIRS model…"))
 })
+
+test("fit: the trend expands to a weekly table and Play trend; no stage has no Play trend", () => {
+  const h = html.vendored
+  assert.match(h, /<summary[^>]*>Trend table and sound<\/summary>/)
+  assert.match(h, /<caption[^>]*>[^<]*rizz[^<]*<\/caption>/)
+  assert.match(h, /<button[^>]*>Play trend<\/button>/)
+  assert.equal(h.split(esc(trendSentence(fit as never))).length, 2, "the sentence is shown once")
+  assert.match(html.nullStage, /<summary[^>]*>Trend table and sound<\/summary>/)
+  assert.doesNotMatch(html.nullStage, /Play trend/)
+})

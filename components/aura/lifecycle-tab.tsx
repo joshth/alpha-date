@@ -1,10 +1,10 @@
 "use client"
 import { useId, useState, useTransition } from "react"
 import { AuraBadge } from "./aura-badge"
+import { AuraTrend } from "./aura-trend"
 import { LifecycleCharts } from "./lifecycle-charts"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AURA_STAGE_LABELS } from "@/lib/aura"
-import { trendSentence } from "@/lib/aura/trend-text"
 import type { AuraFitOutcome } from "@/app/lab/actions"
 
 const SOURCE = { vendored: "Google Trends", synthetic: "this site's search events" }
@@ -44,7 +44,7 @@ export function LifecycleResult({ outcome, onPick }: { outcome: AuraFitOutcome; 
           </div>
         ))}
       </dl>
-      <p className="text-sm">{trendSentence(fit)}</p>
+      <AuraTrend fit={fit} />
       {stageNote && <p className="text-sm text-lab-muted">{stageNote}</p>}
       <p className="text-xs text-lab-muted">Source: {SOURCE[source]}</p>
     </div>

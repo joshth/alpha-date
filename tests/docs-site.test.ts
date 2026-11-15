@@ -285,3 +285,20 @@ test("the Aura page and the introduction link to the dashboard page, and the Aur
   assert.match(read("docs/intro.mdx"), /\]\(\.\/features\/aura-dashboard\.md\)/)
   assert.doesNotMatch(read("docs/features/aura.md"), /AuraBadge[^\n]*still to come/)
 })
+
+test("the dashboard page documents the trend you can read or hear", () => {
+  const section = read("docs/features/aura-dashboard.md").split("## Trend you can read or hear")[1]?.split("\n## ")[0] ?? ""
+  assert.ok(section, "a section called Trend you can read or hear")
+  // What the reviewer sees and presses.
+  for (const fact of ["Trend table and sound", "Play trend", "Stop", "Volume", "180-day window"]) assert.ok(section.includes(fact), fact)
+  // Sound is opt-in (WCAG 1.4.2) and there is none without a stage.
+  assert.match(section, /never plays on its own/i)
+  assert.match(section, /1\.4\.2/)
+  assert.match(section, /No stage yet/)
+  // How the curve becomes sound, and the cue for each stage.
+  assert.match(section, /pentatonic/i)
+  assert.match(section, /about (3|three) seconds/i)
+  for (const stage of ["Emerging", "Peaking", "Declining", "Parent territory"]) assert.match(section, new RegExp(`\\| ${stage} +\\|`), stage)
+  assert.match(section, /tritone/i)
+  for (const file of ["lib/aura/sonify.ts", "components/aura/trend-player.tsx", "components/aura/aura-trend.tsx"]) assert.ok(section.includes(file), file)
+})

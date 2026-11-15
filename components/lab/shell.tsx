@@ -32,10 +32,11 @@ export function shouldFocusSearch(e: {
   return !(t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName ?? "")))
 }
 
-export function LabShellView({ pathname, userName, mockLlm, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer, themePref = "system", onThemeChange }: {
+export function LabShellView({ pathname, userName, mockLlm, showDemoPages = false, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer, themePref = "system", onThemeChange }: {
   pathname: string
   userName: string
   mockLlm: boolean
+  showDemoPages?: boolean
   children: React.ReactNode
   collapsed?: boolean
   drawerOpen?: boolean
@@ -78,7 +79,7 @@ export function LabShellView({ pathname, userName, mockLlm, children, collapsed 
               <div key={group.label}>
                 <h2 className={`${collapsed ? "sr-only" : ""} px-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-lab-muted`}>{group.label}</h2>
                 <ul>
-                  {group.items.map((item) => (
+                  {group.items.filter((item) => !item.demoOnly || showDemoPages).map((item) => (
                     <li key={item.href}>
                       <Link
                         href={item.href}
