@@ -16,7 +16,7 @@ export function prepareSvgForExport(svg: string, size: { width: number; height: 
   return clean.replace(/<svg\b([^>]*)>/, (_, attrs: string) => {
     const a = attrs.replace(/\s(width|height)="[^"]*"/g, "")
     const add = (cond: boolean, s: string) => (cond ? "" : ` ${s}`)
-    return `<svg${a}${add(/\sxmlns=/.test(a), 'xmlns="http://www.w3.org/2000/svg"')}${add(/xmlns:xlink=/.test(a), 'xmlns:xlink="http://www.w3.org/1999/xlink"')}${add(/\sviewBox=/.test(a), `viewBox="0 0 ${size.width} ${size.height}"`)} width="${size.width}" height="${size.height}"><rect width="100%" height="100%" fill="${background}"/>`
+    return `<svg${a}${add(/\sxmlns=/.test(a), 'xmlns="http://www.w3.org/2000/svg"')}${add(/xmlns:xlink=/.test(a), 'xmlns:xlink="http://www.w3.org/1999/xlink"')}${add(/\sviewBox=/.test(a), `viewBox="0 0 ${size.width} ${size.height}"`)}${add(/\sfont-family=/.test(a), 'font-family="IBM Plex Sans, Helvetica, Arial, sans-serif"')} width="${size.width}" height="${size.height}"><rect width="100%" height="100%" fill="${background}"/>`
   })
 }
 
