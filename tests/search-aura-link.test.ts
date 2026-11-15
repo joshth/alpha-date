@@ -14,6 +14,6 @@ test("found and discovered search results link to Aura with the encoded query", 
 })
 
 test("Aura page passes its term search param to LifecycleTab", () => {
-  assert.match(auraPage, /searchParams/)
-  assert.match(auraPage, /initialTerm=\{[^}]*term[^}]*\}/)
+  assert.match(auraPage, /const term = params\.term/)
+  assert.match(auraPage, /<LifecycleTab fitAction=\{fitAuraTerm\} initialTerm=\{initialTerm\}/)
 })
