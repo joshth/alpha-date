@@ -2,6 +2,16 @@ import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
+import { existsSync, readFileSync } from "node:fs"
+import {
+  applyPreset,
+  DEFAULT_ACCESSIBILITY_PREFERENCES,
+  loadPreferences,
+  resolvePreferences,
+  savePreferences,
+  shouldToggleHighContrast,
+  updatePreference,
+} from "../components/accessibility/preferences"
 
 const markup = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
   const React = require("react");
@@ -20,4 +30,40 @@ test("accessibility panel offers presets, display settings and a live result pre
 
 test("the high-contrast shortcut is exposed to assistive technology", () => {
   assert.match(markup, /aria-keyshortcuts="Control\+Shift\+H Meta\+Shift\+H"/)
+})
+
+test("presets change the intended settings and individual edits become custom", () => {
+  const vision = applyPreset("Vision")
+  assert.equal(vision.highContrast, true)
+  assert.equal(vision.textSize, 125)
+  const motor = applyPreset("Motor")
+  assert.equal(motor.calmMotion, true)
+  assert.equal(motor.largeControls, true)
+  const reading = applyPreset("Reading")
+  assert.equal(reading.font, "opendyslexic")
+  assert.equal(reading.lineSpacing, "wide")
+  assert.equal(updatePreference(vision, "textSize", 150).preset, "Custom")
+})
+
+test("unset motion, contrast and theme follow the OS preferences", () => {
+  assert.deepEqual(resolvePreferences(DEFAULT_ACCESSIBILITY_PREFERENCES, {
+    reducedMotion: true, highContrast: true, darkTheme: true,
+  }), { ...DEFAULT_ACCESSIBILITY_PREFERENCES, calmMotion: true, highContrast: true, darkTheme: true })
+})
+
+test("blocked or invalid storage leaves usable defaults and shortcut handling stays out of text fields", () => {
+  const blocked = { getItem() { throw new Error("blocked") }, setItem() { throw new Error("blocked") }, removeItem() { throw new Error("blocked") } }
+  assert.deepEqual(loadPreferences(blocked), DEFAULT_ACCESSIBILITY_PREFERENCES)
+  assert.equal(savePreferences(blocked, DEFAULT_ACCESSIBILITY_PREFERENCES), false)
+  assert.equal(shouldToggleHighContrast({ key: "h", ctrlKey: true, shiftKey: true, target: { tagName: "INPUT" } }), false)
+  assert.equal(shouldToggleHighContrast({ key: "H", metaKey: true, shiftKey: true, target: { tagName: "BODY" } }), true)
+})
+
+test("preset contents and OS defaults are documented", () => {
+  const path = "docs/features/accessibility-settings.md"
+  assert.ok(existsSync(path), "the accessibility settings guide exists")
+  const guide = readFileSync(path, "utf8")
+  for (const detail of ["Vision", "Motor", "Reading", "System preferences", "Ctrl", "Shift", "H"]) {
+    assert.ok(guide.includes(detail), `${detail} is explained in the guide`)
+  }
 })
