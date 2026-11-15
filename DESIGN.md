@@ -24,6 +24,10 @@ colors:
   control-light: "#e2e1e6"
   text-light: "#1f1e24"
   text-muted-light: "#5c5b62"
+  stage-emerging-light: "#007a5a"
+  stage-peaking-light: "#a86e00"
+  stage-declining-light: "#0072b2"
+  stage-parent-territory-light: "#a8508a"
   stage-emerging: "#009E73"
   stage-peaking: "#E69F00"
   stage-declining: "#56B4E9"
@@ -127,6 +131,7 @@ A work tool for reviewers and educators, not a marketing page. It is calm and de
 - **Text (#ececef)** at 15:1 on surface; **Text muted (#979699)** at 6:1 for secondary text.
 - **Primary (#22c393):** the project teal, lightened until it passes 4.5:1 on surface (7.9:1). Focus rings and links only, never a fill for large areas. Light mode uses #147a62.
 - **Stage colours (Okabe-Ito, colour-blind safe):** emerging #009E73, peaking #E69F00, declining #56B4E9, parent territory #CC79A7, no stage = text muted. Colour is never the only channel: every stage also has a text label and a shape (↗ ▲ ↘ ●), and every chart series has its own line style.
+- **Light mode darkens the stage colours** so the shapes keep at least 3.6:1 on every light surface: emerging #007a5a, peaking #a86e00, declining #0072b2, parent territory #a8508a.
 - Components use theme tokens only. No raw hex values in components.
 
 ## Typography

@@ -41,9 +41,9 @@ test("hexToHsl converts the near-black and near-white greys", () => {
   assert.deepEqual(hexToHsl("#ececef"), [240, 9, 93])
 })
 
-test("DESIGN.md lists the dark and light tokens", () => {
+test("DESIGN.md lists the dark and light tokens, with a light-mode colour for every Aura stage", () => {
   assert.equal(dark.length, 15)
-  assert.equal(light.length, 10)
+  assert.equal(light.length, 14) // the ten surface/text tokens plus a darker light-mode colour for each Aura stage
 })
 
 test("globals.css .lab block defines every dark DESIGN.md token as HSL", () => {
