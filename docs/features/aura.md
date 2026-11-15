@@ -38,6 +38,10 @@ The stage rule, the lifecycle charts and the TypeScript scorer all work today (s
 
 :::
 
+### Accessible badge
+
+`<AuraBadge />` presents the stage as text, a distinct decorative SVG shape and a colour. Its accessible name includes the stage and confidence, and low-confidence and insufficient-history results are labelled honestly. The **What does this mean?** control opens a keyboard-accessible glossary covering all four stages and **No stage yet**; Escape returns focus to the control.
+
 ## How a term's lifecycle is modelled {#model}
 
 Slang spreads like a cold: people pick it up from each other, use it for a while, then lose interest. Aura fits each term's weekly search counts with a modified **SIRS** model, a standard model of how things spread through a population:
