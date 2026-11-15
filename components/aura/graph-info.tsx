@@ -33,7 +33,7 @@ export function GraphInfoButton({ id }: { id: GraphInfoId }) {
           <Info aria-hidden="true" className="h-4 w-4" />
         </button>
       </SheetTrigger>
-      <SheetContent className="overflow-y-auto border-lab-border bg-lab-chrome text-lab-text sm:max-w-md">
+      <SheetContent className="lab overflow-y-auto border-lab-border bg-lab-chrome text-lab-text sm:max-w-md">
         <SheetTitle className="sr-only">{title}</SheetTitle>
         <SheetDescription className="sr-only">Explanation and short video for this chart</SheetDescription>
         <GraphInfoView id={id} />
