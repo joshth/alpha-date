@@ -155,3 +155,17 @@ for (const instant of ["2026-11-02T12:00:00.000Z", "2026-11-02T12:00:00.999Z"]) 
     assert.equal((await load({})).status, "ready")
   })
 }
+
+test("explicit custom period uses submitted UTC bounds and retains its fields", async () => {
+  const calls: unknown[] = []
+  const load = createSafetyActivityView(dependencies(async period => { calls.push(period); return activity }))
+  const from = "2026-11-02T15:30"
+  const to = "2026-11-09T16:00"
+  assert.deepEqual(await load({period: "custom", from, to}), {status: "ready", from, to, activity})
+  assert.deepEqual(calls, [{from: from + ":00Z", to: to + ":00Z"}])
+})
+
+test("custom selection without bounds fails without reading", async () => {
+  const load = createSafetyActivityView(dependencies(async () => { assert.fail("No read expected") }))
+  assert.equal((await load({period: "custom"})).status, "error")
+})
