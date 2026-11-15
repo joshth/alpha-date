@@ -7,7 +7,7 @@ import { LAB_NAV } from "../components/lab/nav"
 // Every app/lab route that has a page.tsx, as a URL path.
 function labRoutes(dir = "app/lab", base = "/lab"): string[] {
   const here = existsSync(join(dir, "page.tsx")) ? [base] : []
-  const subdirs = readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory())
+  const subdirs = readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory() && !d.name.startsWith("["))
   return [...here, ...subdirs.flatMap((d) => labRoutes(join(dir, d.name), `${base}/${d.name}`))]
 }
 

@@ -53,8 +53,7 @@ def _result(name, generation, weeks, y, c, res, now):
     }
 
 
-def fit_term(term: str, now: str | None = None) -> dict:
-    curves, data = _load()
+def _fit_term(term: str, now: str | None, curves: dict, data: dict) -> dict:
     matched, _ = resolve_terms([term], curves)
     if not matched:
         raise LookupError(term)
@@ -62,6 +61,10 @@ def fit_term(term: str, now: str | None = None) -> dict:
     c, (td, res) = curves[name], data[name]
     weeks = pd.date_range(td.start, periods=td.n, freq="7D")
     return _result(name, c["generation"], weeks, td.y, c, res, now)
+
+
+def fit_term(term: str, now: str | None = None) -> dict:
+    return _fit_term(term, now, *_load())
 
 
 @functools.lru_cache(maxsize=None)
@@ -85,14 +88,50 @@ def fit_counts(term: str, weeks: list[str], counts: list[float], generation: str
     return _result(td.term, generation, wk, y, c, r, now)
 
 
+def fit_terms(terms: list[str], now: str | None = None, counts_by_term: dict | None = None) -> dict:
+    """Fit many terms after loading the shared vendored alignment only once."""
+    curves, data = _load()
+    counts_by_term = counts_by_term or {}
+    results = {}
+    for term in terms:
+        try:
+            fit = _fit_term(term, now, curves, data)
+            results[term] = {"kind": "fit", "source": "vendored", "fit": fit}
+            continue
+        except LookupError:
+            counts = counts_by_term.get(term)
+            if counts and np.asarray(counts.get("counts", []), dtype=float).any():
+                try:
+                    fit = fit_counts(term, counts["weeks"], counts["counts"], counts.get("generation", "gen_alpha"), now)
+                    results[term] = {"kind": "fit", "source": "synthetic", "fit": fit}
+                    continue
+                except ValueError:
+                    pass
+        results[term] = {"kind": "no_data"}
+    return results
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m sirs.fit_term", description=__doc__)
-    ap.add_argument("term")
+    ap.add_argument("term", nargs="?")
     ap.add_argument("--json", action="store_true", help="accepted for clarity; output is always JSON")
     ap.add_argument("--now", help="YYYY-MM-DD (default: last observed week)")
+    ap.add_argument("--batch", action="store_true", help="read multiple terms and fallback counts from JSON stdin")
     ap.add_argument("--counts", action="store_true",
                     help='read {"weeks": [...], "counts": [...], "generation"?} JSON from stdin instead of terms.csv')
     args = ap.parse_args(argv)
+    if args.batch:
+        if args.term or args.counts:
+            ap.error("--batch cannot be combined with a term or --counts")
+        payload = json.load(sys.stdin)
+        terms = payload.get("terms") if isinstance(payload, dict) else None
+        counts = payload.get("counts", {}) if isinstance(payload, dict) else {}
+        if not isinstance(terms, list) or not all(isinstance(term, str) for term in terms):
+            ap.error("--batch input needs a terms array")
+        print(json.dumps(fit_terms(terms, args.now, counts)))
+        return 0
+    if not args.term:
+        ap.error("give a term or use --batch")
     try:
         if args.counts:
             d = json.load(sys.stdin)

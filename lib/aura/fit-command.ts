@@ -7,6 +7,7 @@ import { plotCommand, type PlotCommand } from "./plot-command"
 export const MODEL_VERSION = "sirs-trackB-feedback/1"
 
 export type FitCommand = PlotCommand & { input?: string }
+export type SyntheticCountsByTerm = Record<string, { weeks: string[]; counts: number[]; generation?: string }>
 
 export function fitCommand(term: string, opts: { now?: string; counts?: { weeks: string[]; counts: number[] } } = {},
   env: NodeJS.Dict<string> = process.env, repoRoot = process.cwd(), platform: NodeJS.Platform = process.platform): FitCommand {
@@ -16,6 +17,17 @@ export function fitCommand(term: string, opts: { now?: string; counts?: { weeks:
     ...base,
     args: ["-m", "sirs.fit_term", term, "--json", ...(opts.now ? ["--now", opts.now] : []), ...(opts.counts ? ["--counts"] : [])],
     ...(opts.counts ? { input: JSON.stringify(opts.counts) } : {}),
+  }
+}
+
+export function fitBatchCommand(terms: string[], opts: { now?: string; counts?: SyntheticCountsByTerm } = {},
+  env: NodeJS.Dict<string> = process.env, repoRoot = process.cwd(), platform: NodeJS.Platform = process.platform): FitCommand {
+  if (!terms.length) throw new Error("fitBatchCommand needs at least one term")
+  const base = plotCommand(["batch"], env, repoRoot, platform)
+  return {
+    ...base,
+    args: ["-m", "sirs.fit_term", "--json", "--batch", ...(opts.now ? ["--now", opts.now] : [])],
+    input: JSON.stringify({ terms, counts: opts.counts ?? {} }),
   }
 }
 
@@ -31,10 +43,26 @@ const sirsFit = z.object({
 
 export type SirsFit = z.infer<typeof sirsFit>
 
+export type ParsedBatchFit =
+  | { kind: "fit"; source: "vendored" | "synthetic"; fit: SirsFit }
+  | { kind: "no_data" }
+
 export function parseFit(stdout: string): { kind: "fit"; fit: SirsFit } | { kind: "no_data" } {
   const data = JSON.parse(stdout)
   if (data?.error === "no_data") return { kind: "no_data" }
   return { kind: "fit", fit: sirsFit.parse(data) }
+}
+
+export function parseFitBatch(stdout: string): Record<string, ParsedBatchFit> {
+  const data = JSON.parse(stdout)
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("SIRS batch output must be an object")
+  return Object.fromEntries(Object.entries(data).map(([term, value]) => {
+    if (value && typeof value === "object" && "kind" in value && value.kind === "no_data") {
+      return [term, { kind: "no_data" }]
+    }
+    const wrapper = z.object({ kind: z.literal("fit"), source: z.enum(["vendored", "synthetic"]), fit: sirsFit }).parse(value)
+    return [term, wrapper]
+  }))
 }
 
 export function runFit(c: FitCommand): Promise<{ code: number; stdout: string }> {

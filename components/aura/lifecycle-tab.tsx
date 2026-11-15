@@ -1,5 +1,5 @@
 "use client"
-import { useId, useMemo, useState, useTransition } from "react"
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import { AuraBadge } from "./aura-badge"
 import { AuraTrend } from "./aura-trend"
 import { LifecycleCharts } from "./lifecycle-charts"
@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AURA_STAGE_LABELS } from "@/lib/aura"
 import type { AuraFitOutcome } from "@/app/lab/actions"
 import type { AuraDashboardRow } from "@/lib/aura/fit"
+import { auraTermPath } from "@/lib/aura/term-route"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 const SOURCE = { vendored: "Google Trends", synthetic: "this site's search events" }
@@ -103,33 +104,46 @@ export function LifecycleResult({ outcome, onPick }: { outcome: AuraFitOutcome; 
   )
 }
 
-export function LifecycleTab({ fitAction, dashboardRows }: {
+export function LifecycleTab({ initialTerm = "", fitAction, dashboardRows }: {
+  initialTerm?: string
   fitAction: (term: string) => Promise<AuraFitOutcome>
   dashboardRows?: AuraDashboardRow[]
 }) {
   const id = useId()
-  const [term, setTerm] = useState("")
+  const [term, setTerm] = useState(initialTerm)
   const [outcome, setOutcome] = useState<AuraFitOutcome | null>(null)
   const [pending, start] = useTransition()
+  const initialFitStarted = useRef(false)
   const run = (t: string) => { setTerm(t); start(async () => setOutcome(await fitAction(t))) }
+  const openTerm = (rawTerm: string) => {
+    const value = rawTerm.trim()
+    if (value.length < 2 || value.length > 100) { run(value); return }
+    window.location.assign(auraTermPath(value))
+  }
+  useEffect(() => {
+    if (initialTerm && !initialFitStarted.current) {
+      initialFitStarted.current = true
+      start(async () => setOutcome(await fitAction(initialTerm)))
+    }
+  }, [fitAction, initialTerm])
   const status = pending ? "Fitting the SIRS model…" : !outcome ? "" : outcome.kind === "fit"
     ? `Fitted ${outcome.fit.term}: ${outcome.fit.stage ? AURA_STAGE_LABELS[outcome.fit.stage] : "No stage yet"}`
     : outcome.kind === "no_data" ? "No search data for this term" : outcome.message
   return (
     <div className="space-y-6">
-      <form onSubmit={(e) => { e.preventDefault(); run(term) }} className="flex items-end gap-2">
+      <form role="search" onSubmit={(e) => { e.preventDefault(); openTerm(term) }} className="flex items-end gap-2">
         <div className="flex flex-col gap-1">
           <label htmlFor={id} className="text-xs text-lab-muted">Term</label>
           <input id={id} name="term" value={term} onChange={(e) => setTerm(e.target.value)}
             className="h-9 w-64 rounded border border-lab-border-strong bg-lab-input px-3 text-sm" />
         </div>
-        <button type="submit" disabled={pending} className="h-9 rounded bg-lab-text px-4 text-sm font-medium text-lab-surface disabled:opacity-50">Fit</button>
+        <button type="submit" disabled={pending} className="h-9 rounded bg-lab-text px-4 text-sm font-medium text-lab-surface disabled:opacity-50">Search</button>
       </form>
       {dashboardRows && <AuraDashboardTable rows={dashboardRows} />}
       <div role="status" aria-live="polite" className="sr-only">{status}</div>
       {pending ? <Skeleton className="h-64" /> : outcome && (
         <>
-          <LifecycleResult outcome={outcome} onPick={run} />
+          <LifecycleResult outcome={outcome} onPick={openTerm} />
           {outcome.kind === "fit" && <LifecycleCharts fit={outcome.fit} />}
         </>
       )}
