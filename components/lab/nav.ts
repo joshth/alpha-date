@@ -1,6 +1,8 @@
 export interface NavItem {
   href: string
   label: string
+  /** Shown only when the server says the local demo is on. */
+  demoOnly?: boolean
 }
 
 export interface NavGroup {
@@ -20,9 +22,9 @@ export const LAB_NAV: NavGroup[] = [
   {
     label: "Quality",
     items: [
-      { href: "/lab/pipeline", label: "Pipeline" },
       { href: "/lab/eval", label: "Evaluation" },
       { href: "/lab/safety-activity", label: "Safety activity" },
+      { href: "/lab/safety-incidents", label: "Safety incidents", demoOnly: true },
     ],
   },
   { label: "Analytics", items: [{ href: "/lab/aura", label: "Aura" }] },

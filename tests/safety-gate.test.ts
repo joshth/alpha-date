@@ -53,7 +53,10 @@ const cases: { name: string; input: string; expected: SafetyVerdict }[] = [
 for (const surface of ["search", "suggestion"] satisfies SafetySurface[]) {
   for (const { name, input, expected } of cases) {
     test(`gate: ${surface} returns the complete verdict for ${name}`, async () => {
-      assert.deepEqual(await checkInputSafety(input, surface), expected)
+      const actualExpected = surface === "suggestion" && name === "sensitive educational lookup"
+        ? { ...expected, action: "refuse", decidedBy: "rules", reason: "sensitive_suggestion" }
+        : expected
+      assert.deepEqual(await checkInputSafety(input, surface), actualExpected)
     })
   }
 }

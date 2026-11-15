@@ -1,7 +1,9 @@
 import Link from "next/link"
+import { isIncidentDemoEnabled } from "@/lib/safety/incident-demo"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata = { title: "Dashboard" }
+export const dynamic = "force-dynamic"
 
 const ROADMAP = [
   {
@@ -61,6 +63,26 @@ export default function LabDashboard() {
             <CardDescription>AI-discovered terms awaiting review, and missing-term suggestions.</CardDescription>
           </CardHeader>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle asChild>
+              <h2 className="text-lg">
+                <Link href="/lab/safety-activity" className="hover:text-primary hover:underline">Safety activity</Link>
+              </h2>
+            </CardTitle>
+            <CardDescription>View anonymous safety decisions, allowed and stopped totals, and UTC date filters.</CardDescription>
+          </CardHeader>
+        </Card>
+        {isIncidentDemoEnabled() && (
+          <Card>
+            <CardHeader>
+              <CardTitle asChild>
+                <h2 className="text-lg"><Link href="/lab/safety-incidents" className="hover:text-primary hover:underline">Safety incidents</Link></h2>
+              </CardTitle>
+              <CardDescription>Review synthetic incidents and simulated alert outcomes.</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
       </div>
 
       <section aria-labelledby="roadmap-heading">

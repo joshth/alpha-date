@@ -1,4 +1,6 @@
 import { EVAL_CATEGORIES, loadGoldenSet } from "@/lib/eval/golden"
+import { evaluateOutputSafety } from "@/lib/eval/output-safety"
+import { moderate } from "@/lib/_stubs/moderation"
 import { evaluateSafety } from "@/lib/eval/safety"
 import { checkInputSafety, type SafetySurface } from "@/lib/safety/gate"
 
@@ -23,6 +25,7 @@ async function main() {
     }
   }
   const set = loadGoldenSet(file)
+  const outputCases = set.outputSafetyCases ?? []
   const byKind = set.cases.reduce<Record<string, number>>((counts, entry) => {
     counts[entry.kind] = (counts[entry.kind] ?? 0) + 1
     return counts
@@ -32,6 +35,7 @@ async function main() {
   const byCategory = Object.fromEntries(EVAL_CATEGORIES.map(category => [category, 0]))
   for (const entry of set.cases) if (entry.kind !== "dedup") byCategory[entry.category]++
   console.log("By category:", byCategory)
+  console.log(`Output safety fixtures: ${outputCases.length}`)
   const empty = EVAL_CATEGORIES.filter(category => byCategory[category] === 0)
   if (empty.length) console.log(`  (no cases yet for: ${empty.join(", ")})`)
   const review = set.review
@@ -45,13 +49,16 @@ async function main() {
   process.env.MOCK_MODERATION_LATENCY_MS = "0"
   process.env.MOCK_MODERATION_FAILURE_RATE = "0"
   console.log("\nSafety evaluation: deterministic mock moderation; no real-provider accuracy claim.")
-  console.log("Labels are compared as stored. Suggestion results use the same labels as search.")
+  console.log("Surface-specific labels apply only to that surface. For suggestions, shared safe lookup labels with sensitive categories expect refusal.")
   const safety = await evaluateSafety(set.cases, checkInputSafety, surface)
   console.table(safety.confusionMatrix.counts)
+  const outputSafety = await evaluateOutputSafety(outputCases, checkInputSafety, moderate)
+  console.log("Output safety checks exercise generated and cached search results with injected fixtures.")
   console.log(JSON.stringify({
     datasetVersion: set.version,
     configuration: { moderation: "mock", latencyMs: 0, failureRate: 0 },
     safety,
+    outputSafety,
   }, null, 2))
   console.log("\nDiscovery and dedup metrics remain pending in the shared evaluation harness.")
 }

@@ -10,8 +10,7 @@ import { semanticEdges, type SemanticEdge } from "@/lib/dedup/semantic"
 import { moderate } from "@/lib/_stubs/moderation"
 import { createSafeDiscovery } from "@/lib/discovery/safe-discovery"
 import { createSafeTermLookup } from "@/lib/safety/safe-term-lookup"
-import { createTrackedSafetyGate } from "@/lib/safety/events"
-import { recordSafetyEvent } from "@/lib/safety/event-store"
+import { checkRequestSafety } from "@/lib/safety/request-safety"
 import { readSafetyActivity, type SafetyActivity } from "@/lib/safety/activity"
 import { createSearchTerm } from "@/lib/search"
 import { createSuggestTerm } from "@/lib/suggestions"
@@ -28,14 +27,12 @@ import { sanitizeUserText } from "@/lib/discovery/prompt"
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { safetyResponseMessage } from "@/lib/safety/responses"
 import type { ActionResult, SearchOutcome } from "@/lib/types"
-
 // Pipeline: input → safety gate → lexicon lookup → AI discovery → stored for
 // review. Mirrors the order production uses; the gate always runs first.
 
-const trackedInputSafety = createTrackedSafetyGate(checkInputSafety, recordSafetyEvent)
 const generateSafeDiscovery = createSafeDiscovery(generateDiscoveryObject, moderate)
 const getSafeTermByKey = createSafeTermLookup(getTermByKey, moderate)
-const runSearch = createSearchTerm({ checkInputSafety: trackedInputSafety, getTermByKey: getSafeTermByKey, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
+const runSearch = createSearchTerm({ checkInputSafety: checkRequestSafety, getTermByKey: getSafeTermByKey, logTermEvent, generateDiscoveryObject: generateSafeDiscovery, saveDiscoveredTerm })
 
 export async function searchTerm(raw: string): Promise<SearchOutcome> {
   return runSearch(raw)
@@ -45,7 +42,7 @@ export async function fetchAiCallsAvoided(): Promise<number> {
   return getAiCallsAvoided()
 }
 
-const runSuggestion = createSuggestTerm({ checkInputSafety: trackedInputSafety, recordSuggestion })
+const runSuggestion = createSuggestTerm({ checkInputSafety: checkRequestSafety, recordSuggestion })
 
 export async function suggestTerm(rawTerm: string, rawContext?: string): Promise<ActionResult<SafetyVerdict>> {
   return runSuggestion(rawTerm, rawContext)
@@ -83,7 +80,7 @@ export type AuraFitOutcome = AuraFitResult | { kind: "blocked"; message: string 
 export async function fitAuraTerm(raw: string): Promise<AuraFitOutcome> {
   const term = sanitizeUserText(raw, 100)
   if (!term || term.length < 2) return { kind: "invalid", message: "Enter a term between 2 and 100 characters." }
-  const verdict = await trackedInputSafety(prepareSafetyInput(raw), "search")
+  const verdict = await checkRequestSafety(prepareSafetyInput(raw), "search", raw)
   if (verdict.action !== "safe") return { kind: "blocked", message: safetyResponseMessage(verdict, "search") }
   return runAuraFit(term)
 }
