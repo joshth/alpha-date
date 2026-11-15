@@ -3,7 +3,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
-import { fitCommand, parseFit, runFit, MODEL_VERSION } from "@/lib/aura/fit-command"
+import { fitBatchCommand, fitCommand, parseFit, parseFitBatch, runFit, MODEL_VERSION } from "@/lib/aura/fit-command"
 import { plotCommand } from "@/lib/aura/plot-command"
 
 const env = { SIRS_DIR: "/x/sirs" }
@@ -35,6 +35,15 @@ test("fitCommand rejects an empty term", () => {
   assert.throws(() => fitCommand("", {}, env, "/code"))
 })
 
+test("fitBatchCommand sends every term and synthetic fallback counts in one process", () => {
+  const counts = { "new word": { weeks: ["2026-11-13"], counts: [1] } }
+  const batch = fitBatchCommand(["bussin", "new word"], { now: "2026-11-13", counts }, env, "/code")
+  assert.equal(batch.cmd, plotCommand(["x"], env, "/code").cmd)
+  assert.equal(batch.cwd, plotCommand(["x"], env, "/code").cwd)
+  assert.deepEqual(batch.args, ["-m", "sirs.fit_term", "--json", "--batch", "--now", "2026-11-13"])
+  assert.equal(batch.input, JSON.stringify({ terms: ["bussin", "new word"], counts }))
+})
+
 test("parseFit accepts a valid fit and a null stage", () => {
   const parsed = parseFit(JSON.stringify(fixture))
   assert.equal(parsed.kind, "fit")
@@ -43,6 +52,12 @@ test("parseFit accepts a valid fit and a null stage", () => {
 
 test("parseFit maps the no_data error line", () => {
   assert.deepEqual(parseFit(JSON.stringify({ error: "no_data", term: "zzz" })), { kind: "no_data" })
+})
+
+test("parseFitBatch validates each result and preserves no_data outcomes", () => {
+  const parsed = parseFitBatch(JSON.stringify({ bussin: fixture, unknown: { error: "no_data" } }))
+  assert.deepEqual(parsed.bussin, { kind: "fit", fit: fixture })
+  assert.deepEqual(parsed.unknown, { kind: "no_data" })
 })
 
 test("parseFit throws on bad JSON or a wrong shape", () => {
