@@ -26,3 +26,17 @@ export function writeThemePref(storage: Pick<Storage, "setItem"> | null, pref: T
     // The choice just won't be remembered.
   }
 }
+
+/**
+ * Applies a choice to <html>: light or dark sets data-theme, system removes it so the CSS follows the OS.
+ * data-resolved-theme always carries the theme actually in effect.
+ */
+export function applyThemePref(
+  el: Pick<Element, "setAttribute" | "removeAttribute">,
+  pref: ThemePref,
+  osPrefersLight: boolean,
+): void {
+  if (pref === "system") el.removeAttribute("data-theme")
+  else el.setAttribute("data-theme", pref)
+  el.setAttribute("data-resolved-theme", resolveTheme(pref, osPrefersLight))
+}
