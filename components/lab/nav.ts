@@ -28,4 +28,5 @@ export const LAB_NAV: NavGroup[] = [
     ],
   },
   { label: "Analytics", items: [{ href: "/lab/aura", label: "Aura" }] },
+  { label: "Resources", items: [{ href: "/docs", label: "Docs" }] },
 ]
