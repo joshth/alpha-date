@@ -1,3 +1,4 @@
+import { ActivityPeriodFilter } from "@/components/safety/activity-period-filter"
 import { SupportResponseSummary } from "@/components/safety/support-response-summary"
 import type { SafetyActivityView } from "@/lib/safety/activity-view"
 
@@ -16,35 +17,7 @@ export function SafetyActivitySummary({ view }: { view: SafetyActivityView }) {
       {view.status === "forbidden" ? <p role="alert">Reviewer access required.</p> : (
         <>
           <p className="text-sm text-muted-foreground">Educator preview: this scaffold uses mock reviewer access. Real educator authentication and authorisation are not configured.</p>
-          <form action="/lab/safety-activity" method="get" aria-label="Activity period" className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1">
-              <label htmlFor="activity-period" className="block text-sm font-medium">Period</label>
-              <select id="activity-period" name="period" defaultValue={view.preset?.period ?? "day"} className="rounded-md border bg-background px-3 py-2">
-                <option value="day">Day</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="activity-date" className="block text-sm font-medium">Date within period (UTC)</label>
-              <input id="activity-date" name="date" type="date" min="0001-01-01" max="9998-12-31" required defaultValue={view.preset?.date ?? view.from.slice(0, 10)} className="rounded-md border bg-background px-3 py-2" />
-            </div>
-            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-primary-foreground">Show period</button>
-          </form>
-          <details className="rounded-lg border p-3">
-            <summary className="cursor-pointer text-sm font-medium">Custom UTC range</summary>
-          <form action="/lab/safety-activity" method="get" className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1">
-              <label htmlFor="activity-from" className="block text-sm font-medium">From (UTC)</label>
-              <input id="activity-from" name="from" type="datetime-local" step="1" required defaultValue={view.from}
-                aria-describedby="period-help" className="rounded-md border bg-background px-3 py-2" />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="activity-to" className="block text-sm font-medium">To (UTC, exclusive)</label>
-              <input id="activity-to" name="to" type="datetime-local" step="1" required defaultValue={view.to}
-                aria-describedby="period-help" className="rounded-md border bg-background px-3 py-2" />
-            </div>
-            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-primary-foreground">Show activity</button>
-          </form>
-          </details>
+          <ActivityPeriodFilter key={`${view.preset?.period ?? "custom"}:${view.from}:${view.to}`} from={view.from} to={view.to} preset={view.preset} />
           <p id="period-help" className="text-sm text-muted-foreground">Times are in UTC. The start is included and the end is excluded. The default is today in UTC. Calendar weeks run Monday to Sunday; months and years use calendar boundaries.</p>
           {view.status === "error" ? <p role="alert">{view.message}</p> : (
             <>
