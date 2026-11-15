@@ -2,6 +2,8 @@ import type React from "react"
 import Link from "next/link"
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { LAB_NAV } from "./nav"
+import { ThemeToggle } from "./theme-toggle"
+import type { ThemePref } from "./theme"
 
 const ROOT = { href: "/lab", label: "Lexicon Lab" }
 const items = LAB_NAV.flatMap((g) => g.items)
@@ -30,7 +32,7 @@ export function shouldFocusSearch(e: {
   return !(t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName ?? "")))
 }
 
-export function LabShellView({ pathname, userName, mockLlm, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer }: {
+export function LabShellView({ pathname, userName, mockLlm, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer, themePref = "system", onThemeChange }: {
   pathname: string
   userName: string
   mockLlm: boolean
@@ -39,6 +41,8 @@ export function LabShellView({ pathname, userName, mockLlm, children, collapsed 
   drawerOpen?: boolean
   onToggleCollapsed?: () => void
   onToggleDrawer?: () => void
+  themePref?: ThemePref
+  onThemeChange?: (pref: ThemePref) => void
 }) {
   const initials = userName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
   const active = activeHref(pathname)
@@ -57,6 +61,7 @@ export function LabShellView({ pathname, userName, mockLlm, children, collapsed 
           <input id="lab-search" name="q" type="search" placeholder="Search or go to…" aria-keyshortcuts="/" className={`h-8 w-full rounded border border-lab-border-strong bg-lab-input px-3 text-sm text-lab-text placeholder:text-lab-muted ${ring}`} />
           <kbd aria-hidden="true" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-lab-muted">/</kbd>
         </form>
+        <ThemeToggle pref={themePref} onChange={onThemeChange} />
         <span title={userName} aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-lab-control text-xs font-medium">{initials}</span>
         <span className="sr-only">Signed in as {userName}</span>
        </div>
