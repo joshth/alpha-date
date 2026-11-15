@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ExportMenu } from "@/components/aura/export-menu"
+import { GraphInfoButton } from "@/components/aura/graph-info"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 import { ClusterTable, GraphLegend, GraphView, NodePanel } from "@/components/aura/similarity-graph"
@@ -37,6 +38,7 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
         <p aria-live="polite" className="text-sm">{mergeCount(graph, threshold)} merges at this threshold</p>
         <p className="text-xs text-lab-muted">Changing the threshold never changes stored data.</p>
         <p className="text-xs text-lab-muted">{quality ? `Merge precision ${fmt(quality.precision)} · recall ${fmt(quality.recall)} on ${quality.cases} golden cases` : "No golden dedup cases loaded."}</p>
+        <GraphInfoButton id="similarity" />
         <ExportMenu filename="similarity-clusters" columns={CLUSTER_COLUMNS} rows={clusterRows(graph, threshold)} getSvg={showTable ? undefined : getSvg} />
         <button type="button" aria-pressed={showTable} onClick={onToggleTable} className="ml-2 h-9 rounded border border-lab-border-strong px-3 text-sm">Show as table</button>
         <button type="button" aria-pressed={!!semanticOn} onClick={onToggleSemantic} className="ml-2 h-9 rounded border border-lab-border-strong px-3 text-sm">Show meaning matches</button>

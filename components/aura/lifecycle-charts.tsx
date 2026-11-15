@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { ChartPanel } from "./chart-panel"
+import type { GraphInfoId } from "@/lib/aura/graph-info"
 import type { SirsFit } from "@/lib/aura/fit-command"
 import { lifecycleRows, trendSentence, windowBounds } from "@/lib/aura/trend-text"
 
@@ -94,8 +95,8 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
   const peak = Math.max(...rows.map((r) => r.fitted)) * CHART_REFS.peakLine // ponytail: peaking line on the fitted scale, exact only when the observed range covers the peak
   const f = rows[focus]
   const table = (caption: string, series: Series[]) => ({ caption, columns: cols(series), rows })
-  const share = (title: string, series: Series[], caption: string, extra?: React.ReactNode) => (
-    <ChartPanel title={title} summary={summary} table={table(caption, series)}>
+  const share = (title: string, series: Series[], caption: string, infoId: GraphInfoId, extra?: React.ReactNode) => (
+    <ChartPanel title={title} infoId={infoId} summary={summary} table={table(caption, series)}>
       <>
         <ChartContainer config={config(series)} className="h-56 w-full">
           <ComposedChart data={rows}>{axes}{lines(series)}{extra}</ComposedChart>
@@ -106,7 +107,7 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
   )
   return (
     <div className="space-y-8">
-      <ChartPanel title="Search interest and fitted curve" summary={summary} table={table("Weekly search interest and fitted curve", MAIN_SERIES)}>
+      <ChartPanel title="Search interest and fitted curve" infoId="interest" summary={summary} table={table("Weekly search interest and fitted curve", MAIN_SERIES)}>
         <div ref={box}>
           <div aria-hidden="true" className="mb-1 font-mono text-xs tabular-nums text-lab-muted">
             {f.week} · interest {f.interest.toFixed(2)} · fitted {f.fitted.toFixed(2)}
@@ -128,8 +129,8 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
           <SeriesLegend series={MAIN_SERIES} />
         </div>
       </ChartPanel>
-      {share("Population shares", SHARE_SERIES, "Susceptible, infected and recovered shares by week")}
-      {share("Feedback Γ(t)", FEEDBACK_SERIES, "Feedback Γ(t) by week")}
+      {share("Population shares", SHARE_SERIES, "Susceptible, infected and recovered shares by week", "shares")}
+      {share("Feedback Γ(t)", FEEDBACK_SERIES, "Feedback Γ(t) by week", "feedback")}
     </div>
   )
 }
