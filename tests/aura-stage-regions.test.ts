@@ -6,7 +6,7 @@ test("rolling fitted stages identify rising, peaking, declining and stable curve
   const rising = Array.from({ length: 40 }, (_, i) => i + 1)
   const peak = Array.from({ length: 40 }, (_, i) => i < 20 ? i + 1 : 20)
   const decline = Array.from({ length: 40 }, (_, i) => 40 - i)
-  const stable = Array.from({ length: 40 }, () => 10)
+  const stable = [...Array.from({ length: 9 }, () => 10), ...Array.from({ length: 8 }, () => 40), ...Array.from({ length: 9 }, () => 10)]
   assert.equal(fittedStages(rising).at(-1), "emerging")
   assert.equal(fittedStages(peak).at(-1), "peaking")
   assert.equal(fittedStages(decline).at(-1), "declining")
