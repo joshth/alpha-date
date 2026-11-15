@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { RefreshCw, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +17,7 @@ import { AiCallsAvoidedBadge } from "@/components/search/ai-calls-avoided-badge"
 import type { SearchOutcome } from "@/lib/types"
 import type { SlangTerm } from "@/app/types"
 
-function TermCard({ term, badge, note }: { term: SlangTerm; badge: string; note?: string }) {
+function TermCard({ term, badge, note, query }: { term: SlangTerm; badge: string; note?: string; query: string }) {
   return (
     <Card>
       <CardHeader>
@@ -40,6 +41,9 @@ function TermCard({ term, badge, note }: { term: SlangTerm; badge: string; note?
             ))}
           </ul>
         )}
+        <Link href={`/lab/aura/${encodeURIComponent(query)}`} className="inline-flex min-h-6 items-center text-sm underline underline-offset-4">
+          View Aura lifecycle
+        </Link>
       </CardContent>
     </Card>
   )
@@ -142,8 +146,8 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
         {outcome?.kind === "refused" && (
           <SafetyResponse verdict={outcome.verdict} message={outcome.message} />
         )}
-        {outcome?.kind === "found" && <TermCard term={outcome.term} badge="In the lexicon" />}
-        {outcome?.kind === "discovered" && <TermCard term={outcome.term} badge="AI-discovered" note={outcome.note} />}
+        {outcome?.kind === "found" && <TermCard term={outcome.term} badge="In the lexicon" query={query} />}
+        {outcome?.kind === "discovered" && <TermCard term={outcome.term} badge="AI-discovered" note={outcome.note} query={query} />}
         {outcome?.kind === "not_found" && <SuggestForm key={outcome.query} query={outcome.query} />}
         {outcome?.kind === "error" && (
           <p role="alert" className="text-destructive">
