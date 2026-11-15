@@ -1,5 +1,5 @@
 "use client"
-import { useId, useMemo, useState, useTransition } from "react"
+import { useEffect, useId, useMemo, useState, useTransition } from "react"
 import { AuraBadge } from "./aura-badge"
 import { AuraTrend } from "./aura-trend"
 import { LifecycleCharts } from "./lifecycle-charts"
@@ -103,15 +103,19 @@ export function LifecycleResult({ outcome, onPick }: { outcome: AuraFitOutcome; 
   )
 }
 
-export function LifecycleTab({ fitAction, dashboardRows }: {
+export function LifecycleTab({ initialTerm = "", fitAction, dashboardRows }: {
+  initialTerm?: string
   fitAction: (term: string) => Promise<AuraFitOutcome>
   dashboardRows?: AuraDashboardRow[]
 }) {
   const id = useId()
-  const [term, setTerm] = useState("")
+  const [term, setTerm] = useState(initialTerm)
   const [outcome, setOutcome] = useState<AuraFitOutcome | null>(null)
   const [pending, start] = useTransition()
   const run = (t: string) => { setTerm(t); start(async () => setOutcome(await fitAction(t))) }
+  useEffect(() => {
+    if (initialTerm) start(async () => setOutcome(await fitAction(initialTerm)))
+  }, [fitAction, initialTerm])
   const status = pending ? "Fitting the SIRS model…" : !outcome ? "" : outcome.kind === "fit"
     ? `Fitted ${outcome.fit.term}: ${outcome.fit.stage ? AURA_STAGE_LABELS[outcome.fit.stage] : "No stage yet"}`
     : outcome.kind === "no_data" ? "No search data for this term" : outcome.message
