@@ -1,11 +1,27 @@
 // Fit an Aura term: vendored SIRS data first, else a synthetic fit from our own events.
-import { auraTrend, TREND_WEEKS, type TermEvent } from "./index"
+import { auraTrend, TREND_WEEKS, type AuraStage, type TermEvent } from "./index"
 import { fitCommand, parseFit, MODEL_VERSION, type FitCommand, type SirsFit } from "./fit-command"
 import { findLikelyMatches, normaliseSuggestion } from "../normalise"
 
 export type AuraFitResult =
   | { kind: "fit"; fit: SirsFit; source: "vendored" | "synthetic"; stageNote: string | null }
   | { kind: "no_data"; term: string; suggestions: string[] }
+
+export type AuraDashboardRow = { term: string; stage: AuraStage | null }
+
+export async function createAuraDashboardRows(
+  terms: string[],
+  fitTerm: (term: string) => Promise<AuraFitResult>,
+): Promise<AuraDashboardRow[]> {
+  return Promise.all(terms.map(async (term) => {
+    try {
+      const outcome = await fitTerm(term)
+      return { term, stage: outcome.kind === "fit" ? outcome.fit.stage : null }
+    } catch {
+      return { term, stage: null }
+    }
+  }))
+}
 
 export interface AuraFitDeps {
   runFit: (cmd: FitCommand) => Promise<{ code: number; stdout: string }>

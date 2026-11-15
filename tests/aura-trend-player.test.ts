@@ -36,6 +36,11 @@ test("TrendPlayer: a labelled volume slider from 0 to 1", () => {
   assert.match(html.staged, new RegExp(`<label[^>]*for="${id}"[^>]*>Volume</label>`))
 })
 
+test("TrendPlayer: changing Volume updates active playback", () => {
+  assert.match(src, /playback\.current\?\.setVolume\(value\)/)
+  assert.match(src, /onChange=\{\(e\) => updateVolume\(Number\(e\.target\.value\)\)\}/)
+})
+
 test("TrendPlayer: sound starts from the button only and the button can stop it", () => {
   assert.equal(src.match(/new AudioContext\(/g)?.length, 1)
   assert.equal(src.match(/playTrend\(/g)?.length, 1)

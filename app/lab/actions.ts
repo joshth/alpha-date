@@ -20,8 +20,8 @@ import { similarityGraph, type DedupGraphData } from "@/lib/dedup/graph"
 import { readDedupRows, readDedupSavings } from "@/lib/dedup/store"
 import { loadGoldenSet } from "@/lib/eval/golden"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
-import { getAiCallsAvoided, getTermByKey, getTermEvents, listPublishedTermNames, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
-import { createAuraFit, type AuraFitResult } from "@/lib/aura/fit"
+import { getAiCallsAvoided, getTermByKey, getTermEvents, listPublishedTermNames, listTermsWithSearchData, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
+import { createAuraDashboardRows, createAuraFit, type AuraFitResult } from "@/lib/aura/fit"
 import { runFit } from "@/lib/aura/fit-command"
 import { sanitizeUserText } from "@/lib/discovery/prompt"
 import { prepareSafetyInput } from "@/lib/safety/input"
@@ -83,6 +83,10 @@ export async function fitAuraTerm(raw: string): Promise<AuraFitOutcome> {
   const verdict = await checkRequestSafety(prepareSafetyInput(raw), "search", raw)
   if (verdict.action !== "safe") return { kind: "blocked", message: safetyResponseMessage(verdict, "search") }
   return runAuraFit(term)
+}
+
+export async function getAuraDashboardRows() {
+  return createAuraDashboardRows(await listTermsWithSearchData(), runAuraFit)
 }
 
 export async function getDedupSavings(minutesPerReview = 2): Promise<DedupSavings> {

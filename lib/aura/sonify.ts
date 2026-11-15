@@ -38,11 +38,13 @@ export function stageCue(stage: AuraStage): number[] {
 
 export const CUE_NOTE_SECONDS = 0.25
 
-/** Schedules the notes and the stage cue on a Web Audio context and returns a stop function. */
-export function playTrend(ctx: AudioContext, notes: Note[], cue: number[], volume: number, onEnd?: () => void): () => void {
+export type TrendPlayback = { setVolume: (volume: number) => void; stop: () => void }
+
+/** Schedules the notes and stage cue, returning controls for the live playback. */
+export function playTrend(ctx: AudioContext, notes: Note[], cue: number[], volume: number, onEnd?: () => void): TrendPlayback {
   if (!notes.length && !cue.length) {
     onEnd?.()
-    return () => {}
+    return { setVolume: () => {}, stop: () => {} }
   }
   const gain = ctx.createGain()
   gain.gain.value = volume
@@ -63,5 +65,8 @@ export function playTrend(ctx: AudioContext, notes: Note[], cue: number[], volum
     return osc
   })
   oscs[oscs.length - 1].onended = () => onEnd?.()
-  return () => oscs.forEach((o) => o.stop())
+  return {
+    setVolume: (nextVolume) => gain.gain.setTargetAtTime(Math.max(0, Math.min(1, nextVolume)), ctx.currentTime, 0.02),
+    stop: () => oscs.forEach((o) => o.stop()),
+  }
 }

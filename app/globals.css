@@ -151,8 +151,10 @@ html[data-text-size="100"] { font-size: 100%; }
 html[data-text-size="125"] { font-size: 125%; }
 html[data-text-size="150"] { font-size: 150%; }
 html[data-text-size="200"] { font-size: 200%; }
-body[data-accessibility-font="atkinson"] { font-family: "Atkinson Hyperlegible Local", sans-serif; }
-body[data-accessibility-font="opendyslexic"] { font-family: "OpenDyslexic Local", sans-serif; }
+body[data-accessibility-font="atkinson"],
+body[data-accessibility-font="atkinson"] .font-sans { font-family: "Atkinson Hyperlegible Local", sans-serif; }
+body[data-accessibility-font="opendyslexic"],
+body[data-accessibility-font="opendyslexic"] .font-sans { font-family: "OpenDyslexic Local", sans-serif; }
 body[data-line-spacing="relaxed"] { line-height: 1.6; }
 body[data-line-spacing="wide"] { line-height: 1.8; }
 
