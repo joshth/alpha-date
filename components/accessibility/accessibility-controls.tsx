@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { Accessibility as AccessibilityIcon } from "lucide-react"
 import { AuraBadge } from "@/components/aura/aura-badge"
 import {
   applyPreset,
@@ -23,7 +24,7 @@ export function AccessibilityControls() {
   const [preferences, setPreferences] = useState(DEFAULT_ACCESSIBILITY_PREFERENCES)
   const [system, setSystem] = useState<SystemPreferences>({ reducedMotion: false, highContrast: false, darkTheme: false })
   const [announcement, setAnnouncement] = useState("")
-  const linkRef = useRef<HTMLAnchorElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const panelRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -95,8 +96,13 @@ export function AccessibilityControls() {
 
   const close = useCallback(() => {
     setOpen(false)
-    requestAnimationFrame(() => linkRef.current?.focus())
+    requestAnimationFrame(() => returnFocusRef.current?.focus())
   }, [])
+
+  const openSettings = (trigger: HTMLElement) => {
+    returnFocusRef.current = trigger
+    setOpen(true)
+  }
 
   useEffect(() => {
     const onShortcut = (event: KeyboardEvent) => {
@@ -137,16 +143,25 @@ export function AccessibilityControls() {
           Skip to search
         </a>
         <a
-          ref={linkRef}
           href="#accessibility-options"
           aria-controls="accessibility-options"
           aria-expanded={open}
-          onClick={() => setOpen(true)}
+          onClick={(event) => openSettings(event.currentTarget)}
           className={`${skipLink} ${focusRing}`}
         >
           Accessibility options
         </a>
       </nav>
+      <button
+        type="button"
+        aria-label="Accessibility options"
+        aria-controls="accessibility-options"
+        aria-expanded={open}
+        onClick={(event) => openSettings(event.currentTarget)}
+        className={`fixed right-4 top-4 z-40 flex size-12 items-center justify-center rounded-full border bg-background text-foreground shadow-md hover:bg-accent ${focusRing}`}
+      >
+        <AccessibilityIcon aria-hidden="true" className="size-7" />
+      </button>
       <section
         ref={panelRef}
         id="accessibility-options"
@@ -157,10 +172,7 @@ export function AccessibilityControls() {
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="accessibility-options-title" className="text-lg font-semibold">Accessibility options</h2>
-          <button type="button" onClick={() => {
-            setOpen(false)
-            requestAnimationFrame(() => linkRef.current?.focus())
-          }} className={`rounded px-3 py-2 text-sm ${focusRing}`}>
+          <button type="button" onClick={close} className={`rounded px-3 py-2 text-sm ${focusRing}`}>
             Close
           </button>
         </div>
