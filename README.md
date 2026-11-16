@@ -1,3 +1,5 @@
+<p align="center"><img src="website/static/img/banner.svg" alt="Gen Alpha Decoder" width="640"></p>
+
 # Gen Alpha Decoder™ | Date — Lexicon Safety & Quality Pipeline
 
 > **Derived teaching scaffold — not the production Gen Alpha Decoder codebase.**
@@ -8,6 +10,7 @@
 > It contains safety rules and test phrases about self-harm and abuse; treat them with care.
 
 Full scope, schedule and success criteria: [docs/SCOPE.md](docs/SCOPE.md).
+Developer docs (guides, architecture, CI) and the Swagger API reference: see [Documentation site](#documentation-site).
 
 ## Quick start
 
@@ -33,6 +36,27 @@ No environment variables, API keys, or database install are needed. By default:
 
 Copy `.env.example` to `.env.local` to change any of these (see comments in that file).
 
+## Documentation site
+
+The docs live in `docs/` and are shown by a Docusaurus site in `website/`, with a Swagger page for the HTTP API.
+It needs Node.js 20 or newer (check with `node -v`; with nvm, run `nvm use 24`).
+
+```bash
+pnpm --dir website install --ignore-workspace   # once
+pnpm docs:dev                                   # http://localhost:3001
+```
+
+- Docs pages: http://localhost:3001
+- API reference (Swagger): http://localhost:3001/api. To use "Try it out", also run `pnpm dev` (the app on http://localhost:3000).
+- Search only exists in a production build, not under `pnpm docs:dev`. To try it:
+
+  ```bash
+  pnpm --dir website build
+  pnpm --dir website serve   # http://localhost:3000, or add --port 3001
+  ```
+
+The docs are private (NDA). The site tells search engines not to index it, and CI builds it as a check only.
+
 ## Commands
 
 | Command | Purpose |
@@ -42,13 +66,17 @@ Copy `.env.example` to `.env.local` to change any of these (see comments in that
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint (Next.js rules) |
 | `pnpm test` | Unit tests (`node:test` via tsx; in-memory database, instant mocks) |
+| `pnpm test:ci` | Same tests as `pnpm test`, plus a `junit.xml` report (what GitLab CI runs) |
 | `pnpm eval:validate` | Validate `eval/golden-set.json` and print counts |
 | `pnpm eval` | Evaluation harness (**yours to build** — see `scripts/eval.ts`) |
 | `pnpm aura:plot bussin "goofy ahh" [--out chart.png]` | Chart each term's SIRS lifecycle curve coloured by Aura stage (opens a window, or saves with `--out`). Runs the SIRS plotter vendored in `sirs/`; needs its Python venv (below) |
+| `pnpm -s mcp` | Starts the read-only MCP server for assistive tech; waits for input, Ctrl+C stops it (see `docs/features/mcp-server.md`) |
 | `pnpm aura:plot --list` | Print every term `aura:plot` accepts, grouped by generation |
 | `pnpm db:generate` | Generate a SQL migration after editing `lib/_stubs/schema.ts` |
 | `pnpm db:migrate` | Apply migrations to `DATABASE_URL` (your own hosted Postgres only) |
 | `pnpm db:reset` | Delete the local PGlite database |
+| `pnpm docs:dev` | Docs site from `docs/`, with the Swagger API reference at `/api`, on http://localhost:3001 (Node 20+; install once with `pnpm --dir website install --ignore-workspace`) |
+| `pnpm --dir website build` | Build the docs site; broken links fail it (what CI's `docs` job runs) |
 
 `aura:plot` needs a Python 3.12 venv in `sirs/`, made once:
 
@@ -93,6 +121,24 @@ decide a policy per surface (e.g. today a *suggestion* of a sensitive term like 
 accepted as a normal suggestion — should it be?), and improve the rules wherever your golden
 set finds misses or false positives. Every rule fix you prove with a new golden-set case can
 go straight into production's regression suite.
+
+### Continuous integration (GitLab)
+
+`.gitlab-ci.yml` runs on every merge request and on pushes to branches and tags. It uses the
+mock AI and mock moderation only, so it needs no API keys or CI/CD variables.
+
+| Job | Runs locally as |
+| --- | --- |
+| `lint` | `pnpm lint` |
+| `typecheck` | `pnpm typecheck` |
+| `unit-tests` | `pnpm test:ci` (JUnit report shows in the merge request) |
+| `eval` | `pnpm eval` (report kept as a downloadable artifact) |
+| `dependency-audit` | `pnpm audit --prod --audit-level=high` (warns, does not block, until `next` is upgraded) |
+| Secret detection and SAST | GitLab's built-in scan templates (no local command) |
+| `build` | `pnpm build` (starts only after lint, typecheck, unit-tests and eval pass) |
+
+To reproduce a pipeline before pushing, run the first four commands in the table, then `pnpm build`.
+CI uses Node 24.18.0 and the pnpm version pinned in `package.json`.
 
 ### Integration rules (how your work gets into production)
 

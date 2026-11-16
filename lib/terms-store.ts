@@ -1,9 +1,11 @@
 import "server-only"
-import { and, count, desc, eq, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, getTableColumns, notInArray, sql } from "drizzle-orm"
 import type { SlangTerm } from "@/app/types"
 import { getDb } from "@/lib/_stubs/db"
 import { termEvents, terms } from "@/lib/_stubs/schema"
 import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
+import { redactTextFields } from "@/lib/safety/privacy"
+import { reviewCreatedAt } from "@/lib/review-time"
 
 // Lexicon persistence (adapted from production lib/term-cache.ts).
 // Lifecycle: published (servable to everyone) | pending_review (needs a human)
@@ -66,6 +68,7 @@ export async function listPublishedTermNames(): Promise<string[]> {
 
 /** Saves an AI-discovered term for human review. Never overwrites an existing row. */
 export async function saveDiscoveredTerm(term: SlangTerm): Promise<TermRecord | null> {
+  term = redactTextFields(term)
   const db = await getDb()
   const rows = await db
     .insert(terms)
@@ -92,7 +95,8 @@ export async function saveDiscoveredTerm(term: SlangTerm): Promise<TermRecord | 
 
 export async function listTermsByStatus(status: TermStatus, limit = 100): Promise<TermRecord[]> {
   const db = await getDb()
-  const rows = await db.select().from(terms).where(eq(terms.status, status)).orderBy(desc(terms.createdAt)).limit(limit)
+  const rows = await db.select({ ...getTableColumns(terms), createdAt: reviewCreatedAt(terms.createdAt) })
+    .from(terms).where(eq(terms.status, status)).orderBy(desc(terms.createdAt)).limit(limit)
   return rows.map(toRecord)
 }
 
@@ -127,4 +131,15 @@ export async function getTermEvents(termText: string): Promise<{ eventType: stri
     .select({ eventType: termEvents.eventType, createdAt: termEvents.createdAt })
     .from(termEvents)
     .where(eq(termEvents.termLower, termText.trim().toLowerCase()))
+}
+
+/** Distinct safe-search terms with activity that contributes to Aura fits. */
+export async function listTermsWithSearchData(): Promise<string[]> {
+  const db = await getDb()
+  const rows = await db
+    .selectDistinct({ term: termEvents.termLower })
+    .from(termEvents)
+    .where(notInArray(termEvents.eventType, ["llm_generated", "prompt_generated"]))
+    .orderBy(asc(termEvents.termLower))
+  return rows.map((row) => row.term)
 }

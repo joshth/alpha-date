@@ -37,8 +37,8 @@ def format_term_list(curves) -> str:
     return "\n\n".join(groups)
 
 
-def track_b_curves() -> dict:
-    """Noise-free Track B feedback curve per term, from the cached fits in results/fits_main.json."""
+def track_b_aligned() -> dict:
+    """Per-generation Track B feedback alignment (params, terms, res, sim) from results/fits_main.json."""
     terms, df = load_dataset()
     td = build_term_data(terms, decompose_all(df))
     split = make_split(terms, SPLIT_SEED)
@@ -49,7 +49,12 @@ def track_b_curves() -> dict:
         tl = [td["B"][t] for t in split[gen]["train"] + split[gen]["test"]]
         res, extra = align_terms(p, tl, "B")
         aligned[(gen, "B", "feedback")] = {"params": p, "terms": tl, "res": res, **extra}
-    return term_curves(aligned)
+    return aligned
+
+
+def track_b_curves() -> dict:
+    """Noise-free Track B feedback curve per term, from the cached fits in results/fits_main.json."""
+    return term_curves(track_b_aligned())
 
 
 def main(argv=None) -> int:
