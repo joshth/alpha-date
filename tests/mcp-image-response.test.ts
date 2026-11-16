@@ -158,3 +158,21 @@ test("graph widget keeps the empty image hidden", async () => {
   if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
   assert.match(resource.contents[0].text, /img\[hidden\]\{display:none\}/)
 })
+
+test("the trend result carries the graph as numbers, even when the PNG cannot render", async () => {
+  for (const failGraph of [false, true]) {
+    const server = createDecoderServer({
+      checkInputSafety, getTermByKey, listPublishedTermNames,
+      fitAuraTerm: async () => fitResult(),
+      renderAuraPng: async () => { if (failGraph) throw new Error("renderer unavailable"); return Buffer.from("89504e470d0a1a0a", "hex") },
+    })
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+    const client = new Client({ name: "data-test", version: "0.0.0" })
+    await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+    const result = await client.callTool({ name: "get_aura_trend", arguments: { term: "rizz" } })
+    const graph = (result.structuredContent as { auraGraph?: { term: string; observed: number[]; fitted: number[] } } | undefined)?.auraGraph
+    assert.equal(graph?.term, "Rizz")
+    assert.equal(graph?.observed.length, 26)
+    assert.equal(graph?.fitted.length, 26)
+  }
+})
