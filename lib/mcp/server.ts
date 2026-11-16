@@ -5,7 +5,7 @@ import { renderAuraPng } from "@/lib/mcp/graph"
 
 const inputSchema = { term: z.string().min(1).max(100) }
 const annotations = { readOnlyHint: true, openWorldHint: false }
-const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v2.html"
+const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v3.html"
 const graphWidget = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aura trend graph</title><style>
@@ -35,7 +35,7 @@ window.addEventListener("message",event=>{
   }
 });
 window.parent.postMessage({jsonrpc:"2.0",id:1,method:"ui/initialize",params:{
-  protocolVersion:"2026-01-26",appCapabilities:{},clientInfo:{name:"Aura graph",version:"1.0.0"}
+  protocolVersion:"2026-01-26",appCapabilities:{},appInfo:{name:"Aura graph",version:"1.0.0"}
 }},"*");
 window.addEventListener("openai:set_globals",event=>render(event.detail?.globals?.toolResponseMetadata??window.openai?.toolResponseMetadata));
 </script></body></html>`
