@@ -91,7 +91,8 @@ test("graph widget renders the standard MCP Apps tool-result notification", asyn
   const image = { src: "", alt: "", hidden: true }
   const status = { textContent: "" }
   let onMessage: ((event: unknown) => void) | undefined
-  const parent = {}
+  const sent: Array<{ method: string }> = []
+  const parent = { postMessage: (message: { method: string }) => sent.push(message) }
   runInNewContext(script, {
     document: { getElementById: (id: string) => id === "graph" ? image : status },
     window: { parent, addEventListener: (name: string, listener: (event: unknown) => void) => {
@@ -99,6 +100,9 @@ test("graph widget renders the standard MCP Apps tool-result notification", asyn
     } },
   })
   assert.ok(onMessage)
+  assert.equal(sent[0].method, "ui/initialize")
+  onMessage({ source: parent, data: { jsonrpc: "2.0", id: 1, result: {} } })
+  assert.equal(sent[1].method, "ui/notifications/initialized")
   onMessage({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result",
     params: { _meta: { auraGraphPng: "aGVsbG8=", auraGraphTerm: "gyatt" } } } })
   assert.equal(image.src, "data:image/png;base64,aGVsbG8=")

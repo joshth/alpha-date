@@ -27,6 +27,16 @@ function render(metadata=window.openai?.toolResponseMetadata){
   }else{image.hidden=true;status.textContent="Graph unavailable. The trend text remains available in the answer.";}
 }
 render();
+window.addEventListener("message",event=>{
+  if(event.source!==window.parent||event.data?.jsonrpc!=="2.0")return;
+  if(event.data.method==="ui/notifications/tool-result")render(event.data.params);
+  if(event.data.id===1&&event.data.result){
+    window.parent.postMessage({jsonrpc:"2.0",method:"ui/notifications/initialized",params:{}},"*");
+  }
+});
+window.parent.postMessage({jsonrpc:"2.0",id:1,method:"ui/initialize",params:{
+  protocolVersion:"2026-01-26",appCapabilities:{},clientInfo:{name:"Aura graph",version:"1.0.0"}
+}},"*");
 window.addEventListener("openai:set_globals",event=>render(event.detail?.globals?.toolResponseMetadata??window.openai?.toolResponseMetadata));
 </script></body></html>`
 
