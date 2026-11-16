@@ -51,3 +51,25 @@ test("render failure keeps the trend text and says Graph unavailable", async () 
   assert.match(content[0].text!, /Observed interest/)
   assert.match(content[0].text!, /Graph unavailable\./)
 })
+
+test("ChatGPT can load a graph widget from the trend tool", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+    renderAuraPng: async () => Buffer.from("89504e470d0a1a0a", "hex"),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const { tools } = await client.listTools()
+  const trend = tools.find((tool) => tool.name === "get_aura_trend")!
+  const uri = (trend._meta as { ui?: { resourceUri?: string } } | undefined)?.ui?.resourceUri
+  assert.equal(uri, "ui://gen-alpha-decoder/aura-graph-v1.html")
+  const resource = await client.readResource({ uri })
+  assert.equal(resource.contents[0].mimeType, "text/html;profile=mcp-app")
+  const html = resource.contents[0].text!
+  assert.match(html, /<img/)
+  assert.match(html, /toolResponseMetadata/)
+  const result = await client.callTool({ name: "get_aura_trend", arguments: { term: "rizz" } })
+  assert.equal((result._meta as { auraGraphPng?: string } | undefined)?.auraGraphPng, Buffer.from("89504e470d0a1a0a", "hex").toString("base64"))
+})
