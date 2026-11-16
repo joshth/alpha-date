@@ -7,7 +7,7 @@ title: MCP server for assistive tech
 
 The decoder also runs as a read-only [MCP](https://modelcontextprotocol.io) server. MCP is a standard way for an AI assistant to call tools. The server lets people use the decoder through the assistive tech and agent they already use: a screen reader with an AI add-on, Claude Desktop, voice control or a switch hub. It covers the accessibility stories A11Y-14 to A11Y-17.
 
-It runs on your own machine over stdio, started with `pnpm -s mcp`. It reads the same local lexicon database as the site (PGlite in `.data`, seeded with synthetic data). The Aura stage and explanation come from the dashboard's cached SIRS fit. The graph renderer uses Python 3.12 and Matplotlib from `sirs/requirements.txt`.
+It runs on your own machine over stdio, started with `pnpm -s mcp`. It reads the lexicon from a private in-memory copy of the synthetic seed data, so it never clashes with the site or another client over the local `.data` database, which only one process can open. Set `DATABASE_URL` for the server to read the same shared database as the site instead. The Aura stage and explanation come from the dashboard's cached SIRS fit. The graph renderer uses Python 3.12 and Matplotlib from `sirs/requirements.txt`.
 
 ```mermaid
 flowchart TB
