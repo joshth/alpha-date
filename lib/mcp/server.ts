@@ -5,7 +5,7 @@ import { renderAuraPng } from "@/lib/mcp/graph"
 
 const inputSchema = { term: z.string().min(1).max(100) }
 const annotations = { readOnlyHint: true, openWorldHint: false }
-const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v4.html"
+const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v5.html"
 const graphWidget = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aura trend graph</title><style>
