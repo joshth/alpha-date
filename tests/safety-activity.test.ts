@@ -14,6 +14,7 @@ const period = { from: "2026-10-30T00:00:00.000Z", to: "2026-10-30T01:00:00.000Z
 const empty = {
   period, evaluated: 0, allowed: 0, blocked: 0, blockedRate: null,
   byOutcome: { safe: 0, refuse: 0, safeguarding: 0, gentle_support: 0 },
+  supportCategories: { suicide_self_harm: 0, violence_threat: 0, eating_disorder: 0, sexual_exploitation: 0, bullying_harassment: 0, multiple: 0, uncategorized: 0 },
 }
 
 async function seed(entries: { outcome: SafetyEvent["outcome"]; at?: string; categories?: SafetyEvent["categories"] }[] = []) {
@@ -39,6 +40,7 @@ test("mixed outcomes count each stored verdict once, including mult-category eve
   assert.deepEqual(await readSafetyActivity(period), {
     period, evaluated: 5, allowed: 2, blocked: 3, blockedRate: 3 / 5,
     byOutcome: { safe: 2, refuse: 1, safeguarding: 1, gentle_support: 1 },
+    supportCategories: { suicide_self_harm: 0, violence_threat: 0, eating_disorder: 0, sexual_exploitation: 0, bullying_harassment: 0, multiple: 1, uncategorized: 1 },
   })
 })
 
@@ -123,8 +125,9 @@ test("reading summaries leaves events unchanged and returns no individual record
   const before = await db.select().from(safetyEvents)
   const summary = await readSafetyActivity(period)
   assert.deepEqual(await db.select().from(safetyEvents), before)
-  assert.deepEqual(Object.keys(summary).sort(), ["period", "evaluated", "allowed", "blocked", "blockedRate", "byOutcome"].sort())
-  assert.equal(JSON.stringify(summary).includes("suicide_self_harm"), false)
+  assert.deepEqual(Object.keys(summary).sort(), ["period", "evaluated", "allowed", "blocked", "blockedRate", "byOutcome", "supportCategories"].sort())
+  assert.equal(summary.supportCategories.suicide_self_harm, 0, "allowed sensitive lookups are not support outcomes")
+  for (const field of ["query", "referenceId", "userId", "ip", "sessionId", "recordedAt"]) assert.equal(field in summary, false)
   assert.equal("discoveryCallsAvoided" in summary, false)
   assert.equal("estimatedSavings" in summary, false)
 })
@@ -153,4 +156,30 @@ test("reviewer server action returns the aggregated period summary", async () =>
   assert.equal(summary.allowed, 1)
   assert.equal(summary.blocked, 1)
   assert.deepEqual(summary.period, period)
+})
+
+test("support distribution is exclusive, deduplicates labels and excludes allowed/refused events", async () => {
+  await seed([
+    {outcome:"safe", categories:["suicide_self_harm"]},
+    {outcome:"refuse", categories:["violence_threat"]},
+    {outcome:"safeguarding", categories:["suicide_self_harm"]},
+    {outcome:"safeguarding", categories:["suicide_self_harm", "suicide_self_harm"]},
+    {outcome:"safeguarding", categories:["violence_threat"]},
+    {outcome:"safeguarding", categories:["violence_threat", "suicide_self_harm"]},
+    {outcome:"gentle_support", categories:[]},
+    {outcome:"gentle_support", categories:["bullying_harassment"]},
+    {outcome:"safeguarding", categories:["sexual_exploitation"], at:period.to},
+  ])
+  const summary = await readSafetyActivity(period)
+  assert.deepEqual(summary.byOutcome, {safe:1, refuse:1, safeguarding:4, gentle_support:2})
+  assert.deepEqual(summary.supportCategories, {suicide_self_harm:2, violence_threat:1, eating_disorder:0, sexual_exploitation:0, bullying_harassment:1, multiple:1, uncategorized:1})
+  assert.equal(Object.values(summary.supportCategories).reduce((sum,n)=>sum+n,0), 6)
+  const repeated = await readSafetyActivity(period)
+  assert.deepEqual(repeated, summary, "refreshing a summary does not create support outcomes")
+})
+
+test("unknown stored category fails clearly without returning the stored label", async () => {
+  const db = await seed()
+  await db.insert(safetyEvents).values({outcome:"safeguarding",categories:["private invalid category"] as unknown as SafetyEvent["categories"],recordedAt:new Date(period.from)})
+  await assert.rejects(readSafetyActivity(period), {message:"Could not load safety activity. Please try again."})
 })
