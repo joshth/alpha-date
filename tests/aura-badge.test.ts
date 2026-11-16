@@ -80,3 +80,14 @@ test("AuraGlossary lists every Aura state and its meaning", () => {
 test("AuraBadge has no raw hex", () => {
   for (const html of Object.values(run()) as string[]) assert.doesNotMatch(html, /#[0-9a-fA-F]{3,8}\b/)
 })
+
+test("AuraGlossary trigger reports whether the glossary is open", () => {
+  const render = (open: boolean) => execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react");
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { AuraGlossary } = require("./components/aura/aura-badge.tsx");
+    console.log(renderToStaticMarkup(React.createElement(AuraGlossary, { open: ${open} })));
+  `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
+  assert.match(render(false), /<button[^>]*aria-expanded="false"/)
+  assert.match(render(true), /<button[^>]*aria-expanded="true"/)
+})
