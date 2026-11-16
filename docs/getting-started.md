@@ -18,6 +18,8 @@ pnpm install
 pnpm dev          # http://localhost:3000 → Lexicon Lab
 ```
 
+To start the app and docs together, run `pnpm --dir website install --ignore-workspace` once, then `pnpm dev:all` (app on port 3000, docs on port 3001).
+
 You do not need environment variables, API keys or a database install. Copy `.env.example` to `.env.local` to change any default. The comments in that file explain each setting.
 
 ## What runs by default
@@ -32,6 +34,7 @@ You do not need environment variables, API keys or a database install. Copy `.en
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Dev server |
+| `pnpm dev:all` | App and docs development servers on ports 3000 and 3001 |
 | `pnpm build` / `pnpm start` | Production build / serve (stop `pnpm dev` first, they share `.next/`) |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint (Next.js rules) |

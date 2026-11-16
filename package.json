@@ -6,6 +6,7 @@
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "next dev",
+    "dev:all": "pnpm dev & pnpm docs:dev & wait",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
