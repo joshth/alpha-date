@@ -1,6 +1,7 @@
 import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { runInNewContext } from "node:vm"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { createDecoderServer } from "@/lib/mcp/server"
@@ -73,4 +74,34 @@ test("ChatGPT can load a graph widget from the trend tool", async () => {
   assert.match(html, /toolResponseMetadata/)
   const result = await client.callTool({ name: "get_aura_trend", arguments: { term: "rizz" } })
   assert.equal((result._meta as { auraGraphPng?: string } | undefined)?.auraGraphPng, Buffer.from("89504e470d0a1a0a", "hex").toString("base64"))
+})
+
+test("graph widget renders the standard MCP Apps tool-result notification", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-event-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v1.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  const script = resource.contents[0].text.match(/<script>([\s\S]*?)<\/script>/)?.[1]
+  assert.ok(script)
+  const image = { src: "", alt: "", hidden: true }
+  const status = { textContent: "" }
+  let onMessage: ((event: unknown) => void) | undefined
+  const parent = {}
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "graph" ? image : status },
+    window: { parent, addEventListener: (name: string, listener: (event: unknown) => void) => {
+      if (name === "message") onMessage = listener
+    } },
+  })
+  assert.ok(onMessage)
+  onMessage({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result",
+    params: { _meta: { auraGraphPng: "aGVsbG8=", auraGraphTerm: "gyatt" } } } })
+  assert.equal(image.src, "data:image/png;base64,aGVsbG8=")
+  assert.equal(image.hidden, false)
+  assert.match(image.alt, /gyatt Aura graph/)
 })
