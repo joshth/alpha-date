@@ -43,7 +43,7 @@ window.addEventListener("openai:set_globals",event=>render(event.detail?.globals
 export function createDecoderServer(deps: DecoderDeps & { renderAuraPng?: typeof renderAuraPng }): McpServer {
   const tools = createDecoderTools(deps)
   const server = new McpServer({ name: "gen-alpha-decoder", version: "0.1.0" })
-  server.registerResource("aura-graph", GRAPH_URI, {}, async () => ({
+  server.registerResource("aura-graph", GRAPH_URI, { mimeType: "text/html;profile=mcp-app" }, async () => ({
     contents: [{ uri: GRAPH_URI, mimeType: "text/html;profile=mcp-app", text: graphWidget,
       _meta: { ui: { prefersBorder: true } } }],
   }))
@@ -56,7 +56,7 @@ export function createDecoderServer(deps: DecoderDeps & { renderAuraPng?: typeof
   server.registerTool("get_aura_trend", {
     description: "Observed search interest and fitted SIRS curve across 156 weeks as a graph, plus 26 labelled values for speech or braille. Read-only.",
     inputSchema, annotations,
-    _meta: { ui: { resourceUri: GRAPH_URI }, "openai/outputTemplate": GRAPH_URI },
+    _meta: { ui: { resourceUri: GRAPH_URI }, "ui/resourceUri": GRAPH_URI, "openai/outputTemplate": GRAPH_URI },
   }, async ({ term }) => {
     const { text, fit } = await tools.getAuraTrendResult(term)
     if (!fit) return { content: [{ type: "text" as const, text }] }
