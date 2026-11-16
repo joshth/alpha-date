@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { createDecoderTools, type DecoderDeps } from "@/lib/mcp/tools"
 import { renderAuraPng } from "@/lib/mcp/graph"
+import { auraGraphData } from "@/lib/mcp/graph-data"
 
 const inputSchema = { term: z.string().min(1).max(100) }
 const annotations = { readOnlyHint: true, openWorldHint: false }
@@ -61,15 +62,16 @@ export function createDecoderServer(deps: DecoderDeps & { renderAuraPng?: typeof
   }, async ({ term }) => {
     const { text, fit } = await tools.getAuraTrendResult(term)
     if (!fit) return { content: [{ type: "text" as const, text }] }
+    const structuredContent = { auraGraph: auraGraphData(fit) }
     try {
       const png = await (deps.renderAuraPng ?? renderAuraPng)(fit)
       return { content: [
         { type: "text" as const, text: `${text}\nIf the image is not shown inline, expand this tool result to view the PNG graph.` },
         { type: "image" as const, data: png.toString("base64"), mimeType: "image/png" },
-      ], _meta: { auraGraphPng: png.toString("base64"), auraGraphTerm: fit.term } }
+      ], structuredContent, _meta: { auraGraphPng: png.toString("base64"), auraGraphTerm: fit.term } }
     } catch (error) {
       console.error("Aura graph unavailable:", error)
-      return { content: [{ type: "text" as const, text: `${text}\nGraph unavailable.` }] }
+      return { content: [{ type: "text" as const, text: `${text}\nGraph unavailable.` }], structuredContent }
     }
   })
   return server
