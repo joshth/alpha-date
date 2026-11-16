@@ -140,7 +140,7 @@ Fitted interest, oldest first, 0 to 1: 0.19, 0.20, ... 0.68, 0.73
 [PNG image content: observed points and fitted curve across up to 156 weeks]
 ```
 
-The example abbreviates the 26 values. The real MCP result has a separate `image/png` block after the text. A blocked, unknown, or unfittable term gets no image. If rendering fails, the text adds “Graph unavailable.”
+The example abbreviates the 26 values. The real MCP result has a separate `image/png` block after the text. ChatGPT also uses the tool's MCP Apps resource to display the graph in a card; refresh the plugin after installing this version so it discovers the resource. A blocked, unknown, or unfittable term gets no image. If rendering fails, the text adds “Graph unavailable.”
 
 ## Feel or hear the trend {#trend}
 

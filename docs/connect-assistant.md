@@ -44,13 +44,13 @@ ChatGPT needs one account step because it cannot start a program on your compute
 1. In [OpenAI Platform tunnel settings](https://platform.openai.com/settings/organization/tunnels), create a tunnel connected to the ChatGPT workspace you will use. Copy its `tunnel_...` ID.
 2. Download and install [OpenAI's tunnel client](https://github.com/openai/tunnel-client/releases/latest) for your computer. Create a restricted runtime key with **Tunnels Read + Use** in [Platform API keys](https://platform.openai.com/settings/organization/api-keys).
 3. Paste the tunnel ID when setup asks. Paste the runtime key at the **hidden** prompt on your computer. Keep the setup window open while using ChatGPT; closing it stops the tunnel.
-4. In ChatGPT, open **Plugins → Add custom MCP server → Tunnel**. Select your tunnel, choose **No authentication** for the MCP server, and create the plugin. Start a new chat and ask the same sample question.
+4. In ChatGPT, open **Plugins → Add custom MCP server → Tunnel**. Select your tunnel, choose **No authentication** for the MCP server, and create the plugin. Open its detail page and select **Refresh** so ChatGPT discovers the graph display. Start a new chat and ask the same sample question.
 
 The runtime key is never saved in this project or written into the tunnel profile. Do not paste it into a chat, screenshot, or public issue. If you do not see the tunnel in ChatGPT, check that it belongs to the right workspace and that your account has **Tunnels Read + Use**. Your ChatGPT workspace must allow custom MCP servers.
 
 ## What to expect
 
-`get_aura_trend` gives a 156-week picture: orange points are observed search interest, a blue line is the fitted SIRS curve, and a pale band marks the last 180 days. Below the stage and explanation, the text answer lists the latest 26 observed and fitted values. If a graph cannot be drawn, the text still works and says **“Graph unavailable.”** Unknown, blocked, and unfittable words do not produce a graph.
+`get_aura_trend` gives a 156-week picture: orange points are observed search interest, a blue line is the fitted SIRS curve, and a pale band marks the last 180 days. ChatGPT displays it in a small graph card. The text answer lists the latest 26 observed and fitted values for speech and braille. If a graph cannot be drawn, the text still works and says **“Graph unavailable.”** Unknown, blocked, and unfittable words do not produce a graph.
 
 Your computer must be on for the local decoder to work. Claude Desktop and Gemini CLI start it when they need it. ChatGPT also needs the tunnel window running.
 
