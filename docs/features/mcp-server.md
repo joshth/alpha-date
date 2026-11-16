@@ -140,7 +140,7 @@ Fitted interest, oldest first, 0 to 1: 0.19, 0.20, ... 0.68, 0.73
 [PNG image content: observed points and fitted curve across up to 156 weeks]
 ```
 
-The example abbreviates the 26 values. The real MCP result has a separate `image/png` block after the text and advertises an MCP Apps UI resource. In the tested ChatGPT tunnel connection, the PNG is visible by expanding the `get_aura_trend` tool call; ChatGPT did not place it in the main answer. Refresh the plugin after installing this version so it discovers the current metadata. A blocked, unknown, or unfittable term gets no image. If rendering fails, the text adds “Graph unavailable.”
+The example abbreviates the 26 values. The real MCP result has a separate `image/png` block after the text and advertises an MCP Apps UI resource. In the tested ChatGPT tunnel connection, the PNG is visible by expanding the `get_aura_trend` tool call; ChatGPT did not place it in the main answer. The graph panel reads the PNG from the tool result metadata that ChatGPT passes to it, and shows no broken image when the graph is missing. This version has not yet been checked in ChatGPT, so if the panel still says “Graph unavailable”, expand the tool call to see the PNG. Refresh the plugin after installing this version so it discovers the current metadata. A blocked, unknown, or unfittable term gets no image. If rendering fails, the text adds “Graph unavailable.”
 
 ## Feel or hear the trend {#trend}
 
