@@ -5,7 +5,7 @@ import { renderAuraPng } from "@/lib/mcp/graph"
 
 const inputSchema = { term: z.string().min(1).max(100) }
 const annotations = { readOnlyHint: true, openWorldHint: false }
-const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v1.html"
+const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v2.html"
 const graphWidget = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aura trend graph</title><style>
@@ -45,7 +45,7 @@ export function createDecoderServer(deps: DecoderDeps & { renderAuraPng?: typeof
   const server = new McpServer({ name: "gen-alpha-decoder", version: "0.1.0" })
   server.registerResource("aura-graph", GRAPH_URI, {}, async () => ({
     contents: [{ uri: GRAPH_URI, mimeType: "text/html;profile=mcp-app", text: graphWidget,
-      _meta: { ui: { prefersBorder: true, csp: { connectDomains: [], resourceDomains: [] } } } }],
+      _meta: { ui: { prefersBorder: true } } }],
   }))
   const register = (name: string, description: string, run: (term: string) => Promise<string>) =>
     server.registerTool(name, { description, inputSchema, annotations }, async ({ term }) => ({
