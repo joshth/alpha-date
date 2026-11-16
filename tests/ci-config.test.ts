@@ -1,6 +1,9 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { existsSync, readFileSync } from "node:fs"
+import { spawnSync } from "node:child_process"
+import os from "node:os"
+import path from "node:path"
 
 const scripts: Record<string, string> = JSON.parse(readFileSync("package.json", "utf8")).scripts
 const pipeline = existsSync(".gitlab-ci.yml") ? readFileSync(".gitlab-ci.yml", "utf8") : ""
@@ -38,4 +41,15 @@ test("a docs job builds the docs site from its own lockfile, so broken links fai
   assert.match(job, /pnpm --dir website install --frozen-lockfile --ignore-workspace/)
   assert.match(job, /files: \[website\/pnpm-lock\.yaml\]/)
   assert.match(job, /script: pnpm --dir website build$/m)
+})
+
+test("graph tests pass without a local Python virtual environment", () => {
+  const env = { ...process.env, SIRS_DIR: path.join(os.tmpdir(), `missing-sirs-${process.pid}`) }
+  delete env.NODE_TEST_CONTEXT
+  const run = spawnSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "--conditions=react-server", "--test", "tests/mcp-graph.test.ts"], {
+    env,
+    encoding: "utf8",
+    timeout: 30_000,
+  })
+  assert.equal(run.status, 0, run.stdout + run.stderr)
 })
