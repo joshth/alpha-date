@@ -66,6 +66,9 @@ test("ChatGPT can load a graph widget from the trend tool", async () => {
   const trend = tools.find((tool) => tool.name === "get_aura_trend")!
   const uri = (trend._meta as { ui?: { resourceUri?: string } } | undefined)?.ui?.resourceUri
   assert.equal(uri, "ui://gen-alpha-decoder/aura-graph-v4.html")
+  assert.equal(trend._meta?.["ui/resourceUri"], uri)
+  const { resources } = await client.listResources()
+  assert.equal(resources.find((resource) => resource.uri === uri)?.mimeType, "text/html;profile=mcp-app")
   const resource = await client.readResource({ uri })
   assert.equal(resource.contents[0].mimeType, "text/html;profile=mcp-app")
   if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
