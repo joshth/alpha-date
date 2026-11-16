@@ -16,6 +16,7 @@ const rendered = JSON.parse(execFileSync(process.execPath, ["--require", "tsx/cj
   const result = { available: typeof Table === "function" };
   if (result.available) {
     result.html = render(React.createElement(Table, { rows }));
+    result.encodedTerm = render(React.createElement(Table, { rows: [{ term: "rizz & roll", stage: null, confidence: null }] }));
     result.empty = render(React.createElement(Table, { rows: [] }));
     result.tab = render(React.createElement(LifecycleTab, { fitAction: async () => ({}), dashboardRows: rows }));
     if (typeof sortAuraDashboardRows === "function") {
@@ -40,6 +41,10 @@ test("Aura page renders an accessible per-term stage table with an empty state",
   assert.match(html, /Emerging/)
   assert.match(html, /Peaking/)
   assert.match(html, /No stage yet/)
+  for (const term of ["bussin", "clout", "steady", "unknown"]) {
+    assert.match(html, new RegExp(`<a[^>]*href="/lab/aura/${term}"[^>]*>${term}<\\/a>`), `${term} links to its Aura dashboard`)
+  }
+  assert.match(rendered.encodedTerm, /<a[^>]*href="\/lab\/aura\/rizz%20%26%20roll"[^>]*>rizz &amp; roll<\/a>/)
   for (const confidence of ["75%", "50%", "25%", "—"]) assert.ok(html.includes(confidence), confidence)
   assert.deepEqual(rendered.termAscending, ["bussin", "clout", "steady", "unknown"])
   assert.deepEqual(rendered.termDescending, ["unknown", "steady", "clout", "bussin"])

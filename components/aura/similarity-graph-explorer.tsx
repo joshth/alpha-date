@@ -73,7 +73,7 @@ export function GraphExplorer({ graphAction, semanticAction }: { graphAction: ()
   // Built once at the lowest slider value; the slider only filters edges, so nodes never move.
   const graph = useMemo(() => (data ? similarityGraph(data.rows, data.lexicon, 0.3) : null), [data])
   const positions = useMemo(() => (graph ? layoutGraph(graph) : {}), [graph])
-  if (!data || !graph) return <Skeleton className="h-64" />
+  if (!data || !graph) return <div role="status" aria-label="Loading similarity graph"><span className="sr-only">Loading similarity graph…</span><Skeleton className="h-64 w-full" /></div>
   if (!data.rows.length) return <p className="text-sm text-lab-muted">No suggestions to graph yet.</p>
   const quality = data.golden.length ? { ...mergeQuality(data.golden, threshold), cases: data.golden.length } : null
   const onMove = (key: Key) => {
