@@ -145,3 +145,16 @@ test("graph widget reads the PNG from ChatGPT's toolResponseMetadata", async () 
   assert.equal(image.hidden, false)
   assert.match(image.alt, /gyatt Aura graph/)
 })
+
+test("graph widget keeps the empty image hidden", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-hidden-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v4.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  assert.match(resource.contents[0].text, /img\[hidden\]\{display:none\}/)
+})
