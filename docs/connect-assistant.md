@@ -15,7 +15,7 @@ Install these once on your computer:
 2. [Node.js](https://nodejs.org/en/download) (version 20 or newer), to run the decoder.
 3. [Python 3.12](https://www.python.org/downloads/), to calculate and draw Aura trends. On Windows, tick **Add Python to PATH** in the installer.
 
-You also need the assistant you want to use: [Claude Desktop](https://claude.ai/download), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or [ChatGPT](https://chatgpt.com). Claude Desktop for Linux is currently in beta. This setup uses a local Gemini CLI; the Gemini website has different availability and connection rules.
+You also need the assistant you want to use: [Claude Desktop](https://claude.ai/download), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or [ChatGPT](https://chatgpt.com). Claude Desktop for Linux is currently in beta. This setup uses a local Gemini CLI. [Gemini Apps custom MCP connections](https://support.google.com/gemini/answer/17209137) currently require a supported US personal account, so Gemini CLI is the route for people elsewhere, including Australia.
 
 ## Copy and connect in one go
 

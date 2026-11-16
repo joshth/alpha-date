@@ -11,6 +11,7 @@
 
 Full scope, schedule and success criteria: [docs/SCOPE.md](docs/SCOPE.md).
 Developer docs (guides, architecture, CI) and the Swagger API reference: see [Documentation site](#documentation-site).
+To connect Claude Desktop, Gemini CLI, or ChatGPT on macOS, Linux, or Windows, use [Connect your AI assistant](docs/connect-assistant.md).
 
 ## Quick start
 
@@ -78,7 +79,7 @@ The docs are private (NDA). The site tells search engines not to index it, and C
 | `pnpm docs:dev` | Docs site from `docs/`, with the Swagger API reference at `/api`, on http://localhost:3001 (Node 20+; install once with `pnpm --dir website install --ignore-workspace`) |
 | `pnpm --dir website build` | Build the docs site; broken links fail it (what CI's `docs` job runs) |
 
-`aura:plot` needs a Python 3.12 venv in `sirs/`, made once:
+`aura:plot` and the MCP Aura graph need a Python 3.12 venv in `sirs/`, made once. The guided assistant setup creates it automatically:
 
 ```sh
 # macOS / Linux
