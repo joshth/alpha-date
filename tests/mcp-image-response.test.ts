@@ -65,7 +65,7 @@ test("ChatGPT can load a graph widget from the trend tool", async () => {
   const { tools } = await client.listTools()
   const trend = tools.find((tool) => tool.name === "get_aura_trend")!
   const uri = (trend._meta as { ui?: { resourceUri?: string } } | undefined)?.ui?.resourceUri
-  assert.equal(uri, "ui://gen-alpha-decoder/aura-graph-v3.html")
+  assert.equal(uri, "ui://gen-alpha-decoder/aura-graph-v4.html")
   const resource = await client.readResource({ uri })
   assert.equal(resource.contents[0].mimeType, "text/html;profile=mcp-app")
   if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
@@ -84,7 +84,7 @@ test("graph widget renders the standard MCP Apps tool-result notification", asyn
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
   const client = new Client({ name: "widget-event-test", version: "0.0.0" })
   await Promise.all([server.connect(serverSide), client.connect(clientSide)])
-  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v3.html" })
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v4.html" })
   if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
   const script = resource.contents[0].text.match(/<script>([\s\S]*?)<\/script>/)?.[1]
   assert.ok(script)

@@ -5,7 +5,7 @@ import { renderAuraPng } from "@/lib/mcp/graph"
 
 const inputSchema = { term: z.string().min(1).max(100) }
 const annotations = { readOnlyHint: true, openWorldHint: false }
-const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v3.html"
+const GRAPH_URI = "ui://gen-alpha-decoder/aura-graph-v4.html"
 const graphWidget = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aura trend graph</title><style>
@@ -15,7 +15,7 @@ figure{margin:0}img{display:block;width:100%;height:auto}figcaption{margin-top:8
 <figcaption id="status" role="status">Loading Aura graph…</figcaption></figure><script>
 function render(metadata=window.openai?.toolResponseMetadata){
   const result=metadata?.mcp_tool_result??metadata?.call_tool_result??metadata;
-  const png=result?._meta?.auraGraphPng;
+  const png=result?.content?.find(item=>item.type==="image"&&item.mimeType==="image/png")?.data??result?._meta?.auraGraphPng;
   const term=result?._meta?.auraGraphTerm??"This term";
   const image=document.getElementById("graph");
   const status=document.getElementById("status");
