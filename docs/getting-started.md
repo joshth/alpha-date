@@ -4,6 +4,8 @@ sidebar_position: 2
 
 # Getting started
 
+Want to use the decoder in Claude, ChatGPT, or Gemini? Follow [Connect your AI assistant](./connect-assistant.md) for one guided setup command on macOS, Linux, or Windows.
+
 ## Requirements
 
 - Node.js 20 or later
@@ -59,7 +61,7 @@ The API reference page is not searchable.
 
 ## The aura:plot Python venv
 
-`pnpm aura:plot` needs a Python 3.12 venv in `sirs/`. Make it once.
+`pnpm aura:plot` and the MCP Aura graph need a Python 3.12 venv in `sirs/`. The [assistant setup](./connect-assistant.md) makes it automatically. For a manual app setup, make it once:
 
 macOS or Linux:
 
