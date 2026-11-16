@@ -1,6 +1,7 @@
 // MCP tools for assistive tech: plain text and lexicon data fences.
 import { AURA_STAGE_LABELS, LOW_CONFIDENCE } from "@/lib/aura"
 import type { AuraFitResult } from "@/lib/aura/fit"
+import type { SirsFit } from "@/lib/aura/fit-command"
 import { lifecycleRows, trendSentence } from "@/lib/aura/trend-text"
 import { asData } from "@/lib/mcp/data"
 import { answer } from "@/lib/mcp/format"
@@ -49,6 +50,26 @@ export function createDecoderTools(deps: DecoderDeps) {
     return { term: record.term, result: await deps.fitAuraTerm(record.term.term) }
   }
 
+  async function getAuraTrendResult(query: string): Promise<{ text: string; fit: SirsFit | null }> {
+    const refusal = await blocked(query)
+    if (refusal) return { text: refusal, fit: null }
+    const found = await findFitted(query)
+    if (!found) return { text: await notFound(query), fit: null }
+    const { term, result } = found
+    if (result.kind !== "fit" || !result.fit.stage) {
+      return { text: answer(auraSummary(term.term, result), ["There is too little search data to give a trend."]), fit: null }
+    }
+    const rows = lifecycleRows(result.fit).slice(-26)
+    return {
+      text: answer(auraSummary(term.term, result), [
+        trendSentence(result.fit),
+        `Observed interest, oldest first, 0 to 1: ${rows.map((row) => row.interest.toFixed(2)).join(", ")}`,
+        `Fitted interest, oldest first, 0 to 1: ${rows.map((row) => row.fitted.toFixed(2)).join(", ")}`,
+      ]),
+      fit: result.fit,
+    }
+  }
+
   return {
     async lookupTerm(query: string): Promise<string> {
       const refusal = await blocked(query)
@@ -71,18 +92,8 @@ export function createDecoderTools(deps: DecoderDeps) {
       return answer(auraSummary(term.term, result), [result.kind === "fit" ? trendSentence(result.fit) : "There is too little search data to give a stage."])
     },
     async getAuraTrend(query: string): Promise<string> {
-      const refusal = await blocked(query)
-      if (refusal) return refusal
-      const found = await findFitted(query)
-      if (!found) return notFound(query)
-      const { term, result } = found
-      if (result.kind !== "fit" || !result.fit.stage) return answer(auraSummary(term.term, result), ["There is too little search data to give a trend."])
-      const rows = lifecycleRows(result.fit).slice(-26)
-      return answer(auraSummary(term.term, result), [
-        trendSentence(result.fit),
-        `Observed interest, oldest first, 0 to 1: ${rows.map((row) => row.interest.toFixed(2)).join(", ")}`,
-        `Fitted interest, oldest first, 0 to 1: ${rows.map((row) => row.fitted.toFixed(2)).join(", ")}`,
-      ])
+      return (await getAuraTrendResult(query)).text
     },
+    getAuraTrendResult,
   }
 }
