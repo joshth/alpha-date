@@ -56,7 +56,7 @@ const tab = readFileSync("components/aura/lifecycle-tab.tsx", "utf8")
 
 test("the lifecycle table restores the saved sort after mount and saves every change", () => {
   assert.match(tab, /from "\.\/sort-pref"/)
-  assert.match(tab, /useEffect\(\(\) => \{[^}]*readAuraSortPref\(window\.localStorage\)/s)
-  assert.match(tab, /writeAuraSortPref\(window\.localStorage,/)
+  assert.match(tab, /useEffect\(\(\) => \{[^}]*readAuraSortPref\(safeLocalStorage\(\)\)/)
+  assert.match(tab, /writeAuraSortPref\(safeLocalStorage\(\),/)
   assert.doesNotMatch(tab, /type DashboardSortKey =/)
 })

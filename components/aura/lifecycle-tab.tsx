@@ -2,6 +2,7 @@
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import { AuraBadge } from "./aura-badge"
 import { AuraTrend } from "./aura-trend"
+import { readAuraSortPref, safeLocalStorage, writeAuraSortPref, DEFAULT_AURA_SORT, type DashboardSortKey, type SortDirection } from "./sort-pref"
 import { LifecycleCharts } from "./lifecycle-charts"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AURA_STAGE_LABELS } from "@/lib/aura"
@@ -12,8 +13,6 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 
 const SOURCE = { vendored: "Google Trends", synthetic: "this site's search events" }
 const mono = "font-mono tabular-nums whitespace-nowrap"
-type DashboardSortKey = "term" | "aura" | "confidence"
-type SortDirection = "ascending" | "descending"
 
 export function sortAuraDashboardRows(rows: AuraDashboardRow[], key: DashboardSortKey, direction: SortDirection) {
   return rows
@@ -33,12 +32,17 @@ export function sortAuraDashboardRows(rows: AuraDashboardRow[], key: DashboardSo
 }
 
 export function AuraDashboardTable({ rows }: { rows: AuraDashboardRow[] }) {
-  const [sortKey, setSortKey] = useState<DashboardSortKey>("term")
-  const [direction, setDirection] = useState<SortDirection>("ascending")
+  const [sortKey, setSortKey] = useState<DashboardSortKey>(DEFAULT_AURA_SORT.key)
+  const [direction, setDirection] = useState<SortDirection>(DEFAULT_AURA_SORT.direction)
+  useEffect(() => {
+    const saved = readAuraSortPref(safeLocalStorage()) // after mount, so server and first client render match
+    setSortKey(saved.key); setDirection(saved.direction)
+  }, [])
   const sortedRows = useMemo(() => sortAuraDashboardRows(rows, sortKey, direction), [rows, sortKey, direction])
   const sortBy = (key: DashboardSortKey) => {
-    if (sortKey === key) setDirection((current) => current === "ascending" ? "descending" : "ascending")
-    else { setSortKey(key); setDirection("ascending") }
+    const next: SortDirection = sortKey === key && direction === "ascending" ? "descending" : "ascending"
+    setSortKey(key); setDirection(next)
+    writeAuraSortPref(safeLocalStorage(), { key, direction: next })
   }
   const header = (key: DashboardSortKey, label: string) => (
     <TableHead scope="col" aria-sort={sortKey === key ? direction : "none"}>

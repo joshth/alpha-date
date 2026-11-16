@@ -37,3 +37,12 @@ export function writeAuraSortPref(storage: Pick<Storage, "setItem"> | null, pref
     // The sort just won't be remembered.
   }
 }
+
+/** Reading window.localStorage itself can throw when site data is blocked. */
+export function safeLocalStorage(): Storage | null {
+  try {
+    return window.localStorage
+  } catch {
+    return null
+  }
+}
