@@ -42,7 +42,7 @@ export function AuraGlossary({ open: controlledOpen }: { open?: boolean } = {}) 
     return () => document.removeEventListener("keydown", close)
   }, [controlledOpen])
   return <>
-    <button ref={triggerRef} type="button" onClick={() => setUncontrolledOpen(true)} className="rounded px-1 text-sm underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">What does this mean?</button>
+    <button ref={triggerRef} type="button" aria-expanded={open} onClick={() => setUncontrolledOpen((o) => !o)} className="rounded px-1 text-sm underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">What does this mean?</button>
     {open && <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="aura-glossary-title" tabIndex={-1} className="mt-2 rounded border border-lab-border bg-lab-surface-raised p-3">
       <h2 id="aura-glossary-title" className="font-semibold">Aura stages</h2>
       <ul className="mt-2 grid gap-2">{STAGE_ORDER.map((stage) => <li key={stage ?? "none"} className="flex items-start gap-2"><AuraIcon stage={stage} /><span><strong>{stage ? AURA_STAGE_LABELS[stage] : "No stage yet"}</strong>: {MEANINGS[stage ?? "none"]}</span></li>)}</ul>
