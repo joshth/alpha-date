@@ -15,8 +15,9 @@ figure{margin:0}img{display:block;width:100%;height:auto}figcaption{margin-top:8
 <figcaption id="status" role="status">Loading Aura graph…</figcaption></figure><script>
 function render(metadata=window.openai?.toolResponseMetadata){
   const result=metadata?.mcp_tool_result??metadata?.call_tool_result??metadata;
-  const png=result?.content?.find(item=>item.type==="image"&&item.mimeType==="image/png")?.data??result?._meta?.auraGraphPng;
-  const term=result?._meta?.auraGraphTerm??"This term";
+  const meta=result?._meta??result;
+  const png=result?.content?.find(item=>item.type==="image"&&item.mimeType==="image/png")?.data??meta?.auraGraphPng;
+  const term=meta?.auraGraphTerm??"This term";
   const image=document.getElementById("graph");
   const status=document.getElementById("status");
   if(typeof png==="string"&&/^[A-Za-z0-9+/=]+$/.test(png)){
