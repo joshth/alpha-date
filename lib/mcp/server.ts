@@ -63,7 +63,7 @@ export function createDecoderServer(deps: DecoderDeps & { renderAuraPng?: typeof
     try {
       const png = await (deps.renderAuraPng ?? renderAuraPng)(fit)
       return { content: [
-        { type: "text" as const, text },
+        { type: "text" as const, text: `${text}\nIf the image is not shown inline, expand this tool result to view the PNG graph.` },
         { type: "image" as const, data: png.toString("base64"), mimeType: "image/png" },
       ], _meta: { auraGraphPng: png.toString("base64"), auraGraphTerm: fit.term } }
     } catch (error) {
