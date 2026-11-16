@@ -307,3 +307,9 @@ test("the dashboard page documents the trend you can read or hear", () => {
   assert.match(section, /tritone/i)
   for (const file of ["lib/aura/sonify.ts", "components/aura/trend-player.tsx", "components/aura/aura-trend.tsx"]) assert.ok(section.includes(file), file)
 })
+
+test("Mermaid flowchart hover tooltips work because webpack keeps d3-transition", () => {
+  // d3 is marked sideEffects:false, so webpack drops d3-transition and selections lose .transition().
+  assert.match(config, /sideEffects: true/)
+  assert.match(config, /d3/)
+})
