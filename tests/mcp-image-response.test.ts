@@ -109,4 +109,8 @@ test("graph widget renders the standard MCP Apps tool-result notification", asyn
   assert.equal(image.src, "data:image/png;base64,aGVsbG8=")
   assert.equal(image.hidden, false)
   assert.match(image.alt, /gyatt Aura graph/)
+  onMessage({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result",
+    params: { content: [{ type: "text", text: "Rizz trend" },
+      { type: "image", mimeType: "image/png", data: "cml6eg==" }] } } })
+  assert.equal(image.src, "data:image/png;base64,cml6eg==")
 })
