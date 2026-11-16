@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { moderate } from "@/lib/_stubs/moderation"
 import { createAuraFit } from "@/lib/aura/fit"
 import { runFit } from "@/lib/aura/fit-command"
+import { defaultMcpDatabase } from "@/lib/mcp/database"
 import { createDecoderServer } from "@/lib/mcp/server"
 import { checkInputSafety } from "@/lib/safety/gate"
 import { createSafeTermLookup } from "@/lib/safety/safe-term-lookup"
@@ -12,6 +13,7 @@ import { getTermByKey, getTermEvents, listPublishedTermNames } from "@/lib/terms
 
 // MCP clients start servers from their own folder; the lexicon database lives under the repo root.
 process.chdir(path.join(__dirname, ".."))
+defaultMcpDatabase()
 
 createDecoderServer({
   checkInputSafety,
