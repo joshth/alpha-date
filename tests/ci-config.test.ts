@@ -44,7 +44,7 @@ test("a docs job builds the docs site from its own lockfile, so broken links fai
 })
 
 test("graph tests pass without a local Python virtual environment", () => {
-  const env = { ...process.env, SIRS_DIR: path.join(os.tmpdir(), `missing-sirs-${process.pid}`) }
+  const env: NodeJS.ProcessEnv = { ...process.env, SIRS_DIR: path.join(os.tmpdir(), `missing-sirs-${process.pid}`) }
   delete env.NODE_TEST_CONTEXT
   const run = spawnSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "--conditions=react-server", "--test", "tests/mcp-graph.test.ts"], {
     env,
