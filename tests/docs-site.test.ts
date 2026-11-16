@@ -5,6 +5,11 @@ import { existsSync, readFileSync } from "node:fs"
 const read = (file: string) => (existsSync(file) ? readFileSync(file, "utf8") : "")
 const config = read("website/docusaurus.config.ts")
 
+test("one command starts the app and docs development servers", () => {
+  const scripts = JSON.parse(read("package.json") || "{}").scripts
+  assert.equal(scripts?.["dev:all"], "pnpm dev & pnpm docs:dev & wait")
+})
+
 test("the docs site is its own package with its own lockfile, outside the app workspace", () => {
   const pkg = JSON.parse(read("website/package.json") || "{}")
   assert.equal(pkg.scripts?.build, "docusaurus build")
