@@ -1,12 +1,16 @@
 import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { existsSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { plotCommand } from "@/lib/aura/plot-command"
 import { renderAuraPng } from "@/lib/mcp/graph"
 import { fitResult } from "./mcp-fit-fixture"
 
-test("renders a valid PNG from observed and fitted SIRS data", async () => {
+const hasVenv = existsSync(plotCommand(["x"]).cmd)
+
+test("renders a valid PNG from observed and fitted SIRS data", { skip: !hasVenv && "sirs/.venv missing" }, async () => {
   const result = fitResult()
   if (result.kind !== "fit") throw new Error("missing fit")
   const png = await renderAuraPng(result.fit)
