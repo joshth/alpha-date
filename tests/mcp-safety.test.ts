@@ -5,8 +5,9 @@ import { DATA_BEGIN } from "@/lib/mcp/data"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
 import { resourcesFor } from "@/lib/safety/resources"
 import { safetyResponseMessage } from "@/lib/safety/responses"
-import { getTermByKey, getTermEvents, listPublishedTermNames } from "@/lib/terms-store"
+import { getTermByKey, listPublishedTermNames } from "@/lib/terms-store"
 import { createDecoderTools } from "@/lib/mcp/tools"
+import { fitResult } from "./mcp-fit-fixture"
 
 const verdicts: SafetyVerdict[] = [
   { action: "safeguarding", categories: ["suicide_self_harm"], crisis: "self_harm", decidedBy: "rules", reason: "crisis:self_harm" },
@@ -19,12 +20,7 @@ function makeTools(gate: typeof checkInputSafety) {
     checkInputSafety: gate,
     getTermByKey,
     listPublishedTermNames,
-    getTermEvents,
-    scoreTermLifecycle: () => {
-      spy.scored++
-      return { stage: "peaking", confidence: 0.9, explanation: "x" }
-    },
-    now: () => new Date("2026-11-01T00:00:00.000Z"),
+    fitAuraTerm: async () => { spy.scored++; return fitResult() },
   })
   return { tools, spy }
 }
