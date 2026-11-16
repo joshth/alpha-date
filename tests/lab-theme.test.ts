@@ -2,7 +2,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { existsSync, readFileSync } from "node:fs"
 
-const read = (p: string) => (existsSync(p) ? readFileSync(p, "utf8") : "")
+const read = (p: string) => (existsSync(p) ? readFileSync(p, "utf8").replace(/\r\n/g, "\n") : "")
 const css = read("app/globals.css")
 const tw = read("tailwind.config.ts")
 const layout = read("app/lab/layout.tsx")
@@ -79,10 +79,28 @@ test("tailwind.config.ts exposes lab and stage colours and Plex fonts", () => {
   assert.match(tw, /mono:\s*\[\s*"var\(--font-plex-mono\)"/)
 })
 
-test("app/lab/layout.tsx loads IBM Plex and applies the lab class", () => {
-  assert.match(layout, /import \{[^}]*IBM_Plex_Sans[^}]*\} from "next\/font\/google"/)
-  assert.match(layout, /import \{[^}]*IBM_Plex_Mono[^}]*\} from "next\/font\/google"/)
+test("app/lab/layout.tsx bundles licensed IBM Plex fonts without build-time Google requests", () => {
+  assert.match(layout, /import localFont from "next\/font\/local"/)
+  assert.doesNotMatch(layout, /next\/font\/google/)
+  const fonts = [...layout.matchAll(/(?:src|path): "(\.\.\/\.\.\/fonts\/[^"\n]+\.ttf)"/g)].map(match => match[1])
+  assert.equal(fonts.length, 4)
+  for (const font of fonts) {
+    const bytes = readFileSync("app/lab/" + font)
+    assert.deepEqual([...bytes.subarray(0, 4)], [0, 1, 0, 0], `${font} must be an actual TrueType font`)
+  }
+  assert.match(read("fonts/OFL-IBM-Plex.txt"), /SIL OPEN FONT LICENSE Version 1.1/)
+
   assert.match(layout, /variable: "--font-plex-sans"/)
   assert.match(layout, /variable: "--font-plex-mono"/)
   assert.match(layout, /className=\{?[^>]*\blab\b/)
+})
+
+
+test("the calls-avoided badge also uses a bundled font", () => {
+  const badge = read("components/search/ai-calls-avoided-badge.tsx")
+  assert.match(badge, /next\/font\/local/)
+  assert.doesNotMatch(badge, /next\/font\/google/)
+  assert.match(badge, /weight: "900"/)
+  assert.deepEqual([...readFileSync("fonts/Nunito-Variable.ttf").subarray(0, 4)], [0, 1, 0, 0])
+  assert.match(read("fonts/OFL-Nunito.txt"), /SIL OPEN FONT LICENSE Version 1.1/)
 })
