@@ -176,3 +176,46 @@ test("the trend result carries the graph as numbers, even when the PNG cannot re
     assert.equal(graph?.fitted.length, 26)
   }
 })
+
+async function widgetScript(): Promise<string> {
+  const server = createDecoderServer({ checkInputSafety, getTermByKey, listPublishedTermNames, fitAuraTerm: async () => fitResult() })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-chart-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v5.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  return resource.contents[0].text.match(/<script>([\s\S]*?)<\/script>/)![1]
+}
+
+const graph = { term: "gyatt", startWeek: "2026-05-10", windowStart: "2026-05-24", observed: [0.1, 0.5, 0.2, 0.3], fitted: [0.2, 0.3, 0.3, 0.3] }
+
+test("graph panel draws the chart itself from the numbers when no PNG arrives", async () => {
+  const script = await widgetScript()
+  const image = { src: "", alt: "", hidden: true }
+  const chart = { innerHTML: "", hidden: true }
+  const status = { textContent: "" }
+  let onMessage: ((event: unknown) => void) | undefined
+  const parent = { postMessage: () => {} }
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "graph" ? image : id === "chart" ? chart : status },
+    window: { parent, addEventListener: (name: string, listener: (event: unknown) => void) => { if (name === "message") onMessage = listener } },
+  })
+  onMessage!({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result",
+    params: { structuredContent: { auraGraph: graph } } } })
+  assert.equal(chart.hidden, false)
+  assert.equal(image.hidden, true)
+  assert.match(chart.innerHTML, /<svg[^>]*role="img"[^>]*aria-label="gyatt Aura graph/)
+  assert.equal((chart.innerHTML.match(/<circle/g) ?? []).length, 4)
+  assert.match(chart.innerHTML, /<polyline/)
+  assert.doesNotMatch(status.textContent, /Graph unavailable/)
+})
+
+test("graph panel also draws from ChatGPT's toolOutput", async () => {
+  const script = await widgetScript()
+  const chart = { innerHTML: "", hidden: true }
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "chart" ? chart : { src: "", alt: "", hidden: true, textContent: "" } },
+    window: { parent: { postMessage: () => {} }, addEventListener: () => {}, openai: { toolOutput: { auraGraph: graph } } },
+  })
+  assert.match(chart.innerHTML, /<svg/)
+})
