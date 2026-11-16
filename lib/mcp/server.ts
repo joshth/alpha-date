@@ -10,7 +10,7 @@ const graphWidget = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aura trend graph</title><style>
 body{margin:0;padding:12px;font:15px system-ui,sans-serif;color:#17212b;background:#fff}
-figure{margin:0}img{display:block;width:100%;height:auto}figcaption{margin-top:8px;line-height:1.4}
+figure{margin:0}img{display:block;width:100%;height:auto}img[hidden]{display:none}figcaption{margin-top:8px;line-height:1.4}
 </style></head><body><figure><img id="graph" alt="Aura trend graph" hidden>
 <figcaption id="status" role="status">Loading Aura graph…</figcaption></figure><script>
 function render(metadata=window.openai?.toolResponseMetadata){
