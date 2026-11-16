@@ -8,7 +8,7 @@ import { shouldStartNavigationProgress } from "./navigation-progress"
 import { applyThemePref, readThemePref, writeThemePref, type ThemePref } from "./theme"
 import { LabShellView, shouldFocusSearch } from "./shell"
 
-export function LabShell(props: { userName: string; mockLlm: boolean; showDemoPages?: boolean; children: React.ReactNode }) {
+export function LabShell(props: { userName: string; mockLlm: boolean; showDemoPages?: boolean; headerActions?: React.ReactNode; children: React.ReactNode }) {
   const pathname = usePathname() ?? "/lab"
   const previousPathname = useRef(pathname)
   const [navigationProgress, setNavigationProgress] = useState<number | null>(null)
