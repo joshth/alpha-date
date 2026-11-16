@@ -66,6 +66,28 @@ flowchart TB
 
 5.  **Other clients.** Any MCP client that runs stdio servers can use the same command and args.
 
+### ChatGPT {#chatgpt}
+
+ChatGPT cannot launch this local stdio command directly. For a private connection, use [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels). This keeps the server and its local database on your computer. Your computer must stay on with `tunnel-client` running for ChatGPT tool calls to work. A public ChatGPT plugin would instead need a stable HTTPS Streamable HTTP endpoint.
+
+1. Sign in to [OpenAI Platform tunnel settings](https://platform.openai.com/settings/organization/tunnels). Create a tunnel associated with the ChatGPT workspace where you will add the plugin, and copy its `tunnel_id`. You need Tunnels Read + Manage to create it and Tunnels Read + Use to run it. Your ChatGPT workspace must also allow custom MCP servers.
+2. Install the current `tunnel-client` from the download link on that page or the [official releases](https://github.com/openai/tunnel-client/releases/latest). Run `tunnel-client help quickstart` to check the installed version's options.
+3. Create a restricted runtime API key with Tunnels Read + Use. Enter it into `CONTROL_PLANE_API_KEY` in your local shell; do not put the key in this repository, the command line, or chat. Then configure the local stdio server, replacing only the tunnel ID:
+
+   ```sh
+   tunnel-client init \
+     --sample sample_mcp_stdio_local \
+     --profile gen-alpha-decoder \
+     --tunnel-id tunnel_YOUR_ID \
+     --mcp-command "/Users/richardlong/Code/alpha-date/node_modules/.bin/tsx --tsconfig /Users/richardlong/Code/alpha-date/tsconfig.json --conditions=react-server /Users/richardlong/Code/alpha-date/scripts/mcp-server.ts"
+   tunnel-client doctor --profile gen-alpha-decoder --explain
+   tunnel-client run --profile gen-alpha-decoder
+   ```
+
+4. In [ChatGPT Plugins](https://chatgpt.com), choose **Add custom MCP server**, select **Tunnel**, choose that `tunnel_id`, and choose **No authentication** for the MCP server itself. The tunnel already controls access to this private, synthetic, read-only lexicon. Review the discovered `lookup_term`, `get_aura`, and `get_aura_trend` tools, create and install the plugin, then start a new chat and ask: “Use Gen Alpha Decoder to look up gyatt.”
+
+If ChatGPT cannot discover tools, check that `tunnel-client run` is still active, then rerun `doctor`. If the tunnel is missing from ChatGPT, check its workspace association and Tunnels Read + Use permission. See the [official connection guide](https://developers.openai.com/plugins/deploy/connect-chatgpt).
+
 ## Tools {#tools}
 
 Each tool takes `{ term: string }` (at most 100 characters) and is marked `readOnlyHint`.
