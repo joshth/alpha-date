@@ -32,6 +32,7 @@ test("fitted Aura trend returns readable text followed by a PNG", async () => {
   assert.equal(content[0].type, "text")
   assert.match(content[0].text!, /Observed interest/)
   assert.match(content[0].text!, /Fitted interest/)
+  assert.match(content[0].text!, /expand this tool result to view the PNG graph/i)
   assert.equal(content[1].type, "image")
   assert.equal(content[1].mimeType, "image/png")
   assert.equal(Buffer.from(content[1].data!, "base64").subarray(0, 8).toString("hex"), "89504e470d0a1a0a")
