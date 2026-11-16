@@ -49,3 +49,14 @@ test("writeAuraSortPref stores the sort under the key, round-trips, and never th
   assert.doesNotThrow(() => writeAuraSortPref(null, DEFAULT_AURA_SORT))
   assert.doesNotThrow(() => writeAuraSortPref({ setItem: boom }, DEFAULT_AURA_SORT))
 })
+
+// No DOM test library in this repo, so the wiring is checked from the component source.
+import { readFileSync } from "node:fs"
+const tab = readFileSync("components/aura/lifecycle-tab.tsx", "utf8")
+
+test("the lifecycle table restores the saved sort after mount and saves every change", () => {
+  assert.match(tab, /from "\.\/sort-pref"/)
+  assert.match(tab, /useEffect\(\(\) => \{[^}]*readAuraSortPref\(window\.localStorage\)/s)
+  assert.match(tab, /writeAuraSortPref\(window\.localStorage,/)
+  assert.doesNotMatch(tab, /type DashboardSortKey =/)
+})
