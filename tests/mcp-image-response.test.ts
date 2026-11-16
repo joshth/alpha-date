@@ -118,3 +118,30 @@ test("graph widget renders the standard MCP Apps tool-result notification", asyn
       { type: "image", mimeType: "image/png", data: "cml6eg==" }] } } })
   assert.equal(image.src, "data:image/png;base64,cml6eg==")
 })
+
+test("graph widget reads the PNG from ChatGPT's toolResponseMetadata", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-chatgpt-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v4.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  const script = resource.contents[0].text.match(/<script>([\s\S]*?)<\/script>/)?.[1]
+  assert.ok(script)
+  const image = { src: "", alt: "", hidden: true }
+  const status = { textContent: "" }
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "graph" ? image : status },
+    window: {
+      parent: { postMessage: () => {} },
+      addEventListener: () => {},
+      openai: { toolResponseMetadata: { auraGraphPng: "aGVsbG8=", auraGraphTerm: "gyatt" } },
+    },
+  })
+  assert.equal(image.src, "data:image/png;base64,aGVsbG8=")
+  assert.equal(image.hidden, false)
+  assert.match(image.alt, /gyatt Aura graph/)
+})
