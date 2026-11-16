@@ -20,22 +20,20 @@ const run = () => (cached ??= JSON.parse(execFileSync(process.execPath, ["--requ
   console.log(JSON.stringify(out));
 `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })))
 
-const icon = (html: string) => html.match(/<span[^>]*aria-hidden="true"[^>]*>([^<]*)<\/span>/)!
 const visible = (html: string) => html.replace(/<span[^>]*sr-only[^>]*>.*?<\/span>/g, "").replace(/<[^>]+>/g, "")
 
-const spec: [string, string, string, string][] = [
-  ["emerging", "↗", "text-stage-emerging", AURA_STAGE_LABELS.emerging],
-  ["peaking", "▲", "text-stage-peaking", AURA_STAGE_LABELS.peaking],
-  ["declining", "↘", "text-stage-declining", AURA_STAGE_LABELS.declining],
-  ["parent_territory", "●", "text-stage-parent", AURA_STAGE_LABELS.parent_territory],
-  ["null", "○", "text-lab-muted", "No stage yet"],
+const spec: [string, string, string][] = [
+  ["emerging", "text-stage-emerging", AURA_STAGE_LABELS.emerging],
+  ["peaking", "text-stage-peaking", AURA_STAGE_LABELS.peaking],
+  ["declining", "text-stage-declining", AURA_STAGE_LABELS.declining],
+  ["parent_territory", "text-stage-parent", AURA_STAGE_LABELS.parent_territory],
+  ["null", "text-lab-muted", "No stage yet"],
 ]
-for (const [k, shape, colour, label] of spec) {
-  test(`AuraBadge ${k}: aria-hidden shape, colour class, visible label`, () => {
+for (const [k, colour, label] of spec) {
+  test(`AuraBadge ${k}: one aria-hidden SVG icon, colour class, visible label`, () => {
     const html = run()[k]
-    const m = icon(html)
-    assert.equal(m[1], shape)
-    assert.match(m[0], new RegExp(`class="[^"]*${colour}`))
+    assert.match(html, new RegExp(`<svg[^>]*aria-hidden="true"[^>]*class="[^"]*${colour}`))
+    assert.doesNotMatch(html, /<span[^>]*aria-hidden="true"/, "no second text glyph beside the SVG")
     assert.ok(visible(html).includes(label))
   })
 }
