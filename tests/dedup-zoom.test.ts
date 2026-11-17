@@ -1,7 +1,7 @@
 import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { fullView, panView, zoomView } from "@/lib/dedup/zoom"
+import { fullView, panView, screenToGraph, zoomView } from "@/lib/dedup/zoom"
 
 const base = { width: 640, height: 400 }
 
@@ -34,4 +34,11 @@ test("panning stops at the graph edges", () => {
   const zoomed = { x: 100, y: 100, w: 320, h: 200 }
   assert.deepEqual(panView(zoomed, base, 1000, 1000), { x: 320, y: 200, w: 320, h: 200 })
   assert.deepEqual(panView(zoomed, base, -1000, -1000), { x: 0, y: 0, w: 320, h: 200 })
+})
+
+test("screenToGraph maps a pixel in the svg box to graph coordinates of the current view", () => {
+  const rect = { left: 10, top: 20, width: 320, height: 200 } // svg drawn at half size
+  assert.deepEqual(screenToGraph(fullView(base), rect, 10, 20), { x: 0, y: 0 })
+  assert.deepEqual(screenToGraph(fullView(base), rect, 170, 120), { x: 320, y: 200 })
+  assert.deepEqual(screenToGraph({ x: 100, y: 100, w: 320, h: 200 }, rect, 170, 120), { x: 260, y: 200 })
 })
