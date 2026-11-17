@@ -121,3 +121,23 @@ test("header actions remain inside the shell header alongside existing controls"
   assert.match(markup, /aria-label="Lab"/)
   assert.match(markup, /PAGE BODY/)
 })
+
+test("header actions sit in the main header row, right before the theme toggle", () => {
+  const markup = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react"); globalThis.React = React;
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { LabShellView } = require("./components/lab/shell.tsx");
+    console.log(renderToStaticMarkup(React.createElement(LabShellView, {
+      pathname: "/lab", userName: "Reviewer", mockLlm: true,
+      headerActions: React.createElement("button", {type: "button"}, "Support location"),
+      children: null,
+    })));
+  `], {cwd: process.cwd(), encoding: "utf8", env: {...process.env, NODE_OPTIONS: ""}})
+  const header = markup.match(/<header[^>]*>[\s\S]*?<\/header>/)?.[0] ?? ""
+  const action = header.indexOf("Support location")
+  const theme = header.indexOf('aria-label="Colour theme"')
+  assert.ok(action > -1 && theme > -1)
+  assert.ok(action < theme, "action should come before the theme toggle")
+  assert.ok(header.indexOf('role="search"') < action, "action should come after the search form")
+  assert.doesNotMatch(header, /justify-end px-4 pb-2/)
+})

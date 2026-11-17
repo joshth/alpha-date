@@ -78,11 +78,11 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
           <input id="lab-search" name="q" type="search" placeholder="Search or go to…" aria-keyshortcuts="/" className={`h-8 w-full rounded border border-lab-border-strong bg-lab-input px-3 text-sm text-lab-text placeholder:text-lab-muted ${ring}`} />
           <kbd aria-hidden="true" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-lab-muted">/</kbd>
         </form>
+        {headerActions}
         <ThemeToggle pref={themePref} onChange={onThemeChange} />
         <span title={userName} aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-lab-control text-xs font-medium">{initials}</span>
         <span className="sr-only">Signed in as {userName}</span>
        </div>
-       {headerActions && <div className="flex justify-end px-4 pb-2">{headerActions}</div>}
        <p className="bg-lab-raised px-4 py-1 text-xs text-lab-muted">
         Teaching scaffold · signed in as mock user &quot;{userName}&quot; ·{" "}
         {mockLlm ? "mock AI and moderation" : "real AI and moderation (your own key)"}
