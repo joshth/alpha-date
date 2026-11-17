@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import Link from "next/link"
-import { AuraBadge } from "./aura-badge"
+import { AuraBadge, AuraGlossary } from "./aura-badge"
 import { AuraTrend } from "./aura-trend"
 import { readAuraSortPref, safeLocalStorage, writeAuraSortPref, DEFAULT_AURA_SORT, type DashboardSortKey, type SortDirection } from "./sort-pref"
 import { LifecycleCharts } from "./lifecycle-charts"
@@ -110,19 +110,22 @@ export function LifecycleResult({ outcome, onPick }: { outcome: AuraFitOutcome; 
     )
   const { fit, source, stageNote } = outcome
   const stats: [string, React.ReactNode][] = [
-    ["Stage", <AuraBadge key="stage" stage={fit.stage} confidence={fit.confidence} />],
+    ["Stage", <AuraBadge key="stage" stage={fit.stage} confidence={fit.confidence} glossary={false} />],
     ["r", fit.r.toFixed(2)], ["Δ", fit.delta.toFixed(2)], ["Peak week", fit.peakWeek], ["Confidence", `${Math.round(fit.confidence * 100)}%`],
   ]
   return (
     <div className="space-y-3">
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-y border-lab-border py-3 sm:grid-cols-[minmax(0,2.2fr)_repeat(4,minmax(0,1fr))]">
-        {stats.map(([k, v], i) => (
-          <div key={k}>
-            <dt className="text-xs text-lab-muted">{k}</dt>
-            <dd className={`mt-1 text-sm ${i ? mono : ""}`}>{v}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-y border-lab-border py-3">
+        <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-[minmax(0,2.2fr)_repeat(4,minmax(0,1fr))]">
+          {stats.map(([k, v], i) => (
+            <div key={k}>
+              <dt className="text-xs text-lab-muted">{k}</dt>
+              <dd className={`mt-1 text-sm ${i ? mono : ""}`}>{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <AuraGlossary />
+      </div>
       <AuraTrend fit={fit} />
       {stageNote && <p className="text-sm text-lab-muted">{stageNote}</p>}
       <p className="text-xs text-lab-muted">Source: {SOURCE[source]}</p>
