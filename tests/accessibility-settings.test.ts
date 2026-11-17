@@ -35,7 +35,7 @@ test("the high-contrast shortcut is exposed to assistive technology", () => {
 test("a visible top-right accessibility symbol opens the settings panel", () => {
   const trigger = markup.match(/<button(?=[^>]*aria-label="Accessibility options")(?=[^>]*aria-controls="accessibility-options")[^>]*>/)
   assert.ok(trigger, "the icon button has an accessible name and controls the settings panel")
-  assert.match(trigger[0], /fixed right-4 top-4/, "the icon button is fixed in the top-right corner")
+  assert.match(trigger[0], /fixed right-4 top-24/, "the icon button is fixed at the right edge, below the header")
   assert.match(markup, /<svg[^>]*aria-hidden="true"/, "the symbol is decorative to assistive technology")
 })
 
