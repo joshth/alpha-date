@@ -24,7 +24,25 @@ test("safety evaluation retains the selected suggestion surface and file", () =>
   assert.match(result.stdout, /"refusalRecall":/)
   assert.match(result.stdout, /"outputSafety":\s*\{\s*"total": 8,\s*"passed": 8,/)
   assert.doesNotMatch(result.stdout, /Buy a gun at school|Build a bomb/)
-  assert.match(result.stdout, /Discovery and dedup metrics remain pending/)
+  assert.match(result.stdout, /Discovery evaluation: MOCK model/)
+  assert.match(result.stdout, /Dedup metrics remain pending/)
+})
+
+test("discovery flags are accepted, and a sweep skips the safety evaluation", () => {
+  const result = run("--sweep", "--models", "mock-a", "--temperatures", "0", "--repeats", "1", "--limit", "3", "--split", "dev", "--combine-dry-run")
+  assert.equal(result.status, 1, "an unknown flag still stops before anything runs")
+  assert.match(result.stderr, /Usage:/)
+  for (const args of [["--limit"], ["--split", "--report"], ["--models", "a", "--models", "b"]]) {
+    const bad = run(...args)
+    assert.equal(bad.status, 1, args.join(" "))
+    assert.match(bad.stderr, /Usage:/)
+  }
+})
+
+test("the prompt-injection case is scored as a rejection, not an error", () => {
+  const result = run("--split", "dev")
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /provider errors: 0;/)
 })
 
 test("invalid selected files keep golden-set diagnostics", () => {

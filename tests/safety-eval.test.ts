@@ -73,7 +73,7 @@ test("reports missing minimum categories and permits extra detected categories",
 
 test("runs only safety cases and forwards the selected surface", async () => {
   const entries: GoldenCase[] = [
-    { id: "discovery", input: "rizz", source: "synthetic", kind: "discovery", category: "valid_slang", safety: { action: "safe", categories: [] }, discovery: { isRealSlang: true } },
+    { id: "discovery", input: "rizz", source: "synthetic", kind: "discovery", category: "valid_slang", safety: { action: "safe", categories: [] }, discovery: { isRealSlang: true, wordType: "real-old", split: "dev", dialect: "US" } },
     fixture("safety", "safe"),
     { ...fixture("search-only", "safe"), surface: "search" },
     { ...fixture("suggestion-only", "refuse"), surface: "suggestion" },
