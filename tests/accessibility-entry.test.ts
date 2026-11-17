@@ -26,3 +26,9 @@ test("the launcher draws the blue circle and white figure from the slides' acces
   assert.ok(controls.includes('<circle cx="410" cy="223" r="46"'))
   assert.ok(controls.includes("M222 287 L598 287"))
 })
+
+test("the launcher and its panel sit below the Lab header, clear of the top-right controls", () => {
+  const classes = [...controls.matchAll(/className=\{?`?"?([^"`}]*fixed right-4[^"`}]*)/g)].map((m) => m[1])
+  assert.equal(classes.length, 2, "launcher and panel")
+  for (const c of classes) assert.ok(/\btop-24\b/.test(c) && !/\btop-4\b/.test(c), c)
+})
