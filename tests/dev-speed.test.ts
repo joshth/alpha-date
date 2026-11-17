@@ -22,3 +22,15 @@ test("warmRoutes lists every static page under app/, skipping dynamic ones", asy
   }
   assert.ok(routes.every((r) => !r.includes("[")))
 })
+
+test("warmUp requests each route once and survives a failing request", async () => {
+  const { warmUp } = await import("../lib/dev-warm")
+  const seen: string[] = []
+  const fetchFn = async (url: string) => {
+    seen.push(url)
+    if (url.endsWith("/bad")) throw new Error("boom")
+    return new Response("ok")
+  }
+  await warmUp("http://localhost:3000", ["/lab", "/bad", "/lab/aura"], fetchFn)
+  assert.deepEqual(seen, ["http://localhost:3000/lab", "http://localhost:3000/bad", "http://localhost:3000/lab/aura"])
+})
