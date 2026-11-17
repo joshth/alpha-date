@@ -34,3 +34,11 @@ test("clicking graph space clears selection but clicking a node does not", () =>
   `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
   assert.deepEqual(JSON.parse(result), [null])
 })
+
+
+test("labels fade in only after zooming past the full graph view", () => {
+  const label = (w: number) => render({ view: { x: 0, y: 0, w, h: w * 400 / 640 } }).match(/<text[^>]*>/)?.[0] ?? ""
+  assert.match(label(800), /opacity="0"/)
+  assert.match(label(560), /opacity="0\.5"/)
+  assert.match(label(480), /opacity="1"/)
+})
