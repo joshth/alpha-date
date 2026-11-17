@@ -4,6 +4,7 @@ export type AccessibilityPreset = "Custom" | "Vision" | "Motor" | "Reading"
 export type AccessibilityFont = "system" | "atkinson" | "opendyslexic"
 export type LineSpacing = "normal" | "relaxed" | "wide"
 export type TextSize = 100 | 125 | 150 | 200
+export type ColorVision = "standard" | "protanopia" | "deuteranopia" | "tritanopia"
 
 export type AccessibilityPreferences = {
   preset: AccessibilityPreset
@@ -13,6 +14,7 @@ export type AccessibilityPreferences = {
   calmMotion: boolean | null
   highContrast: boolean | null
   largeControls: boolean
+  colorVision: ColorVision
 }
 
 export type SystemPreferences = {
@@ -35,16 +37,17 @@ export const DEFAULT_ACCESSIBILITY_PREFERENCES: AccessibilityPreferences = {
   calmMotion: null,
   highContrast: null,
   largeControls: false,
+  colorVision: "standard",
 }
 
 export function accessibilityInitScript(): string {
-  return `(function(){var d=document.documentElement,b=document.body,p={};try{var raw=localStorage.getItem("${ACCESSIBILITY_STORAGE_KEY}");if(raw)p=JSON.parse(raw)||{}}catch(_){}var calm=typeof p.calmMotion==="boolean"?p.calmMotion:matchMedia("(prefers-reduced-motion: reduce)").matches;var contrast=typeof p.highContrast==="boolean"?p.highContrast:matchMedia("(prefers-contrast: more)").matches;d.setAttribute("data-high-contrast",String(contrast));d.setAttribute("data-text-size",String([100,125,150,200].includes(p.textSize)?p.textSize:100));b.setAttribute("data-accessibility-font",["system","atkinson","opendyslexic"].includes(p.font)?p.font:"system");b.setAttribute("data-line-spacing",["normal","relaxed","wide"].includes(p.lineSpacing)?p.lineSpacing:"normal");b.setAttribute("data-calm-motion",String(calm));b.setAttribute("data-large-controls",String(Boolean(p.largeControls)))})()`
+  return `(function(){var d=document.documentElement,b=document.body,p={};try{var raw=localStorage.getItem("${ACCESSIBILITY_STORAGE_KEY}");if(raw)p=JSON.parse(raw)||{}}catch(_){}var calm=typeof p.calmMotion==="boolean"?p.calmMotion:matchMedia("(prefers-reduced-motion: reduce)").matches;var contrast=typeof p.highContrast==="boolean"?p.highContrast:matchMedia("(prefers-contrast: more)").matches;d.setAttribute("data-high-contrast",String(contrast));d.setAttribute("data-text-size",String([100,125,150,200].includes(p.textSize)?p.textSize:100));d.setAttribute("data-color-vision",["protanopia","deuteranopia","tritanopia"].includes(p.colorVision)?p.colorVision:"standard");b.setAttribute("data-accessibility-font",["system","atkinson","opendyslexic"].includes(p.font)?p.font:"system");b.setAttribute("data-line-spacing",["normal","relaxed","wide"].includes(p.lineSpacing)?p.lineSpacing:"normal");b.setAttribute("data-calm-motion",String(calm));b.setAttribute("data-large-controls",String(Boolean(p.largeControls)))})()`
 }
 
 const PRESETS: Record<Exclude<AccessibilityPreset, "Custom">, Omit<AccessibilityPreferences, "preset">> = {
-  Vision: { font: "system", textSize: 125, lineSpacing: "normal", calmMotion: null, highContrast: true, largeControls: false },
-  Motor: { font: "system", textSize: 100, lineSpacing: "normal", calmMotion: true, highContrast: null, largeControls: true },
-  Reading: { font: "opendyslexic", textSize: 100, lineSpacing: "wide", calmMotion: null, highContrast: null, largeControls: false },
+  Vision: { font: "system", textSize: 125, lineSpacing: "normal", calmMotion: null, highContrast: true, largeControls: false, colorVision: "standard" },
+  Motor: { font: "system", textSize: 100, lineSpacing: "normal", calmMotion: true, highContrast: null, largeControls: true, colorVision: "standard" },
+  Reading: { font: "opendyslexic", textSize: 100, lineSpacing: "wide", calmMotion: null, highContrast: null, largeControls: false, colorVision: "standard" },
 }
 
 export function applyPreset(preset: Exclude<AccessibilityPreset, "Custom">): AccessibilityPreferences {
@@ -128,4 +131,5 @@ function isValidPreferences(value: Partial<AccessibilityPreferences>): value is 
     && (value.calmMotion === null || typeof value.calmMotion === "boolean")
     && (value.highContrast === null || typeof value.highContrast === "boolean")
     && typeof value.largeControls === "boolean"
+    && ["standard", "protanopia", "deuteranopia", "tritanopia"].includes(value.colorVision ?? "")
 }

@@ -68,6 +68,7 @@ export function AccessibilityControls() {
     const resolved = resolvePreferences(preferences, system)
     document.documentElement.dataset.highContrast = String(resolved.highContrast)
     document.documentElement.dataset.textSize = String(resolved.textSize)
+    document.documentElement.dataset.colorVision = resolved.colorVision
     document.body.dataset.calmMotion = String(resolved.calmMotion)
     document.body.dataset.accessibilityFont = resolved.font
     document.body.dataset.lineSpacing = resolved.lineSpacing
@@ -227,6 +228,15 @@ export function AccessibilityControls() {
               <option value="system">System default</option>
               <option value="atkinson">Atkinson Hyperlegible</option>
               <option value="opendyslexic">OpenDyslexic</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm" htmlFor="accessibility-color-vision">
+            Colour vision
+            <select id="accessibility-color-vision" value={preferences.colorVision} onChange={(event) => setSetting("colorVision", event.target.value as AccessibilityPreferences["colorVision"], "Colour vision")} className={`min-h-11 rounded border bg-background px-2 ${focusRing}`}>
+              <option value="standard">Standard palette</option>
+              <option value="protanopia">Protanopia</option>
+              <option value="deuteranopia">Deuteranopia</option>
+              <option value="tritanopia">Tritanopia</option>
             </select>
           </label>
         </fieldset>
