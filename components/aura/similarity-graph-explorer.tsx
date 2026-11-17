@@ -30,7 +30,7 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
   view?: View; onZoom?: (factor: number, cx?: number, cy?: number) => void; onResetZoom?: () => void; onPan?: (dx: number, dy: number) => void
   onNodeDrag?: (id: string, x: number, y: number) => void; onNodeRelease?: (id: string) => void
   semanticOn?: boolean; onToggleSemantic?: () => void; semanticEdges?: SemanticEdge[]
-  showTable: boolean; onToggleTable?: () => void; quality: Quality; onSelect?: (id: string) => void; onMove?: (key: Key) => void
+  showTable: boolean; onToggleTable?: () => void; quality: Quality; onSelect?: (id: string | null) => void; onMove?: (key: Key) => void
 }) {
   const graphRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ x: number; y: number; moved: boolean; nodeId?: string } | null>(null)
