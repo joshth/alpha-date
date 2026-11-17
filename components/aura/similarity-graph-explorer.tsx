@@ -11,7 +11,7 @@ import type { SemanticEdge } from "@/lib/dedup/semantic"
 import { layoutGraph } from "@/lib/dedup/layout"
 import { CLUSTER_COLUMNS, clusterRows, mergeCount, nextNeighbour } from "@/lib/dedup/nav"
 import { mergeQuality } from "@/lib/dedup/threshold"
-import { fullView, panView, screenToGraph, zoomView, type View } from "@/lib/dedup/zoom"
+import { overviewView, panView, screenToGraph, zoomView, type View } from "@/lib/dedup/zoom"
 import { MATCH_THRESHOLD } from "@/lib/normalise"
 
 const BASE = { width: 640, height: 400 }
@@ -34,14 +34,12 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
   const graphRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
   const getSvg = () => graphRef.current?.querySelector<SVGSVGElement>('svg[aria-label="Similarity graph"]') ?? null
-  const zoomed = !!view && view.w < BASE.width
-  // Ctrl/⌘+wheel (and trackpad pinch, which browsers send as ctrl+wheel) zooms about the pointer; a plain wheel still scrolls the page.
+  const zoomed = !!view
   // React's onWheel is passive, so preventDefault needs a native listener.
   useEffect(() => {
     const el = graphRef.current, svg = getSvg()
     if (!el || !svg || !view || !onZoom) return
     const wheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return
       e.preventDefault()
       const p = screenToGraph(view, svg.getBoundingClientRect(), e.clientX, e.clientY)
       onZoom(Math.exp(-e.deltaY * 0.01), p.x, p.y)
@@ -57,7 +55,8 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
     if (!d.moved) e.currentTarget.setPointerCapture(e.pointerId) // only after a real drag, so node clicks still work
     d.moved = true
     const rect = svg.getBoundingClientRect()
-    onPan((-e.movementX / rect.width) * view.w, (-e.movementY / rect.height) * view.h)
+    onPan((-(e.clientX - d.x) / rect.width) * view.w, (-(e.clientY - d.y) / rect.height) * view.h)
+    d.x = e.clientX; d.y = e.clientY
   }
   const panEnd = () => { if (drag.current && !drag.current.moved) drag.current = null }
   return (
@@ -106,7 +105,7 @@ export function GraphExplorer({ graphAction, semanticAction }: { graphAction: ()
   const [threshold, setThreshold] = useState(MATCH_THRESHOLD)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showTable, setShowTable] = useState(false)
-  const [view, setView] = useState<View>(fullView(BASE))
+  const [view, setView] = useState<View>(overviewView(BASE))
   const zoom = (factor: number, cx?: number, cy?: number) => setView((v) => zoomView(v, BASE, factor, cx ?? v.x + v.w / 2, cy ?? v.y + v.h / 2))
   const pan = (dx: number, dy: number) => setView((v) => panView(v, BASE, dx, dy))
   useEffect(() => {
@@ -125,5 +124,5 @@ export function GraphExplorer({ graphAction, semanticAction }: { graphAction: ()
     setSelectedId(id)
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-node-id="${CSS.escape(id)}"]`)?.focus())
   }
-  return <GraphExplorerView graph={graph} positions={positions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} semanticOn={semanticOn} onToggleSemantic={toggleSemantic} semanticEdges={semantic ?? undefined} view={view} onZoom={zoom} onPan={pan} onResetZoom={() => setView(fullView(BASE))} />
+  return <GraphExplorerView graph={graph} positions={positions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} semanticOn={semanticOn} onToggleSemantic={toggleSemantic} semanticEdges={semantic ?? undefined} view={view} onZoom={zoom} onPan={pan} onResetZoom={() => setView(overviewView(BASE))} />
 }
