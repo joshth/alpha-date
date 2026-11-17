@@ -9,6 +9,9 @@ import pandas as pd
 
 from . import GENERATIONS
 
+STAGE_STYLES = {"emerging": ("#0072b2", "^"), "peaking": ("#e69f00", "D"),
+                "declining": ("#cc79a7", "v"), "parent_territory": ("#009e73", "s")}
+
 
 def decomposition_figure(decs: dict, examples: dict[str, str], path):
     """Paper Figure 2 style: observed, trend, seasonal, residual for one term per generation."""
@@ -89,8 +92,6 @@ def dtw_scatter(ev: pd.DataFrame, track: str, variant: str, path, title: str = "
 
 def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
     """Noise-free fitted curves coloured by stage."""
-    styles = {"emerging": ("#0072b2", "^"), "peaking": ("#e69f00", "D"),
-              "declining": ("#cc79a7", "v"), "parent_territory": ("#009e73", "s")}
     fig, axes = plt.subplots(1, len(terms), figsize=(3.6 * len(terms), 2.8), squeeze=False,
                              layout="constrained")
     for ax, term in zip(axes[0], terms):
@@ -99,9 +100,9 @@ def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
         labs = label_fn(c, weeks)
         tm = (weeks - c["onset"]).days.values / 7.0
         I = np.interp(tm, c["sim"]["t"], c["sim"]["I"], left=1e-3) / c["i_peak"]
-        staged = np.isin(labs, list(styles))
+        staged = np.isin(labs, list(STAGE_STYLES))
         ax.plot(weeks[staged], I[staged], color="0.75", lw=1, zorder=1)
-        for s, (col, marker) in styles.items():
+        for s, (col, marker) in STAGE_STYLES.items():
             m = labs == s
             ax.scatter(weeks[m], I[m], s=14, color=col, marker=marker, label=s.replace("_", " ").capitalize(),
                        edgecolors="white", linewidths=0.3, zorder=2)

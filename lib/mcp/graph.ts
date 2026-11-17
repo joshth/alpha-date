@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process"
 import type { SirsFit } from "@/lib/aura/fit-command"
 import { plotCommand } from "@/lib/aura/plot-command"
+import { fittedStages } from "@/lib/aura/stage-regions"
 
 const PNG_SIGNATURE = Buffer.from("89504e470d0a1a0a", "hex")
 const MAX_PNG_BYTES = 5 * 1024 * 1024
@@ -32,6 +33,9 @@ export function renderAuraPng(fit: SirsFit): Promise<Buffer> {
         reject(new Error(`Aura graph rendering failed: ${stderr || `exit ${code}`}`))
       } else resolve(png)
     })
-    child.stdin.end(JSON.stringify(fit))
+    const stages = fittedStages(fit.fitted.I)
+    const stageMarkers = stages.flatMap((stage, i) => i >= stages.length - 156 && stage && (i === stages.length - 1 || stage !== stages[i - 1])
+      ? [{ week: fit.weeks[i], fitted: fit.fitted.I[i], stage }] : [])
+    child.stdin.end(JSON.stringify({ ...fit, stageMarkers }))
   })
 }
