@@ -34,3 +34,9 @@ test("warmUp requests each route once and survives a failing request", async () 
   await warmUp("http://localhost:3000", ["/lab", "/bad", "/lab/aura"], fetchFn)
   assert.deepEqual(seen, ["http://localhost:3000/lab", "http://localhost:3000/bad", "http://localhost:3000/lab/aura"])
 })
+
+test("turbopackRoot widens to the common parent only when node_modules resolves outside the project", async () => {
+  const { turbopackRoot } = await import("../lib/turbopack-root.mjs")
+  assert.equal(turbopackRoot("/code/app", "/code/app/node_modules"), "/code/app")
+  assert.equal(turbopackRoot("/code/app-zoom", "/code/app/node_modules"), "/code")
+})
