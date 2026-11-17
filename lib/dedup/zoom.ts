@@ -15,6 +15,12 @@ export function clampView(view: View, base: Size): View {
 /** Move the view by (dx, dy) in graph coordinates, stopping at the graph edges. */
 export const panView = (view: View, base: Size, dx: number, dy: number): View => clampView({ ...view, x: view.x + dx, y: view.y + dy }, base)
 
+/** Map a pointer position (px, py) over the drawn svg box to graph coordinates of the current view. */
+export const screenToGraph = (view: View, rect: { left: number; top: number; width: number; height: number }, px: number, py: number) => ({
+  x: view.x + ((px - rect.left) / rect.width) * view.w,
+  y: view.y + ((py - rect.top) / rect.height) * view.h,
+})
+
 /** Zoom by `factor` about the point (cx, cy) in graph coordinates; the point stays fixed on screen. */
 export function zoomView(view: View, base: Size, factor: number, cx: number, cy: number): View {
   const w = clamp(view.w / factor, base.width / MAX_ZOOM, base.width)
