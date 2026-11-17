@@ -13,9 +13,14 @@ test("the Dedup page has its own title and heading, and shows the dedup counter 
   assert.match(src, /import \{[^}]*getDedupSavings[^}]*getSemanticEdges[^}]*\} from "\.\.\/actions"/)
 })
 
-test("the Dedup page has a search box over the lexicon terms plus the demo terms", () => {
+test("the Dedup page has a search box over the lexicon terms", () => {
   assert.match(src, /import \{ DedupSearch \} from "@\/components\/aura\/dedup-search"/)
   assert.match(src, /<DedupSearch candidates=\{/)
   assert.match(src, /listPublishedTermNames\(\)/)
-  assert.ok(src.includes("六七"))
+})
+
+test("the Dedup page feeds the search box every database word, not only the lexicon", () => {
+  assert.match(src, /readDedupRows\(\)/)
+  assert.match(src, /searchCandidates\(/)
+  assert.ok(!src.includes("const DEMO_TERMS"))
 })
