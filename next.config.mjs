@@ -3,6 +3,10 @@ const nextConfig = {
   // PGlite ships WASM + data files that must be loaded from node_modules at
   // runtime rather than bundled.
   serverExternalPackages: ["@electric-sql/pglite"],
+  // Import only the icons/charts/animations a page uses, not each whole package.
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "motion"],
+  },
   images: {
     unoptimized: true,
   },
