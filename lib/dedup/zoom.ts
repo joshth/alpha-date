@@ -24,7 +24,7 @@ export const screenToGraph = (view: View, rect: { left: number; top: number; wid
 
 /** Zoom by `factor` about the point (cx, cy) in graph coordinates; the point stays fixed on screen. */
 export function zoomView(view: View, base: Size, factor: number, cx: number, cy: number): View {
-  const w = clamp(view.w / factor, base.width / MAX_ZOOM, base.width * 1.25)
+  const w = clamp(view.w / factor, base.width / MAX_ZOOM, base.width * 2.5)
   const k = w / view.w
   return clampView({ x: cx - (cx - view.x) * k, y: cy - (cy - view.y) * k, w, h: (base.height * w) / base.width }, base)
 }
