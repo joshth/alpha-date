@@ -98,3 +98,11 @@ test("fit: the trend has a visible player and expandable weekly table; no stage 
   assert.match(html.nullStage, /<summary[^>]*>Trend table<\/summary>/)
   assert.doesNotMatch(html.nullStage, /Play trend/)
 })
+
+test("fit: 'What does this mean?' sits once at the far right, after the Confidence value", () => {
+  const h = html.vendored
+  const link = h.indexOf("What does this mean?")
+  assert.ok(link > h.indexOf("88%"), "after Confidence")
+  assert.equal(h.split("What does this mean?").length - 1, 1)
+  assert.ok(link > h.indexOf("</dl>") - 400 && !h.slice(h.indexOf("Stage</dt>"), h.indexOf("<dt", h.indexOf("Stage</dt>"))).includes("What does this mean?"), "not inside the Stage cell")
+})
