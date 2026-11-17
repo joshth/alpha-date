@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
-import { Area, CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, Scatter, XAxis, YAxis } from "recharts"
+import { Area, CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { ChartPanel } from "./chart-panel"
 import type { GraphInfoId } from "@/lib/aura/graph-info"
@@ -93,9 +93,9 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
     ...row,
     stage: stages[i] ? AURA_STAGE_LABELS[stages[i]!] : "Insufficient history",
     ...Object.fromEntries(STAGES.map(({ key }) => [`region_${key}`, stages[i] === key ? row.fitted : null])),
+    // Stage symbol only where the stage starts and at the latest week; null elsewhere so no dot is drawn.
+    ...Object.fromEntries([["marker", stages[i] && (i === rows.length - 1 || stages[i] !== stages[i - 1]) ? row.fitted : null], ["markerStage", stages[i]]]),
   })), [rows, stages])
-  const stageMarkers = stagedRows.flatMap((row, i) => stages[i] && (i === stagedRows.length - 1 || stages[i] !== stages[i - 1])
-    ? [{ ...row, stageKey: stages[i] }] : [])
   const win = useMemo(() => windowBounds(rows.map((r) => r.week), fit.windowStart, fit.now), [rows, fit.windowStart, fit.now])
   const summary = trendSentence(fit)
   const [focus, setFocus] = useState(rows.length - 1)
@@ -154,12 +154,14 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
                     active={p.index === focus} onFocusPoint={setFocus} onMove={onMove} />
                 )} />
               {lines([MAIN_SERIES[1]])}
-              <Scatter data={stageMarkers} dataKey="fitted" isAnimationActive={false} legendType="none" shape={(point: unknown) => {
-                const { cx, cy, payload } = point as { cx: number; cy: number; payload: { stageKey: AuraStage } }
-                const stage = STAGES.find(({ key }) => key === payload.stageKey)!
-                return <path d={SYMBOL_PATHS[stage.symbol]} transform={`translate(${cx - 6} ${cy - 6})`}
-                  fill={tok(stage.token)} stroke={tok("surface")} strokeWidth={1.5} aria-hidden="true" />
-              }} />
+              {/* A Line, not a Scatter: Scatter forces a numeric x-axis and collapses the weekly category axis. */}
+              <Line dataKey="marker" stroke="none" isAnimationActive={false} activeDot={false} legendType="none" connectNulls={false}
+                dot={(p: { key?: string; cx?: number; cy?: number; index?: number; payload?: { markerStage?: AuraStage | null; marker: number | null } }) => {
+                  const stage = STAGES.find(({ key }) => key === p.payload?.markerStage)
+                  if (!stage || p.payload?.marker == null || p.cx == null || p.cy == null) return <g key={p.index} />
+                  return <path key={p.index} d={SYMBOL_PATHS[stage.symbol]} transform={`translate(${p.cx - 6} ${p.cy - 6})`}
+                    fill={tok(stage.token)} stroke={tok("surface")} strokeWidth={1.5} aria-hidden="true" />
+                }} />
             </ComposedChart>
           </ChartContainer>
           <SeriesLegend series={MAIN_SERIES} />
