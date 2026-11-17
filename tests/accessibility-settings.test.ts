@@ -88,3 +88,10 @@ test("preset contents and OS defaults are documented", () => {
     assert.ok(guide.includes(detail), `${detail} is explained in the guide`)
   }
 })
+
+test("colour vision options and Aura stage symbols are documented", () => {
+  const guide = readFileSync("docs/features/accessibility-settings.md", "utf8")
+  for (const detail of ["Protanopia", "Deuteranopia", "Tritanopia", "high contrast", "triangle", "diamond", "square", "PNG"]) {
+    assert.ok(guide.includes(detail), `${detail} is explained in the guide`)
+  }
+})
