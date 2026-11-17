@@ -11,6 +11,7 @@
 
 Full scope, schedule and success criteria: [docs/SCOPE.md](docs/SCOPE.md).
 Developer docs (guides, architecture, CI) and the Swagger API reference: see [Documentation site](#documentation-site).
+To connect Claude Desktop, Gemini CLI, or ChatGPT on macOS, Linux, or Windows, use [Connect your AI assistant](docs/connect-assistant.md).
 
 ## Quick start
 
@@ -43,11 +44,11 @@ It needs Node.js 20 or newer (check with `node -v`; with nvm, run `nvm use 24`).
 
 ```bash
 pnpm --dir website install --ignore-workspace   # once
-pnpm docs:dev                                   # http://localhost:3001
+pnpm dev:all                                   # app: http://localhost:3000, docs: http://localhost:3001
 ```
 
 - Docs pages: http://localhost:3001
-- API reference (Swagger): http://localhost:3001/api. To use "Try it out", also run `pnpm dev` (the app on http://localhost:3000).
+- API reference (Swagger): http://localhost:3001/api. "Try it out" uses the app on http://localhost:3000, started by `pnpm dev:all`.
 - Search only exists in a production build, not under `pnpm docs:dev`. To try it:
 
   ```bash
@@ -62,6 +63,7 @@ The docs are private (NDA). The site tells search engines not to index it, and C
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Dev server |
+| `pnpm dev:all` | App and docs development servers on ports 3000 and 3001 |
 | `pnpm build` / `pnpm start` | Production build / serve (stop `pnpm dev` first — they share `.next/`) |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint (Next.js rules) |
@@ -78,7 +80,7 @@ The docs are private (NDA). The site tells search engines not to index it, and C
 | `pnpm docs:dev` | Docs site from `docs/`, with the Swagger API reference at `/api`, on http://localhost:3001 (Node 20+; install once with `pnpm --dir website install --ignore-workspace`) |
 | `pnpm --dir website build` | Build the docs site; broken links fail it (what CI's `docs` job runs) |
 
-`aura:plot` needs a Python 3.12 venv in `sirs/`, made once:
+`aura:plot` and the MCP Aura graph need a Python 3.12 venv in `sirs/`, made once. The guided assistant setup creates it automatically:
 
 ```sh
 # macOS / Linux

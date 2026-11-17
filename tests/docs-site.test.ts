@@ -5,6 +5,11 @@ import { existsSync, readFileSync } from "node:fs"
 const read = (file: string) => (existsSync(file) ? readFileSync(file, "utf8") : "")
 const config = read("website/docusaurus.config.ts")
 
+test("one command starts the app and docs development servers", () => {
+  const scripts = JSON.parse(read("package.json") || "{}").scripts
+  assert.equal(scripts?.["dev:all"], "pnpm dev & pnpm docs:dev & wait")
+})
+
 test("the docs site is its own package with its own lockfile, outside the app workspace", () => {
   const pkg = JSON.parse(read("website/package.json") || "{}")
   assert.equal(pkg.scripts?.build, "docusaurus build")
@@ -301,4 +306,10 @@ test("the dashboard page documents the trend you can read or hear", () => {
   for (const stage of ["Emerging", "Peaking", "Declining", "Parent territory"]) assert.match(section, new RegExp(`\\| ${stage} +\\|`), stage)
   assert.match(section, /tritone/i)
   for (const file of ["lib/aura/sonify.ts", "components/aura/trend-player.tsx", "components/aura/aura-trend.tsx"]) assert.ok(section.includes(file), file)
+})
+
+test("Mermaid flowchart hover tooltips work because webpack keeps d3-transition", () => {
+  // d3 is marked sideEffects:false, so webpack drops d3-transition and selections lose .transition().
+  assert.match(config, /sideEffects: true/)
+  assert.match(config, /d3/)
 })

@@ -4,17 +4,16 @@ import assert from "node:assert/strict"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { checkInputSafety } from "@/lib/safety/gate"
-import { getTermByKey, getTermEvents, listPublishedTermNames } from "@/lib/terms-store"
+import { getTermByKey, listPublishedTermNames } from "@/lib/terms-store"
 import { createDecoderServer } from "@/lib/mcp/server"
+import { fitResult } from "./mcp-fit-fixture"
 
 async function connect() {
   const server = createDecoderServer({
     checkInputSafety,
     getTermByKey,
     listPublishedTermNames,
-    getTermEvents,
-    scoreTermLifecycle: () => ({ stage: "peaking", confidence: 0.9, explanation: "At 95% of its 180-day peak, level over 180 days." }),
-    now: () => new Date("2026-11-01T00:00:00.000Z"),
+    fitAuraTerm: async () => fitResult(),
   })
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
   const client = new Client({ name: "test", version: "0.0.0" })

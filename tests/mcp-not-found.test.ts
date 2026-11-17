@@ -4,16 +4,15 @@ import assert from "node:assert/strict"
 import { findLikelyMatches } from "@/lib/normalise"
 import { DATA_BEGIN } from "@/lib/mcp/data"
 import { checkInputSafety } from "@/lib/safety/gate"
-import { getTermByKey, getTermEvents, listPublishedTermNames, saveDiscoveredTerm } from "@/lib/terms-store"
+import { getTermByKey, listPublishedTermNames, saveDiscoveredTerm } from "@/lib/terms-store"
 import { createDecoderTools } from "@/lib/mcp/tools"
+import { fitResult } from "./mcp-fit-fixture"
 
 const tools = createDecoderTools({
   checkInputSafety,
   getTermByKey,
   listPublishedTermNames,
-  getTermEvents,
-  scoreTermLifecycle: () => ({ stage: "peaking", confidence: 0.9, explanation: "At 95% of its 180-day peak, level over 180 days." }),
-  now: () => new Date("2026-11-01T00:00:00.000Z"),
+  fitAuraTerm: async () => fitResult(),
 })
 
 test("an unknown term says not found and lists up to 3 likely matches", async () => {
