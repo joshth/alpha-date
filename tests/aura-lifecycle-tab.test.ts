@@ -87,12 +87,22 @@ test("pending text lives in the module", () => {
   assert.ok(readFileSync("components/aura/lifecycle-tab.tsx", "utf8").includes("Fitting the SIRS model…"))
 })
 
-test("fit: the trend expands to a weekly table and Play trend; no stage has no Play trend", () => {
+test("fit: the trend has a visible player and expandable weekly table; no stage has no player", () => {
   const h = html.vendored
-  assert.match(h, /<summary[^>]*>Trend table and sound<\/summary>/)
+  assert.match(h, /<summary[^>]*>Trend table<\/summary>/)
   assert.match(h, /<caption[^>]*>[^<]*rizz[^<]*<\/caption>/)
   assert.match(h, /<button[^>]*>Play trend<\/button>/)
+  assert.ok(h.indexOf("Play trend") < h.indexOf("<details"))
+  assert.match(h, /aria-label="About this chart: Search interest and fitted curve"/)
   assert.equal(h.split(esc(trendSentence(fit as never))).length, 2, "the sentence is shown once")
-  assert.match(html.nullStage, /<summary[^>]*>Trend table and sound<\/summary>/)
+  assert.match(html.nullStage, /<summary[^>]*>Trend table<\/summary>/)
   assert.doesNotMatch(html.nullStage, /Play trend/)
+})
+
+test("fit: 'What does this mean?' sits once at the far right, after the Confidence value", () => {
+  const h = html.vendored
+  const link = h.indexOf("What does this mean?")
+  assert.ok(link > h.indexOf("88%"), "after Confidence")
+  assert.equal(h.split("What does this mean?").length - 1, 1)
+  assert.ok(link > h.indexOf("</dl>") - 400 && !h.slice(h.indexOf("Stage</dt>"), h.indexOf("<dt", h.indexOf("Stage</dt>"))).includes("What does this mean?"), "not inside the Stage cell")
 })

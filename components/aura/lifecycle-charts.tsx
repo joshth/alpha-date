@@ -51,11 +51,12 @@ export function FocusDot({ cx, cy, index, payload, tabbable, active, onFocusPoin
 const config = (...s: Series[][]): ChartConfig =>
   Object.fromEntries(s.flat().map((x) => [x.key, { label: x.label, color: x.color }]))
 const tick = { fill: tok("text-muted"), fontSize: 12 }
-const STAGES: { key: AuraStage; token: string; pattern: "diagonal" | "dots" | "cross" | "horizontal" }[] = [
-  { key: "emerging", token: "stage-emerging", pattern: "diagonal" },
-  { key: "peaking", token: "stage-peaking", pattern: "dots" },
-  { key: "declining", token: "stage-declining", pattern: "cross" },
-  { key: "parent_territory", token: "stage-parent-territory", pattern: "horizontal" },
+const SYMBOL_PATHS = { "triangle-up": "M6 1L11 11H1Z", diamond: "M6 1L11 6L6 11L1 6Z", "triangle-down": "M1 1H11L6 11Z", square: "M1 1H11V11H1Z" }
+const STAGES: { key: AuraStage; token: string; pattern: "diagonal" | "dots" | "cross" | "horizontal"; symbol: keyof typeof SYMBOL_PATHS }[] = [
+  { key: "emerging", token: "stage-emerging", pattern: "diagonal", symbol: "triangle-up" },
+  { key: "peaking", token: "stage-peaking", pattern: "dots", symbol: "diamond" },
+  { key: "declining", token: "stage-declining", pattern: "cross", symbol: "triangle-down" },
+  { key: "parent_territory", token: "stage-parent-territory", pattern: "horizontal", symbol: "square" },
 ]
 // An array, not a fragment: Recharts only registers axes and the grid when they are direct children.
 const axes = [
@@ -92,6 +93,8 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
     ...row,
     stage: stages[i] ? AURA_STAGE_LABELS[stages[i]!] : "Insufficient history",
     ...Object.fromEntries(STAGES.map(({ key }) => [`region_${key}`, stages[i] === key ? row.fitted : null])),
+    // Stage symbol only where the stage starts and at the latest week; null elsewhere so no dot is drawn.
+    ...Object.fromEntries([["marker", stages[i] && (i === rows.length - 1 || stages[i] !== stages[i - 1]) ? row.fitted : null], ["markerStage", stages[i]]]),
   })), [rows, stages])
   const win = useMemo(() => windowBounds(rows.map((r) => r.week), fit.windowStart, fit.now), [rows, fit.windowStart, fit.now])
   const summary = trendSentence(fit)
@@ -151,13 +154,22 @@ export function LifecycleCharts({ fit }: { fit: SirsFit }) {
                     active={p.index === focus} onFocusPoint={setFocus} onMove={onMove} />
                 )} />
               {lines([MAIN_SERIES[1]])}
+              {/* A Line, not a Scatter: Scatter forces a numeric x-axis and collapses the weekly category axis. */}
+              <Line dataKey="marker" stroke="none" isAnimationActive={false} activeDot={false} legendType="none" connectNulls={false}
+                dot={(p: { key?: string; cx?: number; cy?: number; index?: number; payload?: { markerStage?: AuraStage | null; marker: number | null } }) => {
+                  const stage = STAGES.find(({ key }) => key === p.payload?.markerStage)
+                  if (!stage || p.payload?.marker == null || p.cx == null || p.cy == null) return <g key={p.index} />
+                  return <path key={p.index} d={SYMBOL_PATHS[stage.symbol]} transform={`translate(${p.cx - 6} ${p.cy - 6})`}
+                    fill={tok(stage.token)} stroke={tok("surface")} strokeWidth={1.5} aria-hidden="true" />
+                }} />
             </ComposedChart>
           </ChartContainer>
           <SeriesLegend series={MAIN_SERIES} />
           <ul aria-label="Aura stage regions" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-lab-muted">
-            {STAGES.map(({ key, token, pattern }) => <li key={key} className="flex items-center gap-1.5">
+            {STAGES.map(({ key, token, pattern, symbol }) => <li key={key} className="flex items-center gap-1.5">
               <svg aria-hidden="true" width="16" height="12"><rect width="16" height="12" fill={tok(token)} fillOpacity="0.18" />
                 {pattern === "dots" ? <circle cx="4" cy="4" r="1.5" fill={tok(token)} /> : <path d={pattern === "cross" ? "M0 0L8 8M8 0L0 8" : pattern === "horizontal" ? "M0 3H16M0 9H16" : "M0 12L12 0M6 12L16 2"} stroke={tok(token)} strokeWidth="1" />}</svg>
+              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d={SYMBOL_PATHS[symbol]} fill={tok(token)} /></svg>
               {AURA_STAGE_LABELS[key]}
             </li>)}
           </ul>

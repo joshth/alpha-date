@@ -12,6 +12,8 @@ matplotlib.use("Agg")
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
+from .plots import STAGE_STYLES
+
 
 def main() -> None:
     fit = json.load(sys.stdin)
@@ -26,6 +28,12 @@ def main() -> None:
                color="#dce9f8", alpha=0.65, label="Last 180 days", zorder=0)
     ax.plot(weeks, fitted, color="#0b559f", linewidth=2.2, label="Fitted SIRS curve", zorder=2)
     ax.scatter(weeks, observed, s=15, color="#a43d1c", label="Observed search interest", zorder=3)
+    for stage, (color, marker) in STAGE_STYLES.items():
+        points = [point for point in fit.get("stageMarkers", []) if point["stage"] == stage]
+        if points:
+            ax.scatter([date.fromisoformat(point["week"]) for point in points],
+                       [point["fitted"] for point in points], s=65, color=color, marker=marker,
+                       edgecolors="white", linewidths=0.8, label=stage.replace("_", " ").capitalize(), zorder=4)
     ax.set(title=f"{fit['term']} — Aura search interest", ylabel="Interest (0 to 1)", xlabel="Week")
     ax.set_ylim(bottom=0)
     ax.set_xlim(weeks[0], weeks[-1])

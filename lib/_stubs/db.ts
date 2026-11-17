@@ -1,7 +1,7 @@
 import "server-only"
 import { mkdirSync } from "node:fs"
 import path from "node:path"
-import { and, eq } from "drizzle-orm"
+import { and, eq, lt, or } from "drizzle-orm"
 import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core"
 import * as schema from "./schema"
@@ -20,13 +20,14 @@ export type Db = PgDatabase<PgQueryResultHKT, typeof schema>
 const globalForDb = globalThis as unknown as { __alphaDateDb?: Promise<Db> }
 
 export async function backfillTermKeys(db: Db): Promise<void> {
+  const outdated = or(eq(schema.terms.termKey, ""), lt(schema.terms.keyVersion, NORMALISER_VERSION))
   const rows = await db.select({ id: schema.terms.id, term: schema.terms.term }).from(schema.terms)
-    .where(eq(schema.terms.termKey, ""))
+    .where(outdated)
   for (const row of rows) {
     const key = normaliseSuggestion(row.term)
     if (!key) continue
     await db.update(schema.terms).set({ termKey: key, keyVersion: NORMALISER_VERSION })
-      .where(and(eq(schema.terms.id, row.id), eq(schema.terms.termKey, "")))
+      .where(and(eq(schema.terms.id, row.id), outdated))
   }
 }
 

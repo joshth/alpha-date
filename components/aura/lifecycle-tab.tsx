@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
-import { AuraBadge } from "./aura-badge"
+import Link from "next/link"
+import { AuraBadge, AuraGlossary } from "./aura-badge"
 import { AuraTrend } from "./aura-trend"
 import { readAuraSortPref, safeLocalStorage, writeAuraSortPref, DEFAULT_AURA_SORT, type DashboardSortKey, type SortDirection } from "./sort-pref"
 import { LifecycleCharts } from "./lifecycle-charts"
@@ -64,7 +65,7 @@ export function AuraDashboardTable({ rows }: { rows: AuraDashboardRow[] }) {
           </TableRow></TableHeader>
           <TableBody>{sortedRows.map(({ term, stage, confidence }) => (
             <TableRow key={term}>
-              <TableCell>{term}</TableCell>
+              <TableCell><Link href={auraTermPath(term)} className="text-primary underline underline-offset-2 focus-visible:outline focus-visible:outline-2">{term}</Link></TableCell>
               <TableCell>{stage ? AURA_STAGE_LABELS[stage] : "No stage yet"}</TableCell>
               <TableCell className="font-mono tabular-nums">{confidence == null ? "—" : `${Math.round(confidence * 100)}%`}</TableCell>
             </TableRow>
@@ -72,6 +73,19 @@ export function AuraDashboardTable({ rows }: { rows: AuraDashboardRow[] }) {
         </Table>
       ) : <p className="text-sm text-lab-muted">No terms with search data yet.</p>}
     </section>
+  )
+}
+
+function AuraFitLoading() {
+  return (
+    <div role="status" aria-label="Loading Aura fit and charts" className="space-y-4">
+      <span className="sr-only">Fitting the SIRS model and loading charts…</span>
+      <div className="grid grid-cols-2 gap-4 border-y border-lab-border py-3 sm:grid-cols-5">
+        {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+      </div>
+      <Skeleton className="h-72 w-full" />
+      <Skeleton className="h-48 w-full" />
+    </div>
   )
 }
 
@@ -96,19 +110,22 @@ export function LifecycleResult({ outcome, onPick }: { outcome: AuraFitOutcome; 
     )
   const { fit, source, stageNote } = outcome
   const stats: [string, React.ReactNode][] = [
-    ["Stage", <AuraBadge key="stage" stage={fit.stage} confidence={fit.confidence} />],
+    ["Stage", <AuraBadge key="stage" stage={fit.stage} confidence={fit.confidence} glossary={false} />],
     ["r", fit.r.toFixed(2)], ["Δ", fit.delta.toFixed(2)], ["Peak week", fit.peakWeek], ["Confidence", `${Math.round(fit.confidence * 100)}%`],
   ]
   return (
     <div className="space-y-3">
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-y border-lab-border py-3 sm:grid-cols-[minmax(0,2.2fr)_repeat(4,minmax(0,1fr))]">
-        {stats.map(([k, v], i) => (
-          <div key={k}>
-            <dt className="text-xs text-lab-muted">{k}</dt>
-            <dd className={`mt-1 text-sm ${i ? mono : ""}`}>{v}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-y border-lab-border py-3">
+        <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-[minmax(0,2.2fr)_repeat(4,minmax(0,1fr))]">
+          {stats.map(([k, v], i) => (
+            <div key={k}>
+              <dt className="text-xs text-lab-muted">{k}</dt>
+              <dd className={`mt-1 text-sm ${i ? mono : ""}`}>{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <AuraGlossary />
+      </div>
       <AuraTrend fit={fit} />
       {stageNote && <p className="text-sm text-lab-muted">{stageNote}</p>}
       <p className="text-xs text-lab-muted">Source: {SOURCE[source]}</p>
@@ -153,7 +170,7 @@ export function LifecycleTab({ initialTerm = "", fitAction, dashboardRows }: {
       </form>
       {dashboardRows && <AuraDashboardTable rows={dashboardRows} />}
       <div role="status" aria-live="polite" className="sr-only">{status}</div>
-      {pending ? <Skeleton className="h-64" /> : outcome && (
+      {pending ? <AuraFitLoading /> : outcome && (
         <>
           <LifecycleResult outcome={outcome} onPick={openTerm} />
           {outcome.kind === "fit" && <LifecycleCharts fit={outcome.fit} />}

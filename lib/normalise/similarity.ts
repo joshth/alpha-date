@@ -8,7 +8,8 @@ export function normalizeKey(text: string): string {
 return text
   .toLowerCase()                         // "Brain Rot!" → "brain rot!"
   .normalize("NFKD")                     // "café" → "cafe" + accent mark
-  .replace(/\p{M}/gu, "")                // remove that accent mark → "cafe"
+  .replace(/(?![\u3099\u309A])\p{M}/gu, "") // remove that accent mark → "cafe"; keep kana voicing (で ≠ て)
+  .normalize("NFC")                      // put kana back together
   .replace(/[^\p{L}\p{N}]/gu, "")        // remove non-letters/digits → "brainrot"
 }
 

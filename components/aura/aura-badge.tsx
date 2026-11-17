@@ -50,7 +50,7 @@ export function AuraGlossary({ open: controlledOpen }: { open?: boolean } = {}) 
   </>
 }
 
-export function AuraBadge({ stage, confidence }: { stage: AuraStage | null; confidence: number }) {
+export function AuraBadge({ stage, confidence, glossary = true }: { stage: AuraStage | null; confidence: number; glossary?: boolean }) {
   const label = stage ? AURA_STAGE_LABELS[stage] : "No stage yet"
   const low = confidence < LOW_CONFIDENCE
   const level = confidence >= 0.7 ? "high" : low ? "low" : "medium"
@@ -60,7 +60,7 @@ export function AuraBadge({ stage, confidence }: { stage: AuraStage | null; conf
       <span className="text-lab-text">{label}</span>
       {low && <span className="text-lab-muted">(low confidence)</span>}
       <span className="sr-only">{`${label}, ${level} confidence`}</span>
-      <AuraGlossary />
+      {glossary && <AuraGlossary />}
     </span>
   )
 }

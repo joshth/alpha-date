@@ -28,6 +28,20 @@ test("accessibility panel offers presets, display settings and a live result pre
   assert.ok(markup.includes("Peaking"), "the preview includes an Aura badge")
 })
 
+test("colour vision choices are available and persist without changing older saved settings", () => {
+  for (const label of ["Colour vision", "Protanopia", "Deuteranopia", "Tritanopia"]) assert.ok(markup.includes(label))
+  const storage = { value: "", getItem() { return this.value }, setItem(_key: string, value: string) { this.value = value }, removeItem() { this.value = "" } }
+  storage.value = JSON.stringify({ ...DEFAULT_ACCESSIBILITY_PREFERENCES })
+  assert.equal(loadPreferences(storage).colorVision, "standard")
+  const next = updatePreference(DEFAULT_ACCESSIBILITY_PREFERENCES, "colorVision", "protanopia")
+  assert.equal(next.preset, "Custom")
+  assert.equal(savePreferences(storage, next), true)
+  assert.equal(loadPreferences(storage).colorVision, "protanopia")
+  assert.equal(DEFAULT_ACCESSIBILITY_PREFERENCES.colorVision, "standard")
+  storage.value = JSON.stringify({ ...next, colorVision: "unknown" })
+  assert.equal(loadPreferences(storage).colorVision, "standard")
+})
+
 test("the high-contrast shortcut is exposed to assistive technology", () => {
   assert.match(markup, /aria-keyshortcuts="Control\+Shift\+H Meta\+Shift\+H"/)
 })
@@ -35,7 +49,7 @@ test("the high-contrast shortcut is exposed to assistive technology", () => {
 test("a visible top-right accessibility symbol opens the settings panel", () => {
   const trigger = markup.match(/<button(?=[^>]*aria-label="Accessibility options")(?=[^>]*aria-controls="accessibility-options")[^>]*>/)
   assert.ok(trigger, "the icon button has an accessible name and controls the settings panel")
-  assert.match(trigger[0], /fixed right-4 top-4/, "the icon button is fixed in the top-right corner")
+  assert.match(trigger[0], /fixed right-4 top-24/, "the icon button is fixed at the right edge, below the header")
   assert.match(markup, /<svg[^>]*aria-hidden="true"/, "the symbol is decorative to assistive technology")
 })
 
@@ -71,6 +85,13 @@ test("preset contents and OS defaults are documented", () => {
   assert.ok(existsSync(path), "the accessibility settings guide exists")
   const guide = readFileSync(path, "utf8")
   for (const detail of ["Vision", "Motor", "Reading", "System preferences", "Ctrl", "Shift", "H"]) {
+    assert.ok(guide.includes(detail), `${detail} is explained in the guide`)
+  }
+})
+
+test("colour vision options and Aura stage symbols are documented", () => {
+  const guide = readFileSync("docs/features/accessibility-settings.md", "utf8")
+  for (const detail of ["Protanopia", "Deuteranopia", "Tritanopia", "high contrast", "triangle", "diamond", "square", "PNG"]) {
     assert.ok(guide.includes(detail), `${detail} is explained in the guide`)
   }
 })

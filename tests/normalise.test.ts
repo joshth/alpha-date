@@ -27,6 +27,12 @@ test("normaliseSuggestion leaves digit runs unchanged", () => {
   assert.equal(normaliseSuggestion("1000"), "1000")
 })
 
+test("Chinese number slang shares the key of its phrase", () => {
+  for (const [number, phrase] of [["520", "我爱你"], ["521", "我爱你"], ["886", "拜拜咯"], ["1314", "一生一世"], ["5201314", "我爱你一生一世"]]) {
+    assert.equal(normaliseSuggestion(number), normaliseSuggestion(phrase), number)
+  }
+})
+
 test("normaliseSuggestion does not expand multi-digit number tokens", () => {
   assert.equal(normaliseSuggestion("100 200"), "100200")
 })

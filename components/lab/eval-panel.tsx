@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { checkFile, runEval, type EvalReport, type FileCheck, type RowVerdict, type getBuckets } from "@/app/lab/eval/actions"
 
 const LABEL: Record<string, string> = {
@@ -14,7 +15,12 @@ export function EvalPanel({ info }: { info: Awaited<ReturnType<typeof getBuckets
   const [report, setReport] = useState<EvalReport | null>(null)
   const [check, setCheck] = useState<FileCheck | null>(null)
   const [busy, setBusy] = useState(false)
+  const [checking, setChecking] = useState(false)
   const [filter, setFilter] = useState<RowVerdict | null>(null)
+  const checkKey = async (key: "answer-key" | "broken") => {
+    setChecking(true)
+    try { setCheck(await checkFile(key)) } finally { setChecking(false) }
+  }
 
   return (
     <div className="space-y-6">
@@ -32,9 +38,10 @@ export function EvalPanel({ info }: { info: Awaited<ReturnType<typeof getBuckets
             Second reviewer: {info.reviewedBy ?? "not yet reviewed"}
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={async () => setCheck(await checkFile("answer-key"))}>Check the answer key</Button>
-            <Button variant="outline" onClick={async () => setCheck(await checkFile("broken"))}>Check a broken file</Button>
+            <Button variant="secondary" disabled={checking} onClick={() => void checkKey("answer-key")}>Check the answer key</Button>
+            <Button variant="outline" disabled={checking} onClick={() => void checkKey("broken")}>Check a broken file</Button>
           </div>
+          {checking && <div role="status" aria-label="Checking evaluation file" className="space-y-2"><span className="sr-only">Checking evaluation file…</span><Skeleton className="h-8 w-full max-w-sm" /></div>}
           {check && (
             <div role="status" className="space-y-1 text-sm">
               <Badge variant={check.ok ? "default" : "destructive"}>{check.ok ? "valid" : `${check.problems.length} problems`}</Badge>{" "}
@@ -53,6 +60,7 @@ export function EvalPanel({ info }: { info: Awaited<ReturnType<typeof getBuckets
       >
         {busy ? "Running…" : "Run the evaluation"}
       </Button>
+      {busy && <div role="status" aria-label="Running evaluation" className="space-y-3"><span className="sr-only">Running evaluation…</span><Skeleton className="h-10 w-full max-w-md" /><Skeleton className="h-48 w-full" /><Skeleton className="h-64 w-full" /></div>}
 
       {report && (
         <Card>
