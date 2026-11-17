@@ -17,6 +17,11 @@ export function layoutGraph(graph: Graph, size = { width: 640, height: 400 }): R
     .stop()
   // ponytail: fixed 300 ticks, fine up to ~200 nodes; cap or batch beyond that
   sim.tick(300)
-  const clamp = (v: number, r: number, max: number) => Math.min(max - r, Math.max(r, v))
-  return Object.fromEntries(nodes.map((n) => [n.id, { x: clamp(n.x, n.r, width), y: clamp(n.y, n.r, height), r: n.r }]))
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
+  const label = new Map(graph.nodes.map((n) => [n.id, n.label.length]))
+  // Keep the centred 11px label (about 6.5px per char, drawn 16px below the node) inside the bounds too.
+  return Object.fromEntries(nodes.map((n) => {
+    const side = Math.max(n.r, (label.get(n.id)! * 6.5) / 2)
+    return [n.id, { x: clamp(n.x, side, width - side), y: clamp(n.y, n.r, height - n.r - 16), r: n.r }]
+  }))
 }
