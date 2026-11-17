@@ -1,4 +1,5 @@
 import type { SlangTerm } from "@/app/types"
+import { CHINESE_NUMBER_TERMS } from "@/lib/lexicon-chinese"
 
 // PUBLIC seed lexicon. This module is imported by client components and ships
 // in the browser bundle — never add proprietary/premium fields here.
@@ -1014,5 +1015,6 @@ export const slangDatabase: SlangTerm[] = [
     "detailedOriginEtymology": "A backronym: a new phrase built to fit the letters of an existing abbreviation. \"KYS\" (kill yourself) was re-expanded as \"keep yourself safe\", keeping the initials while hiding the meaning.",
     "culturalImpactAnalysis": "An example of how harmful phrases are disguised as everyday language to slip past moderation and adult attention. It also makes the genuine, caring use of the phrase easy to misread in both directions, which is why the sender, the tone and the surrounding messages matter more than the words themselves.",
     "communicationTips": "Don't assume every use is sinister, but don't brush it off either. Ask calmly what the message meant to them and how it made them feel. If it was aimed at them as an insult, treat it as bullying: save the evidence, block and report, and stay alert to changes in mood or behavior. Avoid using the phrase yourself to show you understand it."
-  }
+  },
+  ...CHINESE_NUMBER_TERMS,
 ]
