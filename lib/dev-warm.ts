@@ -17,3 +17,18 @@ export function warmRoutes(appDir = join(process.cwd(), "app")): string[] {
   walk(appDir, "")
   return routes.sort()
 }
+
+/** Requests each route in turn so the dev server compiles it before anyone clicks. Failures are logged, not thrown. */
+export async function warmUp(
+  origin: string,
+  routes: string[],
+  fetchFn: (url: string) => Promise<Response> = fetch,
+): Promise<void> {
+  for (const route of routes) {
+    try {
+      await fetchFn(`${origin}${route}`)
+    } catch (err) {
+      console.warn(`[warm-up] ${route} failed:`, err instanceof Error ? err.message : err)
+    }
+  }
+}
