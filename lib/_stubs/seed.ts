@@ -1,7 +1,8 @@
 import { count } from "drizzle-orm"
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core"
 import { slangDatabase } from "@/lib/lexicon-data"
-import { NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
+import { CHINESE_NUMBER_TERMS } from "@/lib/lexicon-chinese"
+import { CHINESE_NUMBER_EXAMPLES, NORMALISER_VERSION, normaliseSuggestion } from "@/lib/normalise"
 import * as schema from "./schema"
 import { SAFETY_EXAMPLES } from "@/lib/safety/examples"
 import {
@@ -48,7 +49,19 @@ export async function seedIfEmpty(db: Db, now = new Date()): Promise<void> {
     categories: example.categories, crisis: example.crisis, rationale: example.rationale,
   }))).onConflictDoNothing()
   const [{ value }] = await db.select({ value: count() }).from(schema.terms)
-  if (value > 0) return
+  if (value > 0) {
+    await db.insert(schema.terms).values(CHINESE_NUMBER_TERMS.map((t) => ({
+      term: t.term, termLower: t.term.toLowerCase(), termKey: normaliseSuggestion(t.term), keyVersion: NORMALISER_VERSION,
+      definition: t.definition, examples: t.examples, originAndContext: t.originAndContext,
+      commonSentiment: t.commonSentiment, sensitivityRating: t.sensitivityRating, tags: t.tags ?? [],
+      source: "seed", status: "published",
+    }))).onConflictDoNothing()
+    await db.insert(schema.termFeedback).values(SYNTHETIC_SUGGESTIONS
+      .filter((s) => CHINESE_NUMBER_EXAMPLES.some((e) => e.number === s.suggestedTerm))
+      .map((s) => ({ suggestedTerm: s.suggestedTerm, count: s.count, status: "pending" })))
+      .onConflictDoNothing()
+    return
+  }
 
   await db.insert(schema.terms).values(
     slangDatabase.map((t) => ({

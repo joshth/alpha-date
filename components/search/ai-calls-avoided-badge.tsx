@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react"
 import { animate } from "motion/react"
-import { Nunito } from "next/font/google"
+import localFont from "next/font/local"
 import { Badge } from "@/components/ui/badge"
 
-const nunito = Nunito({ subsets: ["latin"], weight: "900" })
+const nunito = localFont({ src: "../../fonts/Nunito-Variable.ttf", weight: "900", display: "swap" })
 
 export function AiCallsAvoidedBadge({ value }: { value: number }) {
   const [displayed, setDisplayed] = useState(value)

@@ -24,6 +24,7 @@ export const LAB_NAV: NavGroup[] = [
     label: "Quality",
     items: [
       { href: "/lab/eval", label: "Evaluation" },
+      { href: "/lab/eval/models", label: "Model reports" },
       { href: "/lab/safety-activity", label: "Safety activity" },
       { href: "/lab/safety-incidents", label: "Safety incidents", demoOnly: true },
     ],

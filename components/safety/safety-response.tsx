@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react"
 import type { SafetyVerdict } from "@/lib/safety/gate"
 import { CrisisCard } from "@/components/safety/crisis-card"
 import { HelpResources } from "@/components/safety/help-resources"
@@ -8,7 +9,8 @@ export function SafetyResponse({ verdict, message }: { verdict: SafetyVerdict; m
       <section aria-label="A gentle check-in" className="space-y-2 rounded-lg border border-border bg-muted/40 p-4">
         <h2 className="font-semibold text-foreground">A gentle check-in</h2>
         <p role="status" className="text-foreground">{message}</p>
-        <p className="text-sm text-muted-foreground">You can search for a slang term separately when you're ready.</p>
+        <p className="text-sm text-foreground">You can search for a slang term separately when you're ready.</p>
+        <HelpResources categories={[]} general heading="Someone to talk to" intro="If you would like to talk, these services offer support." />
       </section>
     )
   }
@@ -18,8 +20,11 @@ export function SafetyResponse({ verdict, message }: { verdict: SafetyVerdict; m
   const categories = verdict.categories.length ? verdict.categories : ["bullying_harassment" as const]
   return (
     <div className="space-y-4">
-      <p role="alert" className="text-foreground">{message}</p>
-      {verdict.incidentReference && <p className="break-all text-sm text-muted-foreground">Incident reference: <code>{verdict.incidentReference}</code></p>}
+      <p role="alert" className="flex items-start gap-2 text-foreground">
+        {verdict.reason === "prompt_injection" && <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />}
+        <span>{message}</span>
+      </p>
+      {verdict.incidentReference && <p className="break-all text-sm text-foreground">Incident reference: <code>{verdict.incidentReference}</code></p>}
       {verdict.reason !== "prompt_injection" && (verdict.decidedBy !== "fail_closed" || verdict.categories.length > 0) && (
         <HelpResources categories={categories} />
       )}

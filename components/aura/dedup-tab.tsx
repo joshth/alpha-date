@@ -54,7 +54,8 @@ export function DedupTab({ savingsAction, graphAction, semanticAction }: { savin
   return (
     <div className="space-y-6">
       <div role="status" aria-live="polite" className="sr-only">{pending ? "Updating…" : savings ? "Dedup counts updated" : ""}</div>
-      {savings ? <DedupResult savings={savings} minutesPerReview={minutes} onMinutesChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /> : <><MinutesInput value={minutes} onChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /><Skeleton className="h-24" /></>}
+      {pending && savings && <div role="status" aria-label="Updating deduplication counts"><span className="sr-only">Updating deduplication counts…</span><Skeleton className="h-1 w-full max-w-sm" /></div>}
+      {savings ? <DedupResult savings={savings} minutesPerReview={minutes} onMinutesChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /> : <><MinutesInput value={minutes} onChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /><div role="status" aria-label="Loading deduplication counts" className="grid grid-cols-2 gap-3 sm:grid-cols-6"><span className="sr-only">Loading deduplication counts…</span>{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div></>}
       <GraphExplorer graphAction={graphAction} semanticAction={semanticAction} />
     </div>
   )

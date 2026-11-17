@@ -101,3 +101,23 @@ test("demo-only nav items stay hidden unless the server turns the demo on", () =
   assert.ok(!nav(false).includes(">Safety incidents<"))
   assert.ok(nav(true).includes(">Safety incidents<"))
 })
+
+
+test("header actions remain inside the shell header alongside existing controls", () => {
+  const markup = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react"); globalThis.React = React;
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { LabShellView } = require("./components/lab/shell.tsx");
+    console.log(renderToStaticMarkup(React.createElement(LabShellView, {
+      pathname: "/lab", userName: "Reviewer", mockLlm: true,
+      headerActions: React.createElement("button", {type: "button"}, "Support location"),
+      children: React.createElement("p", null, "PAGE BODY"),
+    })));
+  `], {cwd: process.cwd(), encoding: "utf8", env: {...process.env, NODE_OPTIONS: ""}})
+  const header = markup.match(/<header[^>]*>[\s\S]*?<\/header>/)?.[0] ?? ""
+  assert.match(header, /Support location/)
+  assert.match(header, /role="search"/)
+  assert.match(header, /Teaching scaffold/)
+  assert.match(markup, /aria-label="Lab"/)
+  assert.match(markup, /PAGE BODY/)
+})

@@ -25,6 +25,9 @@ Applying a preset sets its listed settings and leaves other settings at their st
 - **Calm motion:** Reduces animation and transition durations across the page.
 - **High contrast:** Uses a black background with white text and yellow accents and focus outlines.
 - **Larger controls:** Increases the minimum control dimensions.
+- **Colour vision:** Standard, Protanopia, Deuteranopia or Tritanopia. The three alternatives adjust Aura stage colours in both light and dark Lab themes. High contrast takes priority when it is also enabled.
+
+Aura charts also mark stages by shape: an upward triangle for Emerging, a diamond for Peaking, a downward triangle for Declining, and a square for Parent territory. The Lab chart marks stage changes and the latest week; its table names each week's stage. CLI and MCP PNG graphs use the same shapes with a fixed colour vision friendly palette because browser settings are unavailable to those renderers.
 
 The live preview shows a sample search result and its Aura badge using the selected display settings.
 

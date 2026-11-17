@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Accessibility as AccessibilityIcon } from "lucide-react"
 import { AuraBadge } from "@/components/aura/aura-badge"
 import {
   applyPreset,
@@ -15,6 +14,19 @@ import {
   type AccessibilityPreferences,
   type SystemPreferences,
 } from "./preferences"
+
+/** The accessibility icon from the project slides: white figure on a blue circle. */
+function AccessibilityGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 820 820" className="size-12">
+      <circle cx="410" cy="410" r="400" fill="#139fda" />
+      <g fill="#fff">
+        <circle cx="410" cy="223" r="46" />
+        <path d="M222 287 L598 287 a20 20 0 0 1 0 38 L492 340 q-22 8 -22 30 L470 430 q0 40 8 80 L512 650 a20 20 0 0 1 -38 14 L424 505 q-14 -10 -28 0 L346 664 a20 20 0 0 1 -38 -14 L342 510 q8 -40 8 -80 L350 370 q0 -22 -22 -30 L222 325 a19 19 0 0 1 0 -38 Z" />
+      </g>
+    </svg>
+  )
+}
 
 const skipLink = "sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-0 focus:left-0 focus:bg-background focus:text-foreground focus:p-3 focus:shadow-lg"
 const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -56,6 +68,7 @@ export function AccessibilityControls() {
     const resolved = resolvePreferences(preferences, system)
     document.documentElement.dataset.highContrast = String(resolved.highContrast)
     document.documentElement.dataset.textSize = String(resolved.textSize)
+    document.documentElement.dataset.colorVision = resolved.colorVision
     document.body.dataset.calmMotion = String(resolved.calmMotion)
     document.body.dataset.accessibilityFont = resolved.font
     document.body.dataset.lineSpacing = resolved.lineSpacing
@@ -158,9 +171,9 @@ export function AccessibilityControls() {
         aria-controls="accessibility-options"
         aria-expanded={open}
         onClick={(event) => openSettings(event.currentTarget)}
-        className={`fixed right-4 top-4 z-40 flex size-12 items-center justify-center rounded-full border bg-background text-foreground shadow-md hover:bg-accent ${focusRing}`}
+        className={`fixed right-4 top-24 z-40 flex size-12 items-center justify-center rounded-full shadow-md hover:brightness-110 ${focusRing}`}
       >
-        <AccessibilityIcon aria-hidden="true" className="size-7" />
+        <AccessibilityGlyph />
       </button>
       <section
         ref={panelRef}
@@ -168,7 +181,7 @@ export function AccessibilityControls() {
         aria-labelledby="accessibility-options-title"
         hidden={!open}
         tabIndex={-1}
-        className="fixed right-4 top-4 z-50 max-h-[90vh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border bg-card p-5 text-card-foreground shadow-xl"
+        className="fixed right-4 top-24 z-50 max-h-[calc(100vh-7rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border bg-card p-5 text-card-foreground shadow-xl"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="accessibility-options-title" className="text-lg font-semibold">Accessibility options</h2>
@@ -215,6 +228,15 @@ export function AccessibilityControls() {
               <option value="system">System default</option>
               <option value="atkinson">Atkinson Hyperlegible</option>
               <option value="opendyslexic">OpenDyslexic</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm" htmlFor="accessibility-color-vision">
+            Colour vision
+            <select id="accessibility-color-vision" value={preferences.colorVision} onChange={(event) => setSetting("colorVision", event.target.value as AccessibilityPreferences["colorVision"], "Colour vision")} className={`min-h-11 rounded border bg-background px-2 ${focusRing}`}>
+              <option value="standard">Standard palette</option>
+              <option value="protanopia">Protanopia</option>
+              <option value="deuteranopia">Deuteranopia</option>
+              <option value="tritanopia">Tritanopia</option>
             </select>
           </label>
         </fieldset>

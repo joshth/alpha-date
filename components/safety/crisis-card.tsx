@@ -1,3 +1,7 @@
+"use client"
+
+import { useSupportRegion } from "./region-provider"
+import { supportRegion } from "@/lib/safety/regions"
 import { HeartHandshake, Phone } from "lucide-react"
 import type { CrisisKind, SafetyCategory } from "@/lib/safety/classify"
 import { HelpResources } from "@/components/safety/help-resources"
@@ -6,6 +10,8 @@ import { HelpResources } from "@/components/safety/help-resources"
 // of intent to self-harm or to harm others. Calm, direct, and leads with
 // emergency help; no AI content is generated for these inputs.
 export function CrisisCard({ crisis, categories, reference }: { crisis: CrisisKind; categories: SafetyCategory[]; reference?: string }) {
+  const { region } = useSupportRegion()
+  const country = supportRegion(region)
   const harmToOthers = crisis === "harm_to_others"
   return (
     <div role="alert" aria-live="assertive" className="space-y-4 rounded-lg border-2 border-red-600/60 bg-card p-5 shadow-sm">
@@ -13,27 +19,27 @@ export function CrisisCard({ crisis, categories, reference }: { crisis: CrisisKi
         <HeartHandshake className="h-6 w-6 text-red-600" aria-hidden="true" />
         {harmToOthers ? "Please talk to someone now" : "You don't have to go through this alone"}
       </h2>
-      <p className="text-foreground/90">
+      <p className="leading-relaxed text-foreground">
         {harmToOthers
           ? "What you typed sounds like someone could get hurt. If you're thinking about hurting someone, or you're worried someone else might, please talk to someone right now."
-          : "What you typed sounds like things might be really hard right now. Talking to someone can help, and it's free and confidential, any time of day or night."}
+          : "What you typed sounds like things might be really hard right now. Talking to someone can help. The services below explain how they can support you."}
       </p>
       <a
-        href="tel:000"
+        href={`tel:${country.emergency}`}
         className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
       >
-        <Phone className="h-5 w-5" aria-hidden="true" /> If anyone is in danger, call 000
+        <Phone className="h-5 w-5" aria-hidden="true" /> If anyone is in danger in {country.name}, call {country.emergency}
       </a>
       <HelpResources
         categories={categories.length ? categories : [harmToOthers ? "violence_threat" : "suicide_self_harm"]}
         heading="People you can talk to"
-        intro={harmToOthers ? "These services can help you work through what's going on." : "These services are here for you, day and night."}
+        intro={harmToOthers ? "These services can help you work through what's going on." : "You can contact these services for support."}
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm leading-relaxed text-foreground">
         If you were looking up a phrase for someone else, the services above can also help you support them.
       </p>
-      {reference && <p className="break-all text-sm text-muted-foreground">Incident reference: <code>{reference}</code></p>}
-      <p className="text-xs text-muted-foreground">We can&apos;t reply to messages typed here.</p>
+      {reference && <p className="break-all text-sm leading-relaxed text-foreground">Incident reference: <code>{reference}</code></p>}
+      <p className="text-sm leading-relaxed text-foreground">We can&apos;t reply to messages typed here.</p>
     </div>
   )
 }

@@ -1,8 +1,10 @@
+import { DiscoveryCostEstimate } from "@/components/safety/discovery-cost-estimate"
+import { ActivityPeriodFilter } from "@/components/safety/activity-period-filter"
+import { SupportResponseSummary } from "@/components/safety/support-response-summary"
 import type { SafetyActivityView } from "@/lib/safety/activity-view"
 
 const labels = { safe: "Allowed", refuse: "Refused", safeguarding: "Safeguarding", gentle_support: "Gentle support" } as const
 const number = new Intl.NumberFormat("en-AU")
-const usd = new Intl.NumberFormat("en-AU", { style: "currency", currency: "USD", maximumFractionDigits: 6 })
 const percentage = new Intl.NumberFormat("en-AU", { style: "percent", maximumFractionDigits: 1 })
 
 export function SafetyActivitySummary({ view }: { view: SafetyActivityView }) {
@@ -10,26 +12,18 @@ export function SafetyActivitySummary({ view }: { view: SafetyActivityView }) {
     <section aria-labelledby="activity-heading" className="space-y-6">
       <div>
         <h1 id="activity-heading" className="text-2xl font-bold">Safety activity</h1>
-        <p className="text-muted-foreground">Recorded safety outcomes for searches and suggestions.</p>
+        <p className="text-muted-foreground">Educator overview of recorded safety outcomes for searches and suggestions.</p>
       </div>
       {view.status === "forbidden" ? <p role="alert">Reviewer access required.</p> : (
         <>
-          <form action="/lab/safety-activity" method="get" className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1">
-              <label htmlFor="activity-from" className="block text-sm font-medium">From (UTC)</label>
-              <input id="activity-from" name="from" type="datetime-local" step="1" required defaultValue={view.from}
-                aria-describedby="period-help" className="rounded-md border bg-background px-3 py-2" />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="activity-to" className="block text-sm font-medium">To (UTC, exclusive)</label>
-              <input id="activity-to" name="to" type="datetime-local" step="1" required defaultValue={view.to}
-                aria-describedby="period-help" className="rounded-md border bg-background px-3 py-2" />
-            </div>
-            <button type="submit" className="rounded-md bg-primary px-4 py-2 text-primary-foreground">Show activity</button>
-          </form>
-          <p id="period-help" className="text-sm text-muted-foreground">Times are in UTC. The start is included and the end is excluded. The default period is the last 24 hours.</p>
+          <p className="text-sm text-muted-foreground">Educator preview: this scaffold uses mock reviewer access. Real educator authentication and authorisation are not configured.</p>
+          <ActivityPeriodFilter key={`${view.preset?.period ?? "custom"}:${view.from}:${view.to}`} from={view.from} to={view.to} preset={view.preset} />
+          <p id="period-help" className="text-sm text-muted-foreground">Times are in UTC. The start is included and the end is excluded. The default is today in UTC. Calendar weeks run Monday to Sunday; months and years use calendar boundaries.</p>
           {view.status === "error" ? <p role="alert">{view.message}</p> : (
             <>
+              <p className="text-sm text-muted-foreground">Selected range (UTC): <time dateTime={view.activity.period.from}>{view.activity.period.from}</time> to <time dateTime={view.activity.period.to}>{view.activity.period.to}</time> (exclusive).</p>
+              <SupportResponseSummary activity={view.activity} />
+              <h2 className="text-xl font-semibold">All gate activity</h2>
               <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {[
                   ["Recorded evaluations", number.format(view.activity.evaluated)],
@@ -64,9 +58,8 @@ export function SafetyActivitySummary({ view }: { view: SafetyActivityView }) {
                     <>
                       <dl className="grid gap-3 sm:grid-cols-2">
                         <div><dt>Recorded discovery calls avoided</dt><dd className="font-semibold">{number.format(view.discovery.callsAvoided)}</dd></div>
-                        <div><dt>Estimated savings (USD)</dt><dd className="font-semibold">{view.discovery.estimate ? usd.format(view.discovery.estimate.savingsUsd) : "Average cost unavailable"}</dd></div>
+                        <DiscoveryCostEstimate callsAvoided={view.discovery.callsAvoided} configured={view.discovery.estimate} model={process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini"} />
                       </dl>
-                      {view.discovery.estimate && <p className="text-sm text-muted-foreground">Estimate uses {usd.format(view.discovery.estimate.averageCostUsd)} per call. Recorded events can include demo traffic.</p>}
                       <p className="text-sm text-muted-foreground">A recorded lexicon match skipped discovery. Safety stops are counted separately because their effect on model calls is unknown.</p>
                     </>
                   )}

@@ -1,20 +1,18 @@
 import "./setup"
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { scoreTermLifecycle } from "@/lib/aura"
+import { fitResult } from "./mcp-fit-fixture"
 import { slangDatabase } from "@/lib/lexicon-data"
 import { createDecoderTools } from "@/lib/mcp/tools"
 import { checkInputSafety } from "@/lib/safety/gate"
-import { getTermByKey, getTermEvents, listPublishedTermNames } from "@/lib/terms-store"
+import { getTermByKey, listPublishedTermNames } from "@/lib/terms-store"
 
 // A11Y-15 sweep: every tool answer for every seed term must be plain, short-lined text.
 const tools = createDecoderTools({
   checkInputSafety,
   getTermByKey,
   listPublishedTermNames,
-  getTermEvents,
-  scoreTermLifecycle,
-  now: () => new Date(),
+  fitAuraTerm: async () => fitResult(),
 })
 
 const rules: [string, (out: string, lines: string[]) => boolean][] = [

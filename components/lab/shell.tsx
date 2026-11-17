@@ -1,6 +1,6 @@
 import type React from "react"
 import Link from "next/link"
-import { Activity, ArrowLeft, BarChart3, BookOpen, ClipboardCheck, Database, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, type LucideIcon } from "lucide-react"
+import { Activity, ArrowLeft, BarChart3, BookOpen, ClipboardCheck, Database, FileBarChart, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, type LucideIcon } from "lucide-react"
 import { LAB_NAV } from "./nav"
 import { ThemeToggle } from "./theme-toggle"
 import type { ThemePref } from "./theme"
@@ -10,7 +10,7 @@ const ROOT = { href: "/lab", label: "Lexicon Lab" }
 const items = LAB_NAV.flatMap((g) => g.items)
 const icons: Record<string, LucideIcon> = {
   Dashboard: LayoutDashboard, Search, "Review queue": ClipboardCheck,
-  Evaluation: BarChart3, "Safety activity": Activity,
+  Evaluation: BarChart3, "Model reports": FileBarChart, "Safety activity": Activity,
   "Safety incidents": ShieldAlert, Aura: Activity, Dedup: Database, Docs: BookOpen,
 }
 
@@ -44,11 +44,12 @@ export function shouldFocusSearch(e: {
   return !(t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName ?? "")))
 }
 
-export function LabShellView({ pathname, userName, mockLlm, showDemoPages = false, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer, themePref = "system", onThemeChange, navigationProgress = null, navigationComplete = false }: {
+export function LabShellView({ pathname, userName, mockLlm, showDemoPages = false, headerActions, children, collapsed = false, drawerOpen = false, onToggleCollapsed, onToggleDrawer, themePref = "system", onThemeChange, navigationProgress = null, navigationComplete = false }: {
   pathname: string
   userName: string
   mockLlm: boolean
   showDemoPages?: boolean
+  headerActions?: React.ReactNode
   children: React.ReactNode
   collapsed?: boolean
   drawerOpen?: boolean
@@ -81,6 +82,7 @@ export function LabShellView({ pathname, userName, mockLlm, showDemoPages = fals
         <span title={userName} aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-lab-control text-xs font-medium">{initials}</span>
         <span className="sr-only">Signed in as {userName}</span>
        </div>
+       {headerActions && <div className="flex justify-end px-4 pb-2">{headerActions}</div>}
        <p className="bg-lab-raised px-4 py-1 text-xs text-lab-muted">
         Teaching scaffold · signed in as mock user &quot;{userName}&quot; ·{" "}
         {mockLlm ? "mock AI and moderation" : "real AI and moderation (your own key)"}
