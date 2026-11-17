@@ -37,3 +37,6 @@ __pycache__/
 # macOS
 .DS_Store
 
+
+# Codex local config
+/.codex/
