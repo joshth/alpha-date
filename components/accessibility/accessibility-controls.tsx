@@ -170,7 +170,7 @@ export function AccessibilityControls() {
         aria-controls="accessibility-options"
         aria-expanded={open}
         onClick={(event) => openSettings(event.currentTarget)}
-        className={`fixed right-4 top-4 z-40 flex size-12 items-center justify-center rounded-full shadow-md hover:brightness-110 ${focusRing}`}
+        className={`fixed right-4 top-24 z-40 flex size-12 items-center justify-center rounded-full shadow-md hover:brightness-110 ${focusRing}`}
       >
         <AccessibilityGlyph />
       </button>
@@ -180,7 +180,7 @@ export function AccessibilityControls() {
         aria-labelledby="accessibility-options-title"
         hidden={!open}
         tabIndex={-1}
-        className="fixed right-4 top-4 z-50 max-h-[90vh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border bg-card p-5 text-card-foreground shadow-xl"
+        className="fixed right-4 top-24 z-50 max-h-[calc(100vh-7rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border bg-card p-5 text-card-foreground shadow-xl"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="accessibility-options-title" className="text-lg font-semibold">Accessibility options</h2>
