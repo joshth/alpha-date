@@ -11,7 +11,11 @@ import type { SemanticEdge } from "@/lib/dedup/semantic"
 import { layoutGraph } from "@/lib/dedup/layout"
 import { CLUSTER_COLUMNS, clusterRows, mergeCount, nextNeighbour } from "@/lib/dedup/nav"
 import { mergeQuality } from "@/lib/dedup/threshold"
+import { fullView, zoomView, type View } from "@/lib/dedup/zoom"
 import { MATCH_THRESHOLD } from "@/lib/normalise"
+
+const BASE = { width: 640, height: 400 }
+const ZOOM_STEP = 1.5
 
 type Pos = { x: number; y: number; r: number }
 type Quality = { precision: number | null; recall: number | null; cases: number } | null
@@ -21,8 +25,9 @@ export const defaultShowTable = (viewportWidth: number) => viewportWidth < 768
 
 const fmt = (n: number | null) => (n === null ? "n/a" : n.toFixed(2))
 
-export function GraphExplorerView({ graph, positions, threshold, onThreshold, selectedId, showTable, onToggleTable, quality, onSelect, onMove, semanticOn, onToggleSemantic, semanticEdges }: {
+export function GraphExplorerView({ graph, positions, threshold, onThreshold, selectedId, showTable, onToggleTable, quality, onSelect, onMove, semanticOn, onToggleSemantic, semanticEdges, view, onZoom, onResetZoom }: {
   graph: Graph; positions: Record<string, Pos>; threshold: number; onThreshold?: (n: number) => void; selectedId: string | null
+  view?: View; onZoom?: (factor: number) => void; onResetZoom?: () => void
   semanticOn?: boolean; onToggleSemantic?: () => void; semanticEdges?: SemanticEdge[]
   showTable: boolean; onToggleTable?: () => void; quality: Quality; onSelect?: (id: string) => void; onMove?: (key: Key) => void
 }) {
@@ -46,7 +51,13 @@ export function GraphExplorerView({ graph, positions, threshold, onThreshold, se
       </div>
       {showTable ? <ClusterTable graph={graph} threshold={threshold} /> : (
         <div className="space-y-3">
-          <div ref={graphRef}><GraphView graph={graph} positions={positions} selectedId={selectedId} threshold={threshold} onSelect={onSelect} onMove={onMove} semanticEdges={semanticOn ? semanticEdges : undefined} /></div>
+          <div className="flex gap-2">
+            {([["Zoom in", "+", ZOOM_STEP], ["Zoom out", "−", 1 / ZOOM_STEP]] as const).map(([name, glyph, f]) => (
+              <button key={name} type="button" aria-label={name} onClick={() => onZoom?.(f)} className="h-9 w-9 rounded border border-lab-border-strong text-lg">{glyph}</button>
+            ))}
+            <button type="button" aria-label="Reset zoom" onClick={onResetZoom} className="h-9 rounded border border-lab-border-strong px-3 text-sm">Reset</button>
+          </div>
+          <div ref={graphRef}><GraphView graph={graph} positions={positions} view={view} selectedId={selectedId} threshold={threshold} onSelect={onSelect} onMove={onMove} semanticEdges={semanticOn ? semanticEdges : undefined} /></div>
           <GraphLegend semantic={semanticOn} />
           <NodePanel graph={graph} id={selectedId} threshold={threshold} />
         </div>
@@ -66,6 +77,8 @@ export function GraphExplorer({ graphAction, semanticAction }: { graphAction: ()
   const [threshold, setThreshold] = useState(MATCH_THRESHOLD)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showTable, setShowTable] = useState(false)
+  const [view, setView] = useState<View>(fullView(BASE))
+  const zoom = (factor: number) => setView((v) => zoomView(v, BASE, factor, v.x + v.w / 2, v.y + v.h / 2))
   useEffect(() => {
     setShowTable(defaultShowTable(window.innerWidth))
     graphAction().then(setData)
@@ -82,5 +95,5 @@ export function GraphExplorer({ graphAction, semanticAction }: { graphAction: ()
     setSelectedId(id)
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-node-id="${CSS.escape(id)}"]`)?.focus())
   }
-  return <GraphExplorerView graph={graph} positions={positions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} semanticOn={semanticOn} onToggleSemantic={toggleSemantic} semanticEdges={semantic ?? undefined} />
+  return <GraphExplorerView graph={graph} positions={positions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} semanticOn={semanticOn} onToggleSemantic={toggleSemantic} semanticEdges={semantic ?? undefined} view={view} onZoom={zoom} onResetZoom={() => setView(fullView(BASE))} />
 }
