@@ -13,3 +13,12 @@ test("next config trims barrel imports from the heavy UI packages", async () => 
   const packages: string[] = config.experimental?.optimizePackageImports ?? []
   for (const name of ["lucide-react", "recharts", "motion"]) assert.ok(packages.includes(name), name)
 })
+
+test("warmRoutes lists every static page under app/, skipping dynamic ones", async () => {
+  const { warmRoutes } = await import("../lib/dev-warm")
+  const routes = warmRoutes()
+  for (const r of ["/", "/lab", "/lab/aura", "/lab/dedup", "/lab/search", "/lab/review", "/lab/eval", "/lab/safety-activity", "/lab/safety-incidents"]) {
+    assert.ok(routes.includes(r), r)
+  }
+  assert.ok(routes.every((r) => !r.includes("[")))
+})
