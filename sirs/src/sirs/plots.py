@@ -89,7 +89,8 @@ def dtw_scatter(ev: pd.DataFrame, track: str, variant: str, path, title: str = "
 
 def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
     """Noise-free fitted curves coloured by stage."""
-    colors = {"emerging": "C2", "peaking": "C1", "declining": "C3", "parent_territory": "C0"}
+    styles = {"emerging": ("#0072b2", "^"), "peaking": ("#e69f00", "D"),
+              "declining": ("#cc79a7", "v"), "parent_territory": ("#009e73", "s")}
     fig, axes = plt.subplots(1, len(terms), figsize=(3.6 * len(terms), 2.8), squeeze=False,
                              layout="constrained")
     for ax, term in zip(axes[0], terms):
@@ -98,11 +99,11 @@ def stage_example_figure(curves: dict, terms: list[str], label_fn, path=None):
         labs = label_fn(c, weeks)
         tm = (weeks - c["onset"]).days.values / 7.0
         I = np.interp(tm, c["sim"]["t"], c["sim"]["I"], left=1e-3) / c["i_peak"]
-        staged = np.isin(labs, list(colors))
+        staged = np.isin(labs, list(styles))
         ax.plot(weeks[staged], I[staged], color="0.75", lw=1, zorder=1)
-        for s, col in colors.items():
+        for s, (col, marker) in styles.items():
             m = labs == s
-            ax.scatter(weeks[m], I[m], s=14, color=col, label=s.replace("_", " ").capitalize(),
+            ax.scatter(weeks[m], I[m], s=14, color=col, marker=marker, label=s.replace("_", " ").capitalize(),
                        edgecolors="white", linewidths=0.3, zorder=2)
         ax.set_title(f"{term} ({c['generation']})", fontsize=8)
         ax.set_ylabel("Share of peak interest", fontsize=7)
