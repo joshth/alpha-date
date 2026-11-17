@@ -27,3 +27,8 @@ export function foldJapanese(text: string): string {
   const kana = toHiragana(text.trim())
   return (kana && readingsToDigits(kana)) ?? kana
 }
+
+const POLITE_ENDINGS = /(です|ます|だ)$/
+
+/** The key without a trailing polite ending, so ろくななです and ろくなな share a stem. */
+export const japaneseStem = (text: string): string => foldJapanese(text.trim().replace(POLITE_ENDINGS, ""))

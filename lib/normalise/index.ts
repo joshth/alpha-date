@@ -12,7 +12,7 @@
 // respellings) — but beware over-merging distinct terms ("mid" vs "midd"?).
 // Measure merge precision with labelled pairs in the golden set.
 
-import { foldJapanese } from "./japanese"
+import { foldJapanese, japaneseStem } from "./japanese"
 import { normalizeKey, trigramSimilarity } from "./similarity"
 
 // Increment whenever normaliseSuggestion's output changes,
@@ -121,6 +121,13 @@ export function findLikelyMatches(text: string, candidates: string[], _limit = D
 
     if (candidateKey === inputKey) {
       matches.push({ candidate, score: 1, reason: "same_key" })
+      continue
+    }
+
+    // A polite ending (です/ます/だ) is the Japanese stem signal; it works on short keys like "67".
+    if (japaneseStem(inputKey) === japaneseStem(candidateKey)) {
+      const trigram = trigramSimilarity(inputKey, candidateKey)
+      matches.push({ candidate, score: 1 - (1 - trigram) * (1 - STEM_WEIGHT), reason: "stem", signals: { trigram, stem: true } })
       continue
     }
 
