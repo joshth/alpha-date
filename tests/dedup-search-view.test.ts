@@ -24,3 +24,16 @@ test("says so when nothing matches, and shows nothing for empty input", () => {
   const empty = render({ text: "", result: { key: "", matches: [] } })
   assert.ok(!empty.includes("No match") && !empty.includes("key:"))
 })
+
+test("offers all five Chinese number examples with their meanings", () => {
+  const html = render({ text: "521", result: { key: "我爱你", matches: [{ candidate: "我爱你", score: 1, reason: "same_key", label: "Same key" }] } })
+  assert.match(html, /Chinese number examples/)
+  for (const [number, phrase, meaning] of [
+    ["520", "我爱你", "I love you"], ["521", "我爱你", "I love you too (reply)"],
+    ["886", "拜拜咯", "bye-bye"], ["1314", "一生一世", "forever"],
+    ["5201314", "我爱你一生一世", "I love you forever"],
+  ]) {
+    assert.ok(html.includes(number) && html.includes(phrase) && html.includes(meaning), number)
+  }
+  assert.match(html, /<button[^>]*type="button"[^>]*aria-pressed="true"[^>]*>.*521/)
+})
