@@ -95,6 +95,7 @@
 
 /* Lab theme tokens: generated from DESIGN.md (HSL), keep in sync. */
 .lab {
+  color-scheme: dark;
   --lab-primary: 162 70% 45%;
   --lab-on-primary: 240 9% 2%;
   --lab-chrome: 240 9% 2%;
@@ -130,8 +131,113 @@
   --radius: 0.25rem;
 }
 
+@font-face {
+  font-family: "Atkinson Hyperlegible Local";
+  src: url("/fonts/atkinson-hyperlegible-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "OpenDyslexic Local";
+  src: url("/fonts/opendyslexic-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+html[data-text-size="100"] { font-size: 100%; }
+html[data-text-size="125"] { font-size: 125%; }
+html[data-text-size="150"] { font-size: 150%; }
+html[data-text-size="200"] { font-size: 200%; }
+body[data-accessibility-font="atkinson"],
+body[data-accessibility-font="atkinson"] .font-sans { font-family: "Atkinson Hyperlegible Local", sans-serif; }
+body[data-accessibility-font="opendyslexic"],
+body[data-accessibility-font="opendyslexic"] .font-sans { font-family: "OpenDyslexic Local", sans-serif; }
+body[data-line-spacing="relaxed"] { line-height: 1.6; }
+body[data-line-spacing="wide"] { line-height: 1.8; }
+
+body[data-large-controls="true"] button,
+body[data-large-controls="true"] a,
+body[data-large-controls="true"] input,
+body[data-large-controls="true"] select,
+body[data-large-controls="true"] textarea {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+body[data-calm-motion="true"] *,
+body[data-calm-motion="true"] *::before,
+body[data-calm-motion="true"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-calm-motion="false"]) *,
+  body:not([data-calm-motion="false"]) *::before,
+  body:not([data-calm-motion="false"]) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html[data-high-contrast="true"] {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 0%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 0 0% 100%;
+  --muted: 0 0% 0%;
+  --muted-foreground: 0 0% 100%;
+  --border: 0 0% 100%;
+  --input: 0 0% 100%;
+  --primary: 60 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 0%;
+  --secondary-foreground: 0 0% 100%;
+  --ring: 60 100% 50%;
+}
+
+html[data-high-contrast="true"] body { background-color: hsl(0 0% 0%); color: hsl(0 0% 100%); }
+html[data-high-contrast="true"] a { color: hsl(60 100% 50%); }
+html[data-high-contrast="true"] :focus-visible {
+  outline: 3px solid hsl(60 100% 50%) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+
+html[data-high-contrast="true"] .lab {
+  --lab-primary: 60 100% 50%;
+  --lab-on-primary: 0 0% 0%;
+  --lab-chrome: 0 0% 0%;
+  --lab-surface: 0 0% 0%;
+  --lab-surface-raised: 0 0% 0%;
+  --lab-input: 0 0% 0%;
+  --lab-border: 0 0% 100%;
+  --lab-border-strong: 0 0% 100%;
+  --lab-control: 0 0% 0%;
+  --lab-text: 0 0% 100%;
+  --lab-text-muted: 0 0% 100%;
+  --lab-stage-emerging: 60 100% 50%;
+  --lab-stage-peaking: 60 100% 50%;
+  --lab-stage-declining: 60 100% 50%;
+  --lab-stage-parent-territory: 60 100% 50%;
+}
+
+@media (prefers-contrast: more) {
+  html:not([data-high-contrast="false"]) { color-scheme: dark; }
+}
+
 @media (prefers-color-scheme: light) {
-  .lab {
+  :root:not([data-theme]) .lab {
+    color-scheme: light;
     --lab-primary: 166 72% 28%;
     --lab-chrome: 240 10% 96%;
     --lab-surface: 0 0% 100%;
@@ -143,5 +249,48 @@
     --lab-text: 250 9% 13%;
     --lab-text-muted: 249 4% 37%;
     --lab-on-primary: 0 0% 100%;
+    --lab-stage-emerging: 164 100% 24%;
+    --lab-stage-peaking: 39 100% 33%;
+    --lab-stage-declining: 202 100% 35%;
+    --lab-stage-parent-territory: 320 35% 49%;
   }
+}
+
+/* An explicit choice from the header toggle wins over the OS setting. */
+[data-theme="dark"] .lab {
+  color-scheme: dark;
+  --lab-primary: 162 70% 45%;
+  --lab-on-primary: 240 9% 2%;
+  --lab-chrome: 240 9% 2%;
+  --lab-surface: 250 12% 10%;
+  --lab-surface-raised: 250 7% 16%;
+  --lab-input: 255 7% 11%;
+  --lab-border: 250 5% 25%;
+  --lab-border-strong: 250 3% 44%;
+  --lab-control: 252 3% 32%;
+  --lab-text: 240 9% 93%;
+  --lab-text-muted: 260 1% 59%;
+  --lab-stage-emerging: 164 100% 31%;
+  --lab-stage-peaking: 41 100% 45%;
+  --lab-stage-declining: 202 77% 63%;
+  --lab-stage-parent-territory: 327 45% 64%;
+}
+
+[data-theme="light"] .lab {
+  color-scheme: light;
+  --lab-primary: 166 72% 28%;
+  --lab-chrome: 240 10% 96%;
+  --lab-surface: 0 0% 100%;
+  --lab-surface-raised: 240 9% 93%;
+  --lab-input: 0 0% 100%;
+  --lab-border: 252 6% 84%;
+  --lab-border-strong: 249 3% 55%;
+  --lab-control: 252 9% 89%;
+  --lab-text: 250 9% 13%;
+  --lab-text-muted: 249 4% 37%;
+  --lab-on-primary: 0 0% 100%;
+  --lab-stage-emerging: 164 100% 24%;
+  --lab-stage-peaking: 39 100% 33%;
+  --lab-stage-declining: 202 100% 35%;
+  --lab-stage-parent-territory: 320 35% 49%;
 }

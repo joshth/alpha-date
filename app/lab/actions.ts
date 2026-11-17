@@ -20,9 +20,10 @@ import { similarityGraph, type DedupGraphData } from "@/lib/dedup/graph"
 import { readDedupRows, readDedupSavings } from "@/lib/dedup/store"
 import { loadGoldenSet } from "@/lib/eval/golden"
 import { checkInputSafety, type SafetyVerdict } from "@/lib/safety/gate"
-import { getAiCallsAvoided, getTermByKey, getTermEvents, listPublishedTermNames, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
-import { createAuraFit, type AuraFitResult } from "@/lib/aura/fit"
-import { runFit } from "@/lib/aura/fit-command"
+import { getAiCallsAvoided, getTermByKey, getTermEvents, listPublishedTermNames, listTermsWithSearchData, logTermEvent, saveDiscoveredTerm, setTermStatus } from "@/lib/terms-store"
+import { auraTrend, TREND_WEEKS } from "@/lib/aura"
+import { createAuraDashboardLoader, createAuraDashboardRows, createAuraFit, type AuraFitResult } from "@/lib/aura/fit"
+import { fitBatchCommand, parseFitBatch, runFit, type SyntheticCountsByTerm } from "@/lib/aura/fit-command"
 import { sanitizeUserText } from "@/lib/discovery/prompt"
 import { prepareSafetyInput } from "@/lib/safety/input"
 import { safetyResponseMessage } from "@/lib/safety/responses"
@@ -83,6 +84,43 @@ export async function fitAuraTerm(raw: string): Promise<AuraFitOutcome> {
   const verdict = await checkRequestSafety(prepareSafetyInput(raw), "search", raw)
   if (verdict.action !== "safe") return { kind: "blocked", message: safetyResponseMessage(verdict, "search") }
   return runAuraFit(term)
+}
+
+const getCachedAuraDashboardRows = createAuraDashboardLoader(listTermsWithSearchData, async (terms, day) => {
+  if (!terms.length) return []
+  const now = new Date()
+  const eventRows = await Promise.all(terms.map(async (term) => [term, await getTermEvents(term)] as const))
+  const counts: SyntheticCountsByTerm = {}
+  for (const [term, events] of eventRows) {
+    const weeklyCounts = auraTrend(events, now)
+    if (!weeklyCounts.some((count) => count > 0)) continue
+    const weeks = weeklyCounts.map((_, index) =>
+      new Date(now.getTime() - (TREND_WEEKS - 1 - index) * 7 * 86_400_000).toISOString().slice(0, 10),
+    )
+    counts[term] = { weeks, counts: weeklyCounts }
+  }
+
+  const command = fitBatchCommand(terms, { now: day, counts })
+  const { code, stdout } = await runFit(command)
+  if (code !== 0) throw new Error(`SIRS batch fit exited with code ${code}`)
+  const fitted = parseFitBatch(stdout)
+  return createAuraDashboardRows(terms, async (term) => {
+    const result = fitted[term]
+    if (!result) throw new Error(`SIRS batch omitted ${term}`)
+    if (result.kind === "no_data") return { kind: "no_data", term, suggestions: [] }
+    const outcome: AuraFitResult = {
+      kind: "fit",
+      fit: result.fit,
+      source: result.source,
+      stageNote: result.fit.stage ? null : "No stage yet: the curve hasn't taken off",
+    }
+    runAuraFit.prime(term, outcome)
+    return outcome
+  })
+})
+
+export async function getAuraDashboardRows() {
+  return getCachedAuraDashboardRows()
 }
 
 export async function getDedupSavings(minutesPerReview = 2): Promise<DedupSavings> {

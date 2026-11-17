@@ -38,6 +38,10 @@ The stage rule, the lifecycle charts and the TypeScript scorer all work today (s
 
 :::
 
+### Accessible badge
+
+`<AuraBadge />` presents the stage as text, a distinct decorative SVG shape and a colour. Its accessible name includes the stage and confidence, and low-confidence and insufficient-history results are labelled honestly. The **What does this mean?** control opens a keyboard-accessible glossary covering all four stages and **No stage yet**; Escape returns focus to the control.
+
 ## How a term's lifecycle is modelled {#model}
 
 Slang spreads like a cold: people pick it up from each other, use it for a while, then lose interest. Aura fits each term's weekly search counts with a modified **SIRS** model, a standard model of how things spread through a population:
@@ -134,7 +138,7 @@ Search counts are noisy. The 0.20 floor is the smallest change that still shows 
 
 ## The TypeScript scorer {#scorer}
 
-`scoreTermLifecycle` in `lib/aura/index.ts` reads raw search events, not a fitted curve, so it cannot use the noise-free rule above as it stands. It also exports `auraTrend(events, now)`, which returns 26 weekly counted totals scaled 0 to 1 (oldest first). The [MCP server](./mcp-server.md)'s `get_aura_trend` uses it.
+`scoreTermLifecycle` in `lib/aura/index.ts` reads raw search events, not a fitted curve, so it cannot use the noise-free rule above as it stands. It also exports `auraTrend(events, now)`, which returns 26 weekly counted totals scaled 0 to 1 (oldest first). The [MCP server](./mcp-server.md) now uses the dashboard's cached SIRS fit for all three tools. Its `get_aura_trend` returns the latest 26 observed and fitted values plus a PNG graph of up to 156 weeks.
 
 **The window.** The scorer counts every event except `llm_generated` and `prompt_generated` (the app makes those, not searchers). It keeps events from the 180 days before `now` and counts them per day.
 

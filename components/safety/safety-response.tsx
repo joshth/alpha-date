@@ -9,6 +9,7 @@ export function SafetyResponse({ verdict, message }: { verdict: SafetyVerdict; m
         <h2 className="font-semibold text-foreground">A gentle check-in</h2>
         <p role="status" className="text-foreground">{message}</p>
         <p className="text-sm text-muted-foreground">You can search for a slang term separately when you're ready.</p>
+        <HelpResources categories={[]} general heading="Someone to talk to" intro="If you would like to talk, these services offer support." />
       </section>
     )
   }

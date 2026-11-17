@@ -3,26 +3,20 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { slangDatabase } from "@/lib/lexicon-data"
 import { checkInputSafety } from "@/lib/safety/gate"
-import { countTermEvents, getTermByKey, getTermEvents, listPublishedTermNames, type TermEventType } from "@/lib/terms-store"
+import { countTermEvents, getTermByKey, listPublishedTermNames, type TermEventType } from "@/lib/terms-store"
 import { createDecoderTools } from "@/lib/mcp/tools"
-import type { AuraScore } from "@/lib/aura"
+import type { AuraFitResult } from "@/lib/aura/fit"
+import { EXPLANATION, fitResult, noFit } from "./mcp-fit-fixture"
 
 const rizz = slangDatabase.find((t) => t.term === "Rizz")!
-const EXPLANATION = "At 95% of its 180-day peak, level over 180 days."
-
-// Fake scorer: records the events it was given so tests can check what reached it.
-function makeTools(score: AuraScore | null = { stage: "peaking", confidence: 0.9, explanation: EXPLANATION }) {
-  const spy = { received: [] as unknown[] }
+// Fake fit: records the published term passed to it.
+function makeTools(result: AuraFitResult = fitResult()) {
+  const spy = { received: [] as string[] }
   const tools = createDecoderTools({
     checkInputSafety,
     getTermByKey,
     listPublishedTermNames,
-    getTermEvents,
-    scoreTermLifecycle: (events) => {
-      spy.received.push(events)
-      return score
-    },
-    now: () => new Date("2026-11-01T00:00:00.000Z"),
+    fitAuraTerm: async (term) => { spy.received.push(term); return result },
   })
   return { tools, spy }
 }
@@ -35,15 +29,15 @@ test("lookupTerm answers with stage, lexicon text, aura and safeguarding note", 
   assert.ok(between.includes(rizz.definition), out)
   assert.ok(out.includes(`Aura: ${EXPLANATION}`), out)
   assert.ok(out.split("\n").some((l) => l.startsWith("Safeguarding note: Generally Harmless")), out)
-  assert.ok(Array.isArray(spy.received[0]))
+  assert.equal(spy.received[0], "Rizz")
 })
 
 test("lookupTerm words the confidence", async () => {
   const stage = "peaking" as const
-  const first = async (score: AuraScore | null) => (await makeTools(score).tools.lookupTerm("rizz")).split("\n")[0]
-  assert.equal(await first({ stage, confidence: 0.5, explanation: EXPLANATION }), "Rizz: Peaking, medium confidence")
-  assert.equal(await first({ stage, confidence: 0.2, explanation: EXPLANATION }), "Rizz: Peaking (low confidence)")
-  assert.equal(await first(null), "Rizz: No stage yet")
+  const first = async (result: AuraFitResult) => (await makeTools(result).tools.lookupTerm("rizz")).split("\n")[0]
+  assert.equal(await first(fitResult(0.5, stage)), "Rizz: Peaking, medium confidence")
+  assert.equal(await first(fitResult(0.2, stage)), "Rizz: Peaking (low confidence)")
+  assert.equal(await first(noFit), "Rizz: No stage yet")
 })
 
 test("lookupTerm logs no term events", async () => {

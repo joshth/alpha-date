@@ -1,6 +1,7 @@
 export interface NavItem {
   href: string
   label: string
+  external?: boolean
   /** Shown only when the server says the local demo is on. */
   demoOnly?: boolean
 }
@@ -28,5 +29,12 @@ export const LAB_NAV: NavGroup[] = [
       { href: "/lab/safety-incidents", label: "Safety incidents", demoOnly: true },
     ],
   },
-  { label: "Analytics", items: [{ href: "/lab/aura", label: "Aura" }] },
+  {
+    label: "Analytics",
+    items: [
+      { href: "/lab/aura", label: "Aura" },
+      { href: "/lab/dedup", label: "Dedup" },
+    ],
+  },
+  { label: "Resources", items: [{ href: "http://localhost:3001", label: "Docs", external: true }] },
 ]

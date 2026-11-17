@@ -1,0 +1,221 @@
+import "./setup"
+import { test } from "node:test"
+import assert from "node:assert/strict"
+import { runInNewContext } from "node:vm"
+import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
+import { createDecoderServer } from "@/lib/mcp/server"
+import { checkInputSafety } from "@/lib/safety/gate"
+import { getTermByKey, listPublishedTermNames } from "@/lib/terms-store"
+import { fitResult, noFit } from "./mcp-fit-fixture"
+
+async function call(term: string, options: { unfittable?: boolean; failGraph?: boolean } = {}) {
+  let renders = 0
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => options.unfittable ? noFit : fitResult(),
+    renderAuraPng: async () => {
+      renders++
+      if (options.failGraph) throw new Error("renderer unavailable")
+      return Buffer.from("89504e470d0a1a0a", "hex")
+    },
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const result = await client.callTool({ name: "get_aura_trend", arguments: { term } })
+  return { content: result.content as Array<{ type: string; text?: string; data?: string; mimeType?: string }>, renders }
+}
+
+test("fitted Aura trend returns readable text followed by a PNG", async () => {
+  const { content, renders } = await call("rizz")
+  assert.equal(content[0].type, "text")
+  assert.match(content[0].text!, /Observed interest/)
+  assert.match(content[0].text!, /Fitted interest/)
+  assert.match(content[0].text!, /expand this tool result to view the PNG graph/i)
+  assert.equal(content[1].type, "image")
+  assert.equal(content[1].mimeType, "image/png")
+  assert.equal(Buffer.from(content[1].data!, "base64").subarray(0, 8).toString("hex"), "89504e470d0a1a0a")
+  assert.equal(renders, 1)
+})
+
+test("blocked, unknown and unfittable terms return text without rendering", async () => {
+  for (const [term, options] of [["I want to kill myself", {}], ["qqqqzzzz", {}], ["rizz", { unfittable: true }]] as const) {
+    const { content, renders } = await call(term, options)
+    assert.deepEqual(content.map((part) => part.type), ["text"])
+    assert.equal(renders, 0)
+  }
+})
+
+test("render failure keeps the trend text and says Graph unavailable", async () => {
+  const { content } = await call("rizz", { failGraph: true })
+  assert.deepEqual(content.map((part) => part.type), ["text"])
+  assert.match(content[0].text!, /Observed interest/)
+  assert.match(content[0].text!, /Graph unavailable\./)
+})
+
+test("ChatGPT can load a graph widget from the trend tool", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+    renderAuraPng: async () => Buffer.from("89504e470d0a1a0a", "hex"),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const { tools } = await client.listTools()
+  const trend = tools.find((tool) => tool.name === "get_aura_trend")!
+  const uri = (trend._meta as { ui?: { resourceUri?: string } } | undefined)?.ui?.resourceUri
+  assert.equal(uri, "ui://gen-alpha-decoder/aura-graph-v5.html")
+  assert.equal(trend._meta?.["ui/resourceUri"], uri)
+  const { resources } = await client.listResources()
+  assert.equal(resources.find((resource) => resource.uri === uri)?.mimeType, "text/html;profile=mcp-app")
+  const resource = await client.readResource({ uri })
+  assert.equal(resource.contents[0].mimeType, "text/html;profile=mcp-app")
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  const html = resource.contents[0].text
+  assert.match(html, /<img/)
+  assert.match(html, /toolResponseMetadata/)
+  const result = await client.callTool({ name: "get_aura_trend", arguments: { term: "rizz" } })
+  assert.equal((result._meta as { auraGraphPng?: string } | undefined)?.auraGraphPng, Buffer.from("89504e470d0a1a0a", "hex").toString("base64"))
+})
+
+test("graph widget renders the standard MCP Apps tool-result notification", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-event-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v5.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  const script = resource.contents[0].text.match(/<script>([\s\S]*?)<\/script>/)?.[1]
+  assert.ok(script)
+  const image = { src: "", alt: "", hidden: true }
+  const status = { textContent: "" }
+  let onMessage: ((event: unknown) => void) | undefined
+  const sent: Array<{ method: string; params?: Record<string, unknown> }> = []
+  const parent = { postMessage: (message: { method: string; params?: Record<string, unknown> }) => sent.push(message) }
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "graph" ? image : status },
+    window: { parent, addEventListener: (name: string, listener: (event: unknown) => void) => {
+      if (name === "message") onMessage = listener
+    } },
+  })
+  assert.ok(onMessage)
+  assert.equal(sent[0].method, "ui/initialize")
+  assert.equal((sent[0].params?.appInfo as { name?: string } | undefined)?.name, "Aura graph")
+  onMessage({ source: parent, data: { jsonrpc: "2.0", id: 1, result: {} } })
+  assert.equal(sent[1].method, "ui/notifications/initialized")
+  onMessage({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result",
+    params: { _meta: { auraGraphPng: "aGVsbG8=", auraGraphTerm: "gyatt" } } } })
+  assert.equal(image.src, "data:image/png;base64,aGVsbG8=")
+  assert.equal(image.hidden, false)
+  assert.match(image.alt, /gyatt Aura graph/)
+  onMessage({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result",
+    params: { content: [{ type: "text", text: "Rizz trend" },
+      { type: "image", mimeType: "image/png", data: "cml6eg==" }] } } })
+  assert.equal(image.src, "data:image/png;base64,cml6eg==")
+})
+
+test("graph widget reads the PNG from ChatGPT's toolResponseMetadata", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-chatgpt-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v5.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  const script = resource.contents[0].text.match(/<script>([\s\S]*?)<\/script>/)?.[1]
+  assert.ok(script)
+  const image = { src: "", alt: "", hidden: true }
+  const status = { textContent: "" }
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "graph" ? image : status },
+    window: {
+      parent: { postMessage: () => {} },
+      addEventListener: () => {},
+      openai: { toolResponseMetadata: { auraGraphPng: "aGVsbG8=", auraGraphTerm: "gyatt" } },
+    },
+  })
+  assert.equal(image.src, "data:image/png;base64,aGVsbG8=")
+  assert.equal(image.hidden, false)
+  assert.match(image.alt, /gyatt Aura graph/)
+})
+
+test("graph widget keeps the empty image hidden", async () => {
+  const server = createDecoderServer({
+    checkInputSafety, getTermByKey, listPublishedTermNames,
+    fitAuraTerm: async () => fitResult(),
+  })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-hidden-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v5.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  assert.match(resource.contents[0].text, /img\[hidden\]\{display:none\}/)
+})
+
+test("the trend result carries the graph as numbers, even when the PNG cannot render", async () => {
+  for (const failGraph of [false, true]) {
+    const server = createDecoderServer({
+      checkInputSafety, getTermByKey, listPublishedTermNames,
+      fitAuraTerm: async () => fitResult(),
+      renderAuraPng: async () => { if (failGraph) throw new Error("renderer unavailable"); return Buffer.from("89504e470d0a1a0a", "hex") },
+    })
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+    const client = new Client({ name: "data-test", version: "0.0.0" })
+    await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+    const result = await client.callTool({ name: "get_aura_trend", arguments: { term: "rizz" } })
+    const graph = (result.structuredContent as { auraGraph?: { term: string; observed: number[]; fitted: number[] } } | undefined)?.auraGraph
+    assert.equal(graph?.term, "Rizz")
+    assert.equal(graph?.observed.length, 26)
+    assert.equal(graph?.fitted.length, 26)
+  }
+})
+
+async function widgetScript(): Promise<string> {
+  const server = createDecoderServer({ checkInputSafety, getTermByKey, listPublishedTermNames, fitAuraTerm: async () => fitResult() })
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
+  const client = new Client({ name: "widget-chart-test", version: "0.0.0" })
+  await Promise.all([server.connect(serverSide), client.connect(clientSide)])
+  const resource = await client.readResource({ uri: "ui://gen-alpha-decoder/aura-graph-v5.html" })
+  if (!("text" in resource.contents[0])) throw new Error("Widget resource has no HTML")
+  return resource.contents[0].text.match(/<script>([\s\S]*?)<\/script>/)![1]
+}
+
+const graph = { term: "gyatt", startWeek: "2026-05-10", windowStart: "2026-05-24", observed: [0.1, 0.5, 0.2, 0.3], fitted: [0.2, 0.3, 0.3, 0.3] }
+
+test("graph panel draws the chart itself from the numbers when no PNG arrives", async () => {
+  const script = await widgetScript()
+  const image = { src: "", alt: "", hidden: true }
+  const chart = { innerHTML: "", hidden: true }
+  const status = { textContent: "" }
+  let onMessage: ((event: unknown) => void) | undefined
+  const parent = { postMessage: () => {} }
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "graph" ? image : id === "chart" ? chart : status },
+    window: { parent, addEventListener: (name: string, listener: (event: unknown) => void) => { if (name === "message") onMessage = listener } },
+  })
+  onMessage!({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result",
+    params: { structuredContent: { auraGraph: graph } } } })
+  assert.equal(chart.hidden, false)
+  assert.equal(image.hidden, true)
+  assert.match(chart.innerHTML, /<svg[^>]*role="img"[^>]*aria-label="gyatt Aura graph/)
+  assert.equal((chart.innerHTML.match(/<circle/g) ?? []).length, 4)
+  assert.match(chart.innerHTML, /<polyline/)
+  assert.doesNotMatch(status.textContent, /Graph unavailable/)
+})
+
+test("graph panel also draws from ChatGPT's toolOutput", async () => {
+  const script = await widgetScript()
+  const chart = { innerHTML: "", hidden: true }
+  runInNewContext(script, {
+    document: { getElementById: (id: string) => id === "chart" ? chart : { src: "", alt: "", hidden: true, textContent: "" } },
+    window: { parent: { postMessage: () => {} }, addEventListener: () => {}, openai: { toolOutput: { auraGraph: graph } } },
+  })
+  assert.match(chart.innerHTML, /<svg/)
+})

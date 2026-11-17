@@ -7,12 +7,12 @@ type FakeOsc = { frequency: { value: number }; to: unknown; started: number[]; s
 
 function fakeContext() {
   const oscs: FakeOsc[] = []
-  const gains: { gain: { value: number }; to: unknown }[] = []
+  const gains: { gain: { value: number; changes: [number, number, number][]; setTargetAtTime: (value: number, time: number, constant: number) => void }; to: unknown }[] = []
   const ctx = {
     currentTime: 10,
     destination: { name: "speakers" },
     createGain() {
-      const g = { gain: { value: 1 }, to: null as unknown, connect(node: unknown) { g.to = node } }
+      const g = { gain: { value: 1, changes: [] as [number, number, number][], setTargetAtTime(value: number, time: number, constant: number) { this.value = value; this.changes.push([value, time, constant]) } }, to: null as unknown, connect(node: unknown) { g.to = node } }
       gains.push(g)
       return g
     },
@@ -45,6 +45,14 @@ test("playTrend: one gain node at the chosen volume feeds the speakers", () => {
   for (const o of oscs) assert.equal(o.to, gains[0])
 })
 
+test("playTrend: the active playback gain changes smoothly with the selected volume", () => {
+  const { ctx, gains } = fakeContext()
+  const playback = playTrend(ctx as never, notes, cue, 0.3) as unknown as { setVolume?: (volume: number) => void }
+  assert.equal(typeof playback.setVolume, "function", "playback should expose a live volume control")
+  playback.setVolume!(0.75)
+  assert.deepEqual(gains[0].gain.changes, [[0.75, ctx.currentTime, 0.02]])
+})
+
 test("playTrend: each note is scheduled at its pitch and time from now", () => {
   const { ctx, oscs } = fakeContext()
   playTrend(ctx as never, notes, [], 1)
@@ -70,7 +78,7 @@ test("playTrend: the stage cue follows the last note, one cue note after another
 
 test("playTrend: the returned stop silences every note at once", () => {
   const { ctx, oscs } = fakeContext()
-  const stop = playTrend(ctx as never, notes, cue, 1)
+  const { stop } = playTrend(ctx as never, notes, cue, 1)
   ctx.currentTime = 10.2
   stop()
   for (const o of oscs) {

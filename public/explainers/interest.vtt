@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:00.400 --> 00:00:06.600
+Each dot is one week of search interest for a word, shown from two years ago to now.
+
+00:00:06.600 --> 00:00:10.800
+The teal curve is the fitted SIRS model, I(t), drawn through the dots.
+
+00:00:10.800 --> 00:00:15.800
+The last 180 days are shaded. A dashed peaking line sits at 80% of the curve's peak.
+
+00:00:15.800 --> 00:00:18.400
+r is now divided by peak: how close today is to the top.
+
+00:00:18.400 --> 00:00:21.200
+Δ is the change over those 180 days divided by peak: which way it is heading.
+
+00:00:21.400 --> 00:00:25.200
+Stage rule: peaking if r ≥ 0.80. Else emerging if Δ ≥ +0.20, declining if Δ ≤ −0.20, otherwise parent territory.
+
+00:00:25.200 --> 00:00:28.000
+Here r is 0.75 and Δ is −0.24, so the word is declining.

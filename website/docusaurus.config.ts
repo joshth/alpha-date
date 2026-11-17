@@ -41,6 +41,14 @@ export default {
         plugins: [new currentBundler.instance.ProvidePlugin({ Buffer: ['buffer', 'Buffer'] })],
       }),
     }),
+    // Mermaid hover tooltips call selection.transition(), which d3-transition adds. The d3 package says
+    // sideEffects: false, so webpack drops that import and the tooltip code throws; keep it.
+    () => ({
+      name: 'keep-d3-transition',
+      configureWebpack: () => ({
+        module: { rules: [{ test: /node_modules[\\/](d3|d3-transition)[\\/]/, sideEffects: true }] },
+      }),
+    }),
   ],
   presets: [
     [

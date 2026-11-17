@@ -1,0 +1,6 @@
+Each dot is a person in one of three groups: S has not used the word, I is using it, R is tired of it.
+β, spreading: people in S pick the word up from people in I, and move to I.
+Γ, getting tired: people in I grow tired of the word and move to R.
+ξ, forgetting: some people in R forget the word, and can pick it up again.
+Count each group over time and stack the counts: this is how S, I and R change.
+Everyone is in exactly one group, so S + I + R always adds up to 1.

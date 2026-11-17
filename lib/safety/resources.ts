@@ -1,3 +1,4 @@
+import { DEFAULT_SUPPORT_REGION, supportRegion, type SupportRegion } from "@/lib/safety/regions"
 import type { SafetyCategory } from "@/lib/safety/classify"
 
 // Help-seeking information, following Mindframe guidance: at least two 24/7
@@ -15,12 +16,13 @@ export interface HelpResource {
   detail: string
   phone?: string
   text?: string
+  textBody?: string
   url?: string
 }
 
 export const EMERGENCY: HelpResource = {
   name: "Emergency",
-  detail: "If anyone is in immediate danger, call 000 in Australia, or 112 in the EU.",
+  detail: "If anyone is in immediate danger, call 000 in Australia.",
   phone: "000",
 }
 
@@ -71,14 +73,64 @@ const CRIME_STOPPERS: HelpResource = {
   phone: "1800 333 000",
   url: "https://www.crimestoppers.com.au",
 }
-const EU_CHILD_HELPLINE: HelpResource = {
-  name: "Outside Australia",
-  detail: "In most EU countries, the child helpline is 116 111. For other countries, find a free local helpline at findahelpline.com.",
-  phone: "116 111",
-  url: "https://findahelpline.com",
+export const REGIONAL_RESOURCES_VERIFIED_ON = "14 November 2026"
+
+const TELE_MANAS: HelpResource = {
+  name: "Tele-MANAS", phone: "14416",
+  detail: "Free, confidential mental health support across India, 24/7, with multilingual counselling.",
+  url: "https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2321522&lang=1&reg=1",
+}
+const INDIA_CHILD: HelpResource = {
+  name: "Child Helpline India", phone: "1098",
+  detail: "24/7 help for children in difficult circumstances, connected with emergency and child-protection services.",
+  url: "https://wcd.gov.in/child/child-helpline",
+}
+const SAMARITANS: HelpResource = {
+  name: "Samaritans", phone: "116 123",
+  detail: "Free listening support in the UK, any time of day or night.",
+  url: "https://www.samaritans.org/how-we-can-help/contact-samaritan/",
+}
+const UK_CHILDLINE: HelpResource = {
+  name: "Childline", phone: "0800 1111",
+  detail: "Free counselling for children and young people under 19 in the UK, 24/7. Online support is also available.",
+  url: "https://www.childline.org.uk/get-support/contacting-childline/",
+}
+const SHOUT: HelpResource = {
+  name: "Shout", text: "85258", textBody: "SHOUT",
+  detail: "Text SHOUT to 85258 for free, confidential support in the UK, 24/7.",
+  url: "https://giveusashout.org/get-help/",
+}
+const US_LIFELINE: HelpResource = {
+  name: "988 Suicide & Crisis Lifeline", phone: "988", text: "988",
+  detail: "Free, confidential crisis and emotional support in the USA, by call, text or online chat, 24/7.",
+  url: "https://988lifeline.org/",
+}
+const CRISIS_TEXT: HelpResource = {
+  name: "Crisis Text Line", text: "741741", textBody: "HOME",
+  detail: "Text HOME to 741741 for free, confidential support from a trained crisis counsellor in the USA, 24/7.",
+  url: "https://www.crisistextline.org/",
 }
 
-export function resourcesFor(categories: SafetyCategory[]): HelpResource[] {
+const REGIONAL_RESOURCES: Record<Exclude<SupportRegion, "AU">, HelpResource[]> = {
+  IN: [TELE_MANAS, INDIA_CHILD],
+  GB: [SAMARITANS, UK_CHILDLINE, SHOUT],
+  US: [US_LIFELINE, CRISIS_TEXT],
+}
+
+export function generalResourcesFor(region: SupportRegion = DEFAULT_SUPPORT_REGION): HelpResource[] {
+  const country = supportRegion(region)
+  return country.code === "AU" ? [KIDS_HELPLINE, LIFELINE] : [...REGIONAL_RESOURCES[country.code]]
+}
+
+export function emergencyFor(region: SupportRegion = DEFAULT_SUPPORT_REGION): HelpResource {
+  const country = supportRegion(region)
+  return {name: "Emergency", phone: country.emergency, detail: `If anyone is in immediate danger in ${country.name}, call ${country.emergency}.`}
+}
+
+export function resourcesFor(categories: SafetyCategory[], region: SupportRegion = DEFAULT_SUPPORT_REGION): HelpResource[] {
+  const country = supportRegion(region)
+  if (categories.length === 0) return []
+  if (country.code !== "AU") return [...REGIONAL_RESOURCES[country.code]]
   const list: HelpResource[] = []
   const add = (r: HelpResource) => {
     if (!list.includes(r)) list.push(r)
@@ -110,7 +162,6 @@ export function resourcesFor(categories: SafetyCategory[]): HelpResource[] {
     add(CRIME_STOPPERS)
     add(ESAFETY)
   }
-  if (list.length > 0) add(EU_CHILD_HELPLINE)
   return list
 }
 
@@ -123,5 +174,5 @@ export const ALL_RESOURCES: HelpResource[] = [
   ESAFETY,
   ACCCE,
   CRIME_STOPPERS,
-  EU_CHILD_HELPLINE,
+  ...Object.values(REGIONAL_RESOURCES).flat(),
 ]

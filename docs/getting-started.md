@@ -4,6 +4,8 @@ sidebar_position: 2
 
 # Getting started
 
+Want to use the decoder in Claude, ChatGPT, or Gemini? Follow [Connect your AI assistant](./connect-assistant.md) for one guided setup command on macOS, Linux, or Windows.
+
 ## Requirements
 
 - Node.js 20 or later
@@ -15,6 +17,8 @@ sidebar_position: 2
 pnpm install
 pnpm dev          # http://localhost:3000 → Lexicon Lab
 ```
+
+To start the app and docs together, run `pnpm --dir website install --ignore-workspace` once, then `pnpm dev:all` (app on port 3000, docs on port 3001).
 
 You do not need environment variables, API keys or a database install. Copy `.env.example` to `.env.local` to change any default. The comments in that file explain each setting.
 
@@ -30,6 +34,7 @@ You do not need environment variables, API keys or a database install. Copy `.en
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Dev server |
+| `pnpm dev:all` | App and docs development servers on ports 3000 and 3001 |
 | `pnpm build` / `pnpm start` | Production build / serve (stop `pnpm dev` first, they share `.next/`) |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint (Next.js rules) |
@@ -59,7 +64,7 @@ The API reference page is not searchable.
 
 ## The aura:plot Python venv
 
-`pnpm aura:plot` needs a Python 3.12 venv in `sirs/`. Make it once.
+`pnpm aura:plot` and the MCP Aura graph need a Python 3.12 venv in `sirs/`. The [assistant setup](./connect-assistant.md) makes it automatically. For a manual app setup, make it once:
 
 macOS or Linux:
 

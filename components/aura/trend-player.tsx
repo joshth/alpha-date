@@ -6,18 +6,23 @@ import { playTrend, stageCue, trendNotes } from "@/lib/aura/sonify"
 export function TrendPlayer({ stage, series }: { stage: AuraStage | null; series: number[] }) {
   const [playing, setPlaying] = useState(false)
   const [volume, setVolume] = useState(0.5)
-  const stop = useRef<(() => void) | null>(null)
+  const playback = useRef<ReturnType<typeof playTrend> | null>(null)
   const id = useId()
-  useEffect(() => () => stop.current?.(), [])
+  useEffect(() => () => playback.current?.stop(), [])
   if (!stage) return null
+  const updateVolume = (value: number) => {
+    setVolume(value)
+    playback.current?.setVolume(value)
+  }
   const toggle = () => {
     if (playing) {
-      stop.current?.()
+      playback.current?.stop()
+      playback.current = null
       setPlaying(false)
       return
     }
     const ctx = new AudioContext()
-    stop.current = playTrend(ctx, trendNotes(series), stageCue(stage), volume, () => { setPlaying(false); void ctx.close() })
+    playback.current = playTrend(ctx, trendNotes(series), stageCue(stage), volume, () => { playback.current = null; setPlaying(false); void ctx.close() })
     setPlaying(true)
   }
   return (
@@ -27,7 +32,7 @@ export function TrendPlayer({ stage, series }: { stage: AuraStage | null; series
         {playing ? "Stop" : "Play trend"}
       </button>
       <label htmlFor={id} className="text-lab-muted">Volume</label>
-      <input id={id} type="range" min={0} max={1} step={0.05} value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
+      <input id={id} type="range" min={0} max={1} step={0.05} value={volume} onChange={(e) => updateVolume(Number(e.target.value))} />
     </div>
   )
 }
