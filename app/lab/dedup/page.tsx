@@ -1,15 +1,14 @@
 import { DedupTab } from "@/components/aura/dedup-tab"
 import { DedupSearch } from "@/components/aura/dedup-search"
+import { readDedupRows } from "@/lib/dedup/store"
+import { searchCandidates } from "@/lib/dedup/search-demo"
 import { listPublishedTermNames } from "@/lib/terms-store"
 import { getDedupGraph, getDedupSavings, getSemanticEdges } from "../actions"
 
 export const metadata = { title: "Dedup" }
 
-// Always offered in the search box so the demo works on an empty lexicon.
-const DEMO_TERMS = ["六七", "brainrot", "skibidi", "gyatt"]
-
 export default async function DedupPage() {
-  const candidates = [...new Set([...DEMO_TERMS, ...(await listPublishedTermNames())])]
+  const candidates = searchCandidates(await readDedupRows(), await listPublishedTermNames())
   return (
     <div className="space-y-4">
       <div>
