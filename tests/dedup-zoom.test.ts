@@ -16,8 +16,8 @@ test("zooming about a point keeps that point fixed on screen", () => {
   assert.equal((50 - v.y) / v.h, 50 / 400)
 })
 
-test("zoom out past the overview and in past 4x are clamped", () => {
-  assert.deepEqual(zoomView(fullView(base), base, 0.5, 320, 200), { x: -80, y: -50, w: 800, h: 500 })
+test("zoom out reaches 2.5x the graph and in past 4x stays clamped", () => {
+  assert.deepEqual(zoomView(fullView(base), base, 0.5, 320, 200), { x: -320, y: -200, w: 1280, h: 800 })
   assert.equal(zoomView(fullView(base), base, 100, 320, 200).w, 160)
 })
 
@@ -50,5 +50,5 @@ test("overview opens with space around every node and can be dragged before zoom
   assert.equal(typeof opening, "function")
   assert.deepEqual(opening(base), { x: -80, y: -50, w: 800, h: 500 })
   assert.deepEqual(panView(opening(base), base, 40, -20), { x: -40, y: -70, w: 800, h: 500 })
-  assert.deepEqual(zoomView(opening(base), base, 0.1, 320, 200), opening(base))
+  assert.deepEqual(zoomView(opening(base), base, 0.1, 320, 200), { x: -480, y: -300, w: 1600, h: 1000 })
 })
