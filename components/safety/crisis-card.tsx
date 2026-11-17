@@ -19,7 +19,7 @@ export function CrisisCard({ crisis, categories, reference }: { crisis: CrisisKi
         <HeartHandshake className="h-6 w-6 text-red-600" aria-hidden="true" />
         {harmToOthers ? "Please talk to someone now" : "You don't have to go through this alone"}
       </h2>
-      <p className="text-foreground/90">
+      <p className="leading-relaxed text-foreground">
         {harmToOthers
           ? "What you typed sounds like someone could get hurt. If you're thinking about hurting someone, or you're worried someone else might, please talk to someone right now."
           : "What you typed sounds like things might be really hard right now. Talking to someone can help. The services below explain how they can support you."}
@@ -35,11 +35,11 @@ export function CrisisCard({ crisis, categories, reference }: { crisis: CrisisKi
         heading="People you can talk to"
         intro={harmToOthers ? "These services can help you work through what's going on." : "You can contact these services for support."}
       />
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm leading-relaxed text-foreground">
         If you were looking up a phrase for someone else, the services above can also help you support them.
       </p>
-      {reference && <p className="break-all text-sm text-muted-foreground">Incident reference: <code>{reference}</code></p>}
-      <p className="text-xs text-muted-foreground">We can&apos;t reply to messages typed here.</p>
+      {reference && <p className="break-all text-sm leading-relaxed text-foreground">Incident reference: <code>{reference}</code></p>}
+      <p className="text-sm leading-relaxed text-foreground">We can&apos;t reply to messages typed here.</p>
     </div>
   )
 }
