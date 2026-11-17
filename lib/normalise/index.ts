@@ -12,6 +12,7 @@
 // respellings) — but beware over-merging distinct terms ("mid" vs "midd"?).
 // Measure merge precision with labelled pairs in the golden set.
 
+import { foldJapanese } from "./japanese"
 import { normalizeKey, trigramSimilarity } from "./similarity"
 
 // Increment whenever normaliseSuggestion's output changes,
@@ -101,7 +102,7 @@ export function normaliseSuggestion(text: string): string {
 
   // Strip punctuation first so it cannot split a repeated-letter run.
   const key = normalizeKey(expandedText)
-  return collapseRepeatedLetters(key)
+  return collapseRepeatedLetters(foldJapanese(key))
 }
 
 /** Best matches for `text` among `candidates` (lexicon terms and/or other suggestions), best first. */
