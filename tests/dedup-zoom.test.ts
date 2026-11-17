@@ -16,8 +16,8 @@ test("zooming about a point keeps that point fixed on screen", () => {
   assert.equal((50 - v.y) / v.h, 50 / 400)
 })
 
-test("zoom out past the full graph and in past 4x are clamped", () => {
-  assert.deepEqual(zoomView(fullView(base), base, 0.5, 320, 200), fullView(base))
+test("zoom out past the overview and in past 4x are clamped", () => {
+  assert.deepEqual(zoomView(fullView(base), base, 0.5, 320, 200), { x: -80, y: -50, w: 800, h: 500 })
   assert.equal(zoomView(fullView(base), base, 100, 320, 200).w, 160)
 })
 
