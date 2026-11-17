@@ -64,3 +64,22 @@ for (const history of ["fresh", "starter", "main", "safety"] as const) {
     }
   })
 }
+
+test("backfill upgrades older Chinese number keys without changing saved terms", async () => {
+  const client = new PGlite("memory://")
+  const db = drizzle(client, { schema })
+  try {
+    await migrate(db, { migrationsFolder: "drizzle" })
+    await db.insert(schema.terms).values({ term: "520", termLower: "520", termKey: "520", keyVersion: 1, definition: "Saved definition.", status: "pending_review" })
+    await backfillTermKeys(db as unknown as Db)
+    const [row] = await db.select().from(schema.terms)
+    assert.equal(row.termKey, normaliseSuggestion("我爱你"))
+    assert.equal(row.keyVersion, NORMALISER_VERSION)
+    assert.equal(row.definition, "Saved definition.")
+    assert.equal(row.status, "pending_review")
+    await backfillTermKeys(db as unknown as Db)
+    assert.deepEqual((await db.select().from(schema.terms))[0], row)
+  } finally {
+    await client.close()
+  }
+})

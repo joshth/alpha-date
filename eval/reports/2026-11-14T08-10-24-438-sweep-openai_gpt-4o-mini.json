@@ -1,0 +1,1988 @@
+{
+  "datasetVersion": "0.5.0",
+  "datasetSha256": "07ec768262382a22604985b18a721ff9aeb2c2f102e32f5eb68f977673213947",
+  "startedAt": "2026-11-14T08:10:24.438Z",
+  "promptVersion": "prod-2026-09-27",
+  "mock": false,
+  "split": "held-out",
+  "summary": {
+    "rule": {
+      "models": [
+        "openai:gpt-4o-mini"
+      ],
+      "temperatures": [
+        0
+      ],
+      "repeats": 2,
+      "maxH1": 0.1,
+      "minRecall": 0.5
+    },
+    "rows": [
+      {
+        "auc": 0.8571428571428572,
+        "roc": [
+          {
+            "fpr": 0,
+            "tpr": 0,
+            "threshold": null
+          },
+          {
+            "fpr": 0,
+            "tpr": 0.7142857142857143,
+            "threshold": 1
+          },
+          {
+            "fpr": 1,
+            "tpr": 1,
+            "threshold": 0
+          }
+        ],
+        "setting": {
+          "model": "openai:gpt-4o-mini",
+          "temperature": 0
+        },
+        "runs": 2,
+        "hallucinationRate": {
+          "numerator": 0,
+          "denominator": 16,
+          "value": 0,
+          "interval95": [
+            0,
+            0.1936076805344365
+          ]
+        },
+        "hallucinationRange": [
+          0,
+          0
+        ],
+        "precision": {
+          "numerator": 30,
+          "denominator": 30,
+          "value": 1,
+          "interval95": [
+            0.8864866068260312,
+            1
+          ]
+        },
+        "recall": {
+          "numerator": 30,
+          "denominator": 42,
+          "value": 0.7142857142857143,
+          "interval95": [
+            0.5643279073180463,
+            0.8283297537395091
+          ]
+        },
+        "falseAcceptRate": {
+          "numerator": 0,
+          "denominator": 24,
+          "value": 0,
+          "interval95": [
+            0,
+            0.13797620467498017
+          ]
+        },
+        "sensitivityMislabelRate": {
+          "numerator": 2,
+          "denominator": 2,
+          "value": 1,
+          "interval95": [
+            0.34238022750665303,
+            1
+          ]
+        },
+        "errors": 0,
+        "costPer1000CallsUsd": 0.0868090909090909,
+        "meanLatencyMs": 1559.4453428333331,
+        "acceptable": true
+      }
+    ],
+    "recommended": {
+      "auc": 0.8571428571428572,
+      "roc": [
+        {
+          "fpr": 0,
+          "tpr": 0,
+          "threshold": null
+        },
+        {
+          "fpr": 0,
+          "tpr": 0.7142857142857143,
+          "threshold": 1
+        },
+        {
+          "fpr": 1,
+          "tpr": 1,
+          "threshold": 0
+        }
+      ],
+      "setting": {
+        "model": "openai:gpt-4o-mini",
+        "temperature": 0
+      },
+      "runs": 2,
+      "hallucinationRate": {
+        "numerator": 0,
+        "denominator": 16,
+        "value": 0,
+        "interval95": [
+          0,
+          0.1936076805344365
+        ]
+      },
+      "hallucinationRange": [
+        0,
+        0
+      ],
+      "precision": {
+        "numerator": 30,
+        "denominator": 30,
+        "value": 1,
+        "interval95": [
+          0.8864866068260312,
+          1
+        ]
+      },
+      "recall": {
+        "numerator": 30,
+        "denominator": 42,
+        "value": 0.7142857142857143,
+        "interval95": [
+          0.5643279073180463,
+          0.8283297537395091
+        ]
+      },
+      "falseAcceptRate": {
+        "numerator": 0,
+        "denominator": 24,
+        "value": 0,
+        "interval95": [
+          0,
+          0.13797620467498017
+        ]
+      },
+      "sensitivityMislabelRate": {
+        "numerator": 2,
+        "denominator": 2,
+        "value": 1,
+        "interval95": [
+          0.34238022750665303,
+          1
+        ]
+      },
+      "errors": 0,
+      "costPer1000CallsUsd": 0.0868090909090909,
+      "meanLatencyMs": 1559.4453428333331,
+      "acceptable": true
+    },
+    "closest": null,
+    "recommendations": [
+      {
+        "title": "Budget pick",
+        "setting": {
+          "model": "openai:gpt-4o-mini",
+          "temperature": 0
+        },
+        "why": "cheapest of the 1 setting(s) that pass the rule (H1 10.0% or less and recall 50.0% or more): $0.0868 per 1,000 calls, H1 0.0%, recall 71.4%."
+      },
+      {
+        "title": "Safest pick (fewest made-up meanings)",
+        "setting": {
+          "model": "openai:gpt-4o-mini",
+          "temperature": 0
+        },
+        "why": "lowest H1 (0.0%) of the settings that still find at least 50.0% of real slang (recall 71.4%)."
+      },
+      {
+        "title": "Best judgement (highest AUC)",
+        "setting": {
+          "model": "openai:gpt-4o-mini",
+          "temperature": 0
+        },
+        "why": "AUC 0.86: best at telling real slang from made-up and ordinary words (1.00 is perfect, 0.50 is a coin flip)."
+      },
+      {
+        "title": "Fastest pick",
+        "setting": {
+          "model": "openai:gpt-4o-mini",
+          "temperature": 0
+        },
+        "why": "quickest setting that passes the rule: 1.6 s per word on average."
+      }
+    ]
+  },
+  "runs": [
+    {
+      "setting": {
+        "model": "openai:gpt-4o-mini",
+        "temperature": 0
+      },
+      "repeat": 0,
+      "config": {
+        "mock": false,
+        "model": "gpt-4o-mini",
+        "temperature": 0,
+        "seed": null,
+        "baseURL": null,
+        "promptVersion": "prod-2026-09-27"
+      },
+      "discovery": {
+        "total": 33,
+        "scored": 33,
+        "confusion": {
+          "truePositive": 15,
+          "falsePositive": 0,
+          "falseNegative": 6,
+          "trueNegative": 12
+        },
+        "precision": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1,
+          "interval95": [
+            0.7961166989641515,
+            1
+          ]
+        },
+        "recall": {
+          "numerator": 15,
+          "denominator": 21,
+          "value": 0.7142857142857143,
+          "interval95": [
+            0.5004361928391441,
+            0.8618613704787788
+          ]
+        },
+        "hallucinationRate": {
+          "numerator": 0,
+          "denominator": 8,
+          "value": 0,
+          "interval95": [
+            0,
+            0.32440756488388023
+          ]
+        },
+        "falseAcceptRate": {
+          "numerator": 0,
+          "denominator": 12,
+          "value": 0,
+          "interval95": [
+            0,
+            0.24249400665524085
+          ]
+        },
+        "sensitivityMislabelRate": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1,
+          "interval95": [
+            0.20654931437723745,
+            1
+          ]
+        },
+        "acceptedByCategory": {
+          "valid_slang": {
+            "numerator": 14,
+            "denominator": 20,
+            "value": 0.7,
+            "interval95": [
+              0.4810271816464765,
+              0.8545227551323956
+            ]
+          },
+          "invented": {
+            "numerator": 0,
+            "denominator": 8,
+            "value": 0,
+            "interval95": [
+              0,
+              0.32440756488388023
+            ]
+          },
+          "non_slang": {
+            "numerator": 0,
+            "denominator": 4,
+            "value": 0,
+            "interval95": [
+              0,
+              0.4898908364545973
+            ]
+          },
+          "ambiguous": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1,
+            "interval95": [
+              0.20654931437723745,
+              1
+            ]
+          }
+        },
+        "byWordType": {
+          "invented-plausible": {
+            "cases": 6,
+            "recall": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0,
+              "interval95": [
+                0,
+                0.43448246478317476
+              ]
+            }
+          },
+          "invented-random": {
+            "cases": 3,
+            "recall": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 3,
+              "value": 0,
+              "interval95": [
+                0,
+                0.5614970317550454
+              ]
+            }
+          },
+          "new-sense": {
+            "cases": 6,
+            "recall": {
+              "numerator": 4,
+              "denominator": 6,
+              "value": 0.6666666666666666,
+              "interval95": [
+                0.299993315138392,
+                0.9032285888942195
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          },
+          "real-new": {
+            "cases": 6,
+            "recall": {
+              "numerator": 3,
+              "denominator": 6,
+              "value": 0.5,
+              "interval95": [
+                0.1876163064826506,
+                0.8123836935173494
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          },
+          "real-old": {
+            "cases": 12,
+            "recall": {
+              "numerator": 8,
+              "denominator": 9,
+              "value": 0.8888888888888888,
+              "interval95": [
+                0.5650002944233439,
+                0.9801091123614551
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          }
+        },
+        "byDialect": {
+          "AU": {
+            "cases": 6,
+            "recall": {
+              "numerator": 2,
+              "denominator": 4,
+              "value": 0.5,
+              "interval95": [
+                0.15003898915214947,
+                0.8499610108478506
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 1,
+              "value": 0,
+              "interval95": [
+                0,
+                0.7934506856227626
+              ]
+            }
+          },
+          "UK": {
+            "cases": 2,
+            "recall": {
+              "numerator": 1,
+              "denominator": 1,
+              "value": 1,
+              "interval95": [
+                0.20654931437723745,
+                1
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          },
+          "US": {
+            "cases": 25,
+            "recall": {
+              "numerator": 12,
+              "denominator": 16,
+              "value": 0.75,
+              "interval95": [
+                0.5050168346449122,
+                0.8981793250878696
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0,
+              "interval95": [
+                0,
+                0.35433043506668743
+              ]
+            }
+          }
+        },
+        "bySplit": {
+          "held-out": {
+            "cases": 33,
+            "recall": {
+              "numerator": 15,
+              "denominator": 21,
+              "value": 0.7142857142857143,
+              "interval95": [
+                0.5004361928391441,
+                0.8618613704787788
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0,
+              "interval95": [
+                0,
+                0.32440756488388023
+              ]
+            }
+          }
+        },
+        "hallucinatedIds": [],
+        "falsePositiveIds": [],
+        "falseNegativeIds": [
+          "discovery-002",
+          "discovery-048",
+          "discovery-049",
+          "discovery-057",
+          "discovery-074",
+          "discovery-075"
+        ],
+        "sensitivityMislabelIds": [
+          "discovery-007"
+        ],
+        "errorIds": [],
+        "calls": 33,
+        "latency": {
+          "totalMs": 55919.88629299998,
+          "meanMs": 1694.5420088787873,
+          "p95Ms": 3186.7502090000003
+        },
+        "results": [
+          {
+            "id": "discovery-002",
+            "input": "aura farming",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2868.082542,
+            "error": null
+          },
+          {
+            "id": "discovery-003",
+            "input": "brainrot",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Brainrot' refers to a state of mental fatigue or confusion, often caused by information overload or excessive consumption of media, leading to a feeling of being overwhelmed or unable to think clearly.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 3186.7502090000003,
+            "error": null
+          },
+          {
+            "id": "discovery-004",
+            "input": "crash out",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Crash out' means to fall asleep quickly or to become extremely tired, often after a long day or an exhausting activity.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 3380.8454169999995,
+            "error": null
+          },
+          {
+            "id": "discovery-007",
+            "input": "opp",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Opp' is short for 'opposition' and is commonly used to refer to someone who is considered an enemy or rival, particularly in the context of social conflicts or competition.",
+            "rating": "Generally Harmless",
+            "minSensitivity": "Use With Caution",
+            "sensitivityMislabel": true,
+            "latencyMs": 2352.1269170000014,
+            "error": null
+          },
+          {
+            "id": "discovery-009",
+            "input": "on fleek",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'On fleek' is a slang term used to describe something that is perfectly executed or looking great, often used in reference to appearance or style.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 1962.2901249999995,
+            "error": null
+          },
+          {
+            "id": "discovery-010",
+            "input": "zorbleflux",
+            "category": "invented",
+            "wordType": "invented-random",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 943.6892079999998,
+            "error": null
+          },
+          {
+            "id": "discovery-011",
+            "input": "wizzlecore",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 1192.2799999999988,
+            "error": null
+          },
+          {
+            "id": "discovery-016",
+            "input": "goated",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Goated' is a slang term that means someone or something is the greatest of all time (G.O.A.T.). It is often used to praise someone's skills or achievements in a particular area.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2455.001250000001,
+            "error": null
+          },
+          {
+            "id": "discovery-021",
+            "input": "sigma",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "In contemporary slang, 'sigma' refers to a type of personality or archetype, often associated with being independent, self-reliant, and non-conformist, contrasting with the more traditional 'alpha' personality.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 3133.1656250000015,
+            "error": null
+          },
+          {
+            "id": "discovery-022",
+            "input": "aura",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "In Gen Z and Gen Alpha slang, 'aura' refers to the vibe or energy that a person gives off, often reflecting their personality or mood.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2418.263916,
+            "error": null
+          },
+          {
+            "id": "discovery-025",
+            "input": "beige flag",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "A 'beige flag' refers to a personality trait or behavior in a person that is neither a red flag (warning sign) nor a green flag (positive sign), but rather something that is neutral or mildly concerning, often leading to confusion in relationships.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2949.297625000003,
+            "error": null
+          },
+          {
+            "id": "discovery-027",
+            "input": "bae",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Bae' is a term of endearment that stands for 'before anyone else.' It is commonly used to refer to a significant other or someone you care about deeply.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2561.8056249999972,
+            "error": null
+          },
+          {
+            "id": "discovery-033",
+            "input": "trundlewave",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 869.5116659999985,
+            "error": null
+          },
+          {
+            "id": "discovery-035",
+            "input": "goatd",
+            "category": "non_slang",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 1009.5817080000015,
+            "error": null
+          },
+          {
+            "id": "discovery-036",
+            "input": "photosynthesis",
+            "category": "non_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 835.0620419999977,
+            "error": null
+          },
+          {
+            "id": "discovery-040",
+            "input": "ratio",
+            "category": "ambiguous",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "In social media contexts, 'ratio' refers to a situation where a reply to a tweet or post receives more engagement (likes, retweets) than the original post itself, indicating that the reply is more popular or relevant than the original content.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2502.0214579999993,
+            "error": null
+          },
+          {
+            "id": "discovery-045",
+            "input": "mogging",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "Mogging refers to the act of showing off or flexing one's physical appearance or achievements, often in a competitive or boastful manner, particularly in social media contexts.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2461.0556249999936,
+            "error": null
+          },
+          {
+            "id": "discovery-048",
+            "input": "six seven",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 818.6040839999987,
+            "error": null
+          },
+          {
+            "id": "discovery-049",
+            "input": "clanker",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": "Use With Caution",
+            "sensitivityMislabel": false,
+            "latencyMs": 920.0582090000025,
+            "error": null
+          },
+          {
+            "id": "discovery-057",
+            "input": "demure",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 925.5641670000041,
+            "error": null
+          },
+          {
+            "id": "discovery-058",
+            "input": "jit",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Jit' is a slang term used primarily by younger generations, particularly in the southern United States, to refer to a young person or a kid, often in a playful or affectionate manner.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2044.9449999999997,
+            "error": null
+          },
+          {
+            "id": "discovery-066",
+            "input": "gassed",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "UK",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Gassed' is a slang term used to describe someone who is overly excited or hyped about something, often to the point of being unable to contain their enthusiasm.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2372.261375000002,
+            "error": null
+          },
+          {
+            "id": "discovery-070",
+            "input": "arvo",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Arvo' is Australian slang for 'afternoon.' It is commonly used in casual conversation among young people in Australia.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 1853.621500000001,
+            "error": null
+          },
+          {
+            "id": "discovery-072",
+            "input": "deadset",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Deadset' is an Australian slang term meaning 'serious' or 'for real.' It's often used to emphasize the truthfulness or sincerity of a statement.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2119.8965000000026,
+            "error": null
+          },
+          {
+            "id": "discovery-074",
+            "input": "devo",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 837.6321669999961,
+            "error": null
+          },
+          {
+            "id": "discovery-075",
+            "input": "cooked",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 903.3114169999972,
+            "error": null
+          },
+          {
+            "id": "discovery-079",
+            "input": "vrispilled",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 734.5531659999979,
+            "error": null
+          },
+          {
+            "id": "discovery-082",
+            "input": "zindlemogging",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 812.8287920000002,
+            "error": null
+          },
+          {
+            "id": "discovery-087",
+            "input": "snagworthy",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 911.0785409999953,
+            "error": null
+          },
+          {
+            "id": "discovery-089",
+            "input": "blemtrask",
+            "category": "invented",
+            "wordType": "invented-random",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 845.210500000001,
+            "error": null
+          },
+          {
+            "id": "discovery-092",
+            "input": "mipplot",
+            "category": "invented",
+            "wordType": "invented-random",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 905.4038749999963,
+            "error": null
+          },
+          {
+            "id": "discovery-094",
+            "input": "footpath",
+            "category": "non_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 841.104416999995,
+            "error": null
+          },
+          {
+            "id": "discovery-095",
+            "input": "queue",
+            "category": "non_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "UK",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 992.9816250000003,
+            "error": null
+          }
+        ]
+      },
+      "cost": {
+        "calls": 33,
+        "promptTokens": 9940,
+        "completionTokens": 2293,
+        "totalTokens": 12233,
+        "tokenSource": "provider",
+        "pricing": {
+          "inputPerMTokUsd": 0.15,
+          "outputPerMTokUsd": 0.6,
+          "source": "gpt-4o-mini list price"
+        },
+        "costUsd": 0.0028668,
+        "costPer1000CallsUsd": 0.08687272727272727
+      },
+      "timing": {
+        "wallClockMs": 55925.886084,
+        "callsPerMinute": 35.403998731930045
+      }
+    },
+    {
+      "setting": {
+        "model": "openai:gpt-4o-mini",
+        "temperature": 0
+      },
+      "repeat": 1,
+      "config": {
+        "mock": false,
+        "model": "gpt-4o-mini",
+        "temperature": 0,
+        "seed": null,
+        "baseURL": null,
+        "promptVersion": "prod-2026-09-27"
+      },
+      "discovery": {
+        "total": 33,
+        "scored": 33,
+        "confusion": {
+          "truePositive": 15,
+          "falsePositive": 0,
+          "falseNegative": 6,
+          "trueNegative": 12
+        },
+        "precision": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1,
+          "interval95": [
+            0.7961166989641515,
+            1
+          ]
+        },
+        "recall": {
+          "numerator": 15,
+          "denominator": 21,
+          "value": 0.7142857142857143,
+          "interval95": [
+            0.5004361928391441,
+            0.8618613704787788
+          ]
+        },
+        "hallucinationRate": {
+          "numerator": 0,
+          "denominator": 8,
+          "value": 0,
+          "interval95": [
+            0,
+            0.32440756488388023
+          ]
+        },
+        "falseAcceptRate": {
+          "numerator": 0,
+          "denominator": 12,
+          "value": 0,
+          "interval95": [
+            0,
+            0.24249400665524085
+          ]
+        },
+        "sensitivityMislabelRate": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1,
+          "interval95": [
+            0.20654931437723745,
+            1
+          ]
+        },
+        "acceptedByCategory": {
+          "valid_slang": {
+            "numerator": 14,
+            "denominator": 20,
+            "value": 0.7,
+            "interval95": [
+              0.4810271816464765,
+              0.8545227551323956
+            ]
+          },
+          "invented": {
+            "numerator": 0,
+            "denominator": 8,
+            "value": 0,
+            "interval95": [
+              0,
+              0.32440756488388023
+            ]
+          },
+          "non_slang": {
+            "numerator": 0,
+            "denominator": 4,
+            "value": 0,
+            "interval95": [
+              0,
+              0.4898908364545973
+            ]
+          },
+          "ambiguous": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1,
+            "interval95": [
+              0.20654931437723745,
+              1
+            ]
+          }
+        },
+        "byWordType": {
+          "invented-plausible": {
+            "cases": 6,
+            "recall": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0,
+              "interval95": [
+                0,
+                0.43448246478317476
+              ]
+            }
+          },
+          "invented-random": {
+            "cases": 3,
+            "recall": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 3,
+              "value": 0,
+              "interval95": [
+                0,
+                0.5614970317550454
+              ]
+            }
+          },
+          "new-sense": {
+            "cases": 6,
+            "recall": {
+              "numerator": 4,
+              "denominator": 6,
+              "value": 0.6666666666666666,
+              "interval95": [
+                0.299993315138392,
+                0.9032285888942195
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          },
+          "real-new": {
+            "cases": 6,
+            "recall": {
+              "numerator": 3,
+              "denominator": 6,
+              "value": 0.5,
+              "interval95": [
+                0.1876163064826506,
+                0.8123836935173494
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          },
+          "real-old": {
+            "cases": 12,
+            "recall": {
+              "numerator": 8,
+              "denominator": 9,
+              "value": 0.8888888888888888,
+              "interval95": [
+                0.5650002944233439,
+                0.9801091123614551
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          }
+        },
+        "byDialect": {
+          "AU": {
+            "cases": 6,
+            "recall": {
+              "numerator": 2,
+              "denominator": 4,
+              "value": 0.5,
+              "interval95": [
+                0.15003898915214947,
+                0.8499610108478506
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 1,
+              "value": 0,
+              "interval95": [
+                0,
+                0.7934506856227626
+              ]
+            }
+          },
+          "UK": {
+            "cases": 2,
+            "recall": {
+              "numerator": 1,
+              "denominator": 1,
+              "value": 1,
+              "interval95": [
+                0.20654931437723745,
+                1
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "interval95": null
+            }
+          },
+          "US": {
+            "cases": 25,
+            "recall": {
+              "numerator": 12,
+              "denominator": 16,
+              "value": 0.75,
+              "interval95": [
+                0.5050168346449122,
+                0.8981793250878696
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0,
+              "interval95": [
+                0,
+                0.35433043506668743
+              ]
+            }
+          }
+        },
+        "bySplit": {
+          "held-out": {
+            "cases": 33,
+            "recall": {
+              "numerator": 15,
+              "denominator": 21,
+              "value": 0.7142857142857143,
+              "interval95": [
+                0.5004361928391441,
+                0.8618613704787788
+              ]
+            },
+            "hallucinationRate": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0,
+              "interval95": [
+                0,
+                0.32440756488388023
+              ]
+            }
+          }
+        },
+        "hallucinatedIds": [],
+        "falsePositiveIds": [],
+        "falseNegativeIds": [
+          "discovery-002",
+          "discovery-048",
+          "discovery-049",
+          "discovery-057",
+          "discovery-074",
+          "discovery-075"
+        ],
+        "sensitivityMislabelIds": [
+          "discovery-007"
+        ],
+        "errorIds": [],
+        "calls": 33,
+        "latency": {
+          "totalMs": 47003.506334,
+          "meanMs": 1424.3486767878787,
+          "p95Ms": 2460.288625000001
+        },
+        "results": [
+          {
+            "id": "discovery-002",
+            "input": "aura farming",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 686.5657500000016,
+            "error": null
+          },
+          {
+            "id": "discovery-003",
+            "input": "brainrot",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Brainrot' refers to a state of mental fatigue or confusion, often caused by information overload or excessive consumption of media, particularly on social platforms. It describes a feeling of being overwhelmed or mentally drained, often humorously.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2993.567833000001,
+            "error": null
+          },
+          {
+            "id": "discovery-004",
+            "input": "crash out",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Crash out' means to fall asleep quickly or to become unconscious, often due to exhaustion or intoxication.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2123.745959,
+            "error": null
+          },
+          {
+            "id": "discovery-007",
+            "input": "opp",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Opp' is short for 'opposition' and is commonly used to refer to someone who is considered an enemy or rival, particularly in the context of social conflicts or competition.",
+            "rating": "Generally Harmless",
+            "minSensitivity": "Use With Caution",
+            "sensitivityMislabel": true,
+            "latencyMs": 1770.1881250000006,
+            "error": null
+          },
+          {
+            "id": "discovery-009",
+            "input": "on fleek",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'On fleek' is a slang term used to describe something that is perfectly executed or looking great, often used in reference to appearance or style.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2043.3619580000086,
+            "error": null
+          },
+          {
+            "id": "discovery-010",
+            "input": "zorbleflux",
+            "category": "invented",
+            "wordType": "invented-random",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 1075.1597080000065,
+            "error": null
+          },
+          {
+            "id": "discovery-011",
+            "input": "wizzlecore",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 763.4992090000014,
+            "error": null
+          },
+          {
+            "id": "discovery-016",
+            "input": "goated",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Goated' is a slang term that means someone or something is the greatest of all time (G.O.A.T.). It is often used to praise someone's skills or achievements in a particular area.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2152.8363329999993,
+            "error": null
+          },
+          {
+            "id": "discovery-021",
+            "input": "sigma",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "In contemporary slang, 'sigma' refers to a type of personality or mindset characterized by independence, self-reliance, and often a rejection of traditional social hierarchies, particularly in contrast to the 'alpha' personality.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2151.061333000005,
+            "error": null
+          },
+          {
+            "id": "discovery-022",
+            "input": "aura",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "In Gen Z and Gen Alpha slang, 'aura' refers to the vibe or energy that a person gives off, often reflecting their personality or mood.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2015.5524589999986,
+            "error": null
+          },
+          {
+            "id": "discovery-025",
+            "input": "beige flag",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "A 'beige flag' refers to a personality trait or behavior in a person that is neither particularly good nor bad, but rather neutral or unremarkable, often leading to a lack of excitement in a relationship.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2211.932416999989,
+            "error": null
+          },
+          {
+            "id": "discovery-027",
+            "input": "bae",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Bae' is a term of endearment that stands for 'before anyone else,' often used to refer to a romantic partner or someone special.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 1805.1463750000112,
+            "error": null
+          },
+          {
+            "id": "discovery-033",
+            "input": "trundlewave",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 831.953416999997,
+            "error": null
+          },
+          {
+            "id": "discovery-035",
+            "input": "goatd",
+            "category": "non_slang",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 741.5299159999995,
+            "error": null
+          },
+          {
+            "id": "discovery-036",
+            "input": "photosynthesis",
+            "category": "non_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 795.7507500000065,
+            "error": null
+          },
+          {
+            "id": "discovery-040",
+            "input": "ratio",
+            "category": "ambiguous",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "In social media contexts, 'ratio' refers to a situation where a reply to a tweet or post receives more engagement (likes, retweets) than the original post itself, indicating that the reply is more popular or relevant than the original content.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2460.288625000001,
+            "error": null
+          },
+          {
+            "id": "discovery-045",
+            "input": "mogging",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "Mogging refers to the act of showing off or flexing one's physical strength or dominance, often in a competitive or boastful manner.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2220.6862919999985,
+            "error": null
+          },
+          {
+            "id": "discovery-048",
+            "input": "six seven",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 847.2169169999979,
+            "error": null
+          },
+          {
+            "id": "discovery-049",
+            "input": "clanker",
+            "category": "valid_slang",
+            "wordType": "real-new",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": "Use With Caution",
+            "sensitivityMislabel": false,
+            "latencyMs": 919.4412920000032,
+            "error": null
+          },
+          {
+            "id": "discovery-057",
+            "input": "demure",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 680.5928750000021,
+            "error": null
+          },
+          {
+            "id": "discovery-058",
+            "input": "jit",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Jit' is a slang term used primarily by younger generations, particularly in the southern United States, to refer to a young person or a kid, often in a playful or affectionate manner.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2191.798916999993,
+            "error": null
+          },
+          {
+            "id": "discovery-066",
+            "input": "gassed",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "UK",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Gassed' is a slang term used to describe someone who is overly excited or hyped about something, often to the point of being unable to contain their enthusiasm.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2149.2625419999968,
+            "error": null
+          },
+          {
+            "id": "discovery-070",
+            "input": "arvo",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Arvo' is Australian slang for 'afternoon'. It is commonly used in casual conversation among young people in Australia.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 1763.7167079999927,
+            "error": null
+          },
+          {
+            "id": "discovery-072",
+            "input": "deadset",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": true,
+            "outcome": "true_positive",
+            "definition": "'Deadset' is an Australian slang term meaning 'serious' or 'for real.' It's often used to emphasize the truthfulness or sincerity of a statement.",
+            "rating": "Generally Harmless",
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 2174.3029160000006,
+            "error": null
+          },
+          {
+            "id": "discovery-074",
+            "input": "devo",
+            "category": "valid_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 975.856667,
+            "error": null
+          },
+          {
+            "id": "discovery-075",
+            "input": "cooked",
+            "category": "valid_slang",
+            "wordType": "new-sense",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": true,
+            "accepted": false,
+            "outcome": "false_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 819.5800409999938,
+            "error": null
+          },
+          {
+            "id": "discovery-079",
+            "input": "vrispilled",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 865.0221659999952,
+            "error": null
+          },
+          {
+            "id": "discovery-082",
+            "input": "zindlemogging",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 870.8764589999919,
+            "error": null
+          },
+          {
+            "id": "discovery-087",
+            "input": "snagworthy",
+            "category": "invented",
+            "wordType": "invented-plausible",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 823.6645000000135,
+            "error": null
+          },
+          {
+            "id": "discovery-089",
+            "input": "blemtrask",
+            "category": "invented",
+            "wordType": "invented-random",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 817.7250409999979,
+            "error": null
+          },
+          {
+            "id": "discovery-092",
+            "input": "mipplot",
+            "category": "invented",
+            "wordType": "invented-random",
+            "split": "held-out",
+            "dialect": "US",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 706.2772919999989,
+            "error": null
+          },
+          {
+            "id": "discovery-094",
+            "input": "footpath",
+            "category": "non_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "AU",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 739.6869169999991,
+            "error": null
+          },
+          {
+            "id": "discovery-095",
+            "input": "queue",
+            "category": "non_slang",
+            "wordType": "real-old",
+            "split": "held-out",
+            "dialect": "UK",
+            "isRealSlang": false,
+            "accepted": false,
+            "outcome": "true_negative",
+            "definition": null,
+            "rating": null,
+            "minSensitivity": null,
+            "sensitivityMislabel": false,
+            "latencyMs": 815.6586249999964,
+            "error": null
+          }
+        ]
+      },
+      "cost": {
+        "calls": 33,
+        "promptTokens": 9940,
+        "completionTokens": 2286,
+        "totalTokens": 12226,
+        "tokenSource": "provider",
+        "pricing": {
+          "inputPerMTokUsd": 0.15,
+          "outputPerMTokUsd": 0.6,
+          "source": "gpt-4o-mini list price"
+        },
+        "costUsd": 0.0028626,
+        "costPer1000CallsUsd": 0.08674545454545454
+      },
+      "timing": {
+        "wallClockMs": 47004.775542,
+        "callsPerMinute": 42.123379532592764
+      }
+    }
+  ]
+}

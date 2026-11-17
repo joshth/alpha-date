@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/hooks/use-toast"
 import { reviewTerm } from "@/app/lab/actions"
 import { Check, X } from "lucide-react"
@@ -34,13 +35,14 @@ export function ReviewButtons({ termId }: { termId: string }) {
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex items-center gap-2">
       <Button size="sm" disabled={busy} onClick={() => decide("published")}>
         <Check className="mr-2 h-4 w-4" aria-hidden="true" /> Publish
       </Button>
       <Button size="sm" variant="destructive" disabled={busy} onClick={() => decide("rejected")}>
         <X className="mr-2 h-4 w-4" aria-hidden="true" /> Reject
       </Button>
+      {busy && <div role="status" aria-label="Saving review decision"><span className="sr-only">Saving review decision…</span><Skeleton className="h-8 w-8" /></div>}
     </div>
   )
 }

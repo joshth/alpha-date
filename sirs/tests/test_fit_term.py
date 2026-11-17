@@ -110,3 +110,20 @@ def test_cli_unknown_term_prints_no_data_error_and_returns_1(capsys):
     from sirs.fit_term import main
     assert main(["zzznotaterm", "--json"]) == 1
     assert json.loads(capsys.readouterr().out) == {"error": "no_data", "term": "zzznotaterm"}
+
+
+def test_cli_batch_fits_many_terms_with_one_shared_dataset_and_synthetic_fallback(capsys, monkeypatch):
+    from sirs.fit_term import fit_counts, fit_term, main
+    weeks = [d.date().isoformat() for d in pd.date_range(end="2026-11-13", periods=26, freq="7D")]
+    counts = list(range(26))
+    payload = {"terms": ["bussin", "new synthetic"],
+               "counts": {"new synthetic": {"weeks": weeks, "counts": counts}}}
+    monkeypatch.setattr("sys.stdin", __import__("io").StringIO(json.dumps(payload)))
+
+    assert main(["--batch", "--json", "--now", "2026-11-13"]) == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["bussin"] == {"kind": "fit", "source": "vendored", "fit": fit_term("bussin", "2026-11-13")}
+    assert output["new synthetic"] == {
+        "kind": "fit", "source": "synthetic",
+        "fit": fit_counts("new synthetic", weeks, counts, now="2026-11-13"),
+    }

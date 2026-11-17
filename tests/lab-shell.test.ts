@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process"
 import { LAB_NAV } from "../components/lab/nav"
 
 const root = { href: "/lab", label: "Lexicon Lab" }
-let cached: { crumbs: { href: string; label: string }[][]; aura: string; dash: string } | undefined
+let cached: { crumbs: { href: string; label: string }[][]; aura: string; auraTerm: string; dash: string } | undefined
 const run = () => (cached ??= JSON.parse(execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
   const React = require("react");
   const { renderToStaticMarkup } = require("react-dom/server");
@@ -15,8 +15,8 @@ const run = () => (cached ??= JSON.parse(execFileSync(process.execPath, ["--requ
     pathname, userName: "Mock Reviewer", mockLlm: true, children: React.createElement("p", null, "PAGE BODY"),
   }));
   console.log(JSON.stringify({
-    crumbs: ["/lab", "/lab/aura", "/lab/review/123", "/lab/nope"].map(breadcrumbs),
-    aura: view("/lab/aura"), dash: view("/lab"),
+    crumbs: ["/lab", "/lab/aura", "/lab/aura/rizz%20roll", "/lab/review/123", "/lab/nope"].map(breadcrumbs),
+    aura: view("/lab/aura"), auraTerm: view("/lab/aura/rizz%20roll"), dash: view("/lab"),
   }));
 `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })))
 
@@ -29,9 +29,18 @@ test("breadcrumbs: root plus the matching nav page", () => {
   const { crumbs } = run()
   assert.deepEqual(crumbs[0], [root])
   assert.deepEqual(crumbs[1], [root, { href: "/lab/aura", label: label("/lab/aura") }])
+  assert.deepEqual(crumbs[2], [root, { href: "/lab/aura", label: label("/lab/aura") }, { href: "/lab/aura/rizz%20roll", label: "rizz roll" }])
   const review = items.find((i) => i.href === "/lab/review")!
-  assert.deepEqual(crumbs[2], [root, { href: review.href, label: review.label }])
-  assert.deepEqual(crumbs[3], [root])
+  assert.deepEqual(crumbs[3], [root, { href: review.href, label: review.label }])
+  assert.deepEqual(crumbs[4], [root])
+})
+
+test("Aura term breadcrumb includes a back link before its current path", () => {
+  const html = run().auraTerm
+  const crumb = html.match(/<nav aria-label="Breadcrumb"[\s\S]*?<\/nav>/)?.[0] ?? ""
+  assert.match(crumb, /aria-label="Back to Aura dashboard"/)
+  assert.ok(crumb.indexOf('aria-label="Back to Aura dashboard"') < crumb.indexOf("<ol"))
+  assert.match(crumb, /<span aria-current="page">rizz roll<\/span>/)
 })
 
 test("LabShellView renders header, search, avatar, nav, breadcrumb and main", () => {
@@ -91,4 +100,24 @@ test("demo-only nav items stay hidden unless the server turns the demo on", () =
   `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
   assert.ok(!nav(false).includes(">Safety incidents<"))
   assert.ok(nav(true).includes(">Safety incidents<"))
+})
+
+
+test("header actions remain inside the shell header alongside existing controls", () => {
+  const markup = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react"); globalThis.React = React;
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { LabShellView } = require("./components/lab/shell.tsx");
+    console.log(renderToStaticMarkup(React.createElement(LabShellView, {
+      pathname: "/lab", userName: "Reviewer", mockLlm: true,
+      headerActions: React.createElement("button", {type: "button"}, "Support location"),
+      children: React.createElement("p", null, "PAGE BODY"),
+    })));
+  `], {cwd: process.cwd(), encoding: "utf8", env: {...process.env, NODE_OPTIONS: ""}})
+  const header = markup.match(/<header[^>]*>[\s\S]*?<\/header>/)?.[0] ?? ""
+  assert.match(header, /Support location/)
+  assert.match(header, /role="search"/)
+  assert.match(header, /Teaching scaffold/)
+  assert.match(markup, /aria-label="Lab"/)
+  assert.match(markup, /PAGE BODY/)
 })

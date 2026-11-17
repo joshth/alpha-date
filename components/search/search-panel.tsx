@@ -1,12 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { RefreshCw, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SafetyResponse } from "@/components/safety/safety-response"
 import { safetyResponseMessage } from "@/lib/safety/responses"
 import type { SafetyVerdict } from "@/lib/safety/gate"
@@ -16,7 +18,7 @@ import { AiCallsAvoidedBadge } from "@/components/search/ai-calls-avoided-badge"
 import type { SearchOutcome } from "@/lib/types"
 import type { SlangTerm } from "@/app/types"
 
-function TermCard({ term, badge, note }: { term: SlangTerm; badge: string; note?: string }) {
+function TermCard({ term, badge, note, query }: { term: SlangTerm; badge: string; note?: string; query: string }) {
   return (
     <Card>
       <CardHeader>
@@ -40,6 +42,9 @@ function TermCard({ term, badge, note }: { term: SlangTerm; badge: string; note?
             ))}
           </ul>
         )}
+        <Link href={`/lab/aura/${encodeURIComponent(query)}`} className="inline-flex min-h-6 items-center text-sm underline underline-offset-4">
+          View Aura lifecycle
+        </Link>
       </CardContent>
     </Card>
   )
@@ -76,8 +81,9 @@ function SuggestForm({ query }: { query: string }) {
         <Input id="suggest-context" value={context} maxLength={500} onChange={(e) => setContext(e.target.value)} />
       </div>
       <Button type="submit" variant="secondary" disabled={busy}>
-        Suggest &quot;{query}&quot;
+        {busy ? "Sending suggestion…" : <>Suggest &quot;{query}&quot;</>}
       </Button>
+      {busy && <div role="status" aria-label="Sending suggestion" className="space-y-2"><span className="sr-only">Sending suggestion…</span><Skeleton className="h-10 w-full" /></div>}
       {verdict && message ? <SafetyResponse verdict={verdict} message={message} /> : message && (
         <p role="status" className="text-sm text-foreground">
           {message}
@@ -133,6 +139,14 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
       </form>
 
       <div aria-live="polite" className="space-y-4">
+        {busy ? (
+          <div role="status" aria-label="Loading search result" className="space-y-3">
+            <span className="sr-only">Searching the lexicon…</span>
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-24 w-full max-w-3xl" />
+            <Skeleton className="h-8 w-40" />
+          </div>
+        ) : <>
         {outcome?.kind === "gentle_support" && (
           <SafetyResponse verdict={outcome.verdict} message={outcome.message} />
         )}
@@ -142,8 +156,8 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
         {outcome?.kind === "refused" && (
           <SafetyResponse verdict={outcome.verdict} message={outcome.message} />
         )}
-        {outcome?.kind === "found" && <TermCard term={outcome.term} badge="In the lexicon" />}
-        {outcome?.kind === "discovered" && <TermCard term={outcome.term} badge="AI-discovered" note={outcome.note} />}
+        {outcome?.kind === "found" && <TermCard term={outcome.term} badge="In the lexicon" query={query} />}
+        {outcome?.kind === "discovered" && <TermCard term={outcome.term} badge="AI-discovered" note={outcome.note} query={query} />}
         {outcome?.kind === "not_found" && <SuggestForm key={outcome.query} query={outcome.query} />}
         {outcome?.kind === "error" && (
           <p role="alert" className="text-destructive">
@@ -158,6 +172,7 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
             Safety gate: {outcome.verdict.action} · decided by {outcome.verdict.decidedBy} · {outcome.verdict.reason}
           </p>
         )}
+        </>}
       </div>
       <AiCallsAvoidedBadge value={avoided} />
     </div>

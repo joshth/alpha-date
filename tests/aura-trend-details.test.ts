@@ -25,13 +25,15 @@ const html: Record<string, string> = JSON.parse(execFileSync(process.execPath, [
 `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } }))
 const esc = (s: string) => s.replace(/'/g, "&#x27;")
 
-test("AuraTrend: the sentence is always visible, above the closed details", () => {
+test("AuraTrend: the sentence and section heading stay visible with chart help", () => {
   const h = html.staged
   const sentence = trendSentence(fit as never)
   assert.equal(sentence, "Down 35% from its peak, down 20 points in the last 180 days.")
   assert.ok(h.indexOf(sentence) >= 0 && h.indexOf(sentence) < h.indexOf("<details"))
+  assert.match(h, /<h2[^>]*class="text-sm font-medium">Search interest and fitted curve<\/h2>/)
+  assert.match(h, /aria-label="About this chart: Search interest and fitted curve"/)
   assert.doesNotMatch(h, /<details[^>]*\bopen\b/)
-  assert.match(h, /<summary[^>]*>Trend table and sound<\/summary>/)
+  assert.match(h, /<summary[^>]*>Trend table<\/summary>/)
 })
 
 test("AuraTrend: a captioned table with header cells lists the weekly fitted points in the 180-day window", () => {
@@ -46,12 +48,13 @@ test("AuraTrend: a captioned table with header cells lists the weekly fitted poi
   assert.match(body, /<td[^>]*font-mono[^>]*>0\.3<\/td>/)
 })
 
-test("AuraTrend: Play trend sits inside the details when there is a stage", () => {
+test("AuraTrend: Play trend is visible outside the collapsed trend table", () => {
   const h = html.staged
-  assert.ok(h.indexOf("Play trend") > h.indexOf("<details") && h.indexOf("Play trend") < h.indexOf("</details>"))
+  assert.ok(h.indexOf("Play trend") >= 0 && h.indexOf("Play trend") < h.indexOf("<details"))
 })
 
 test("AuraTrend: no stage keeps the honest sentence and hides Play trend", () => {
   assert.ok(html.none.includes(esc(trendSentence({ r: 0.65, delta: -0.2, stage: null }))))
   assert.doesNotMatch(html.none, /Play trend/)
+  assert.match(html.none, /aria-label="About this chart: Search interest and fitted curve"/)
 })

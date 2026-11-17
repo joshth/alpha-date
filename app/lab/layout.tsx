@@ -38,7 +38,7 @@ export default async function LabLayout({ children }: { children: React.ReactNod
   return (
     <RegionProvider initialRegion={region}>
       <div className={`${plexSans.variable} ${plexMono.variable} lab min-h-screen bg-background font-sans text-foreground`}>
-        {/* Sets the saved theme before first paint; the script contains no user input. */}
+        {/* Sets the saved theme on <html> before first paint, so there is no flash. A constant from our own module, no user input. */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript() }} />
         <LabShell userName={user?.name ?? "Mock user"} mockLlm={isMockLlm()} showDemoPages={isIncidentDemoEnabled()} headerActions={<RegionSelector />}>
           {children}

@@ -31,6 +31,17 @@ def test_stage_dots_are_large_and_drawn_over_the_curve_line():
         assert len(ax.lines) == 1
 
 
+def test_stage_dots_and_legend_have_four_distinct_symbols_and_fixed_colours():
+    from matplotlib.colors import to_hex
+    fig = _figure()
+    dots = [c for c in fig.axes[0].collections if isinstance(c, PathCollection)]
+    paths = [tuple(map(tuple, c.get_paths()[0].vertices)) for c in dots]
+    assert len(set(paths)) == 4
+    assert [to_hex(c.get_facecolors()[0]) for c in dots] == ["#0072b2", "#e69f00", "#cc79a7", "#009e73"]
+    legend = fig.legends[0]
+    assert len({tuple(map(tuple, h.get_paths()[0].vertices)) for h in legend.legend_handles}) == 4
+
+
 def test_one_shared_legend_with_readable_stage_names_sits_outside_the_panels():
     fig = _figure()
     assert all(ax.get_legend() is None for ax in fig.axes)

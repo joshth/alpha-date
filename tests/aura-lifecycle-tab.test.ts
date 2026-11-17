@@ -27,6 +27,7 @@ const html: Record<string, string> = JSON.parse(execFileSync(process.execPath, [
   const out = {};
   for (const [k, outcome] of Object.entries(${JSON.stringify(outcomes)})) out[k] = r(React.createElement(LifecycleResult, { outcome }));
   out.tab = r(React.createElement(LifecycleTab, { fitAction: async () => ({}) }));
+  out.initialTab = r(React.createElement(LifecycleTab, { initialTerm: "rizz & roll", fitAction: async () => ({}) }));
   console.log(JSON.stringify(out));
 `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } }))
 const esc = (s: string) => s.replace(/'/g, "&#x27;")
@@ -61,25 +62,47 @@ test("blocked and invalid: role=alert with the message", () => {
   assert.match(html.invalid, /role="alert"[^>]*>[^<]*Enter a term between 2 and 100 characters\./)
 })
 
-test("LifecycleTab: labelled form, Fit button, empty polite live region", () => {
+test("LifecycleTab: labelled search form, Search button, empty polite live region", () => {
   const h = html.tab
   const id = h.match(/<label[^>]*for="([^"]+)"[^>]*>\s*Term\s*<\/label>/)?.[1]
   assert.ok(id && /<input[^>]*name="term"/.test(h) && new RegExp(`<input[^>]*id="${id}"`).test(h))
   assert.match(h, /<form/)
-  assert.match(h, /<button[^>]*type="submit"[^>]*>\s*Fit\s*<\/button>/)
+  assert.match(h, /<button[^>]*type="submit"[^>]*>\s*Search\s*<\/button>/)
   assert.match(h, /<div[^>]*(role="status"[^>]*aria-live="polite"|aria-live="polite"[^>]*role="status")[^>]*><\/div>/)
+})
+
+test("LifecycleTab: initial term is prefilled and fitted on mount", () => {
+  assert.match(html.initialTab, /<input[^>]*value="rizz &amp; roll"/)
+  assert.match(readFileSync("components/aura/lifecycle-tab.tsx", "utf8"), /useEffect\([\s\S]*initialTerm[\s\S]*fitAction/)
+})
+
+test("LifecycleTab keeps a search form that opens the term route", () => {
+  const source = readFileSync("components/aura/lifecycle-tab.tsx", "utf8")
+  assert.match(source, /auraTermPath\(value\)/)
+  assert.match(source, /window\.location\.assign/)
+  assert.match(html.tab, /role="search"/)
 })
 
 test("pending text lives in the module", () => {
   assert.ok(readFileSync("components/aura/lifecycle-tab.tsx", "utf8").includes("Fitting the SIRS model…"))
 })
 
-test("fit: the trend expands to a weekly table and Play trend; no stage has no Play trend", () => {
+test("fit: the trend has a visible player and expandable weekly table; no stage has no player", () => {
   const h = html.vendored
-  assert.match(h, /<summary[^>]*>Trend table and sound<\/summary>/)
+  assert.match(h, /<summary[^>]*>Trend table<\/summary>/)
   assert.match(h, /<caption[^>]*>[^<]*rizz[^<]*<\/caption>/)
   assert.match(h, /<button[^>]*>Play trend<\/button>/)
+  assert.ok(h.indexOf("Play trend") < h.indexOf("<details"))
+  assert.match(h, /aria-label="About this chart: Search interest and fitted curve"/)
   assert.equal(h.split(esc(trendSentence(fit as never))).length, 2, "the sentence is shown once")
-  assert.match(html.nullStage, /<summary[^>]*>Trend table and sound<\/summary>/)
+  assert.match(html.nullStage, /<summary[^>]*>Trend table<\/summary>/)
   assert.doesNotMatch(html.nullStage, /Play trend/)
+})
+
+test("fit: 'What does this mean?' sits once at the far right, after the Confidence value", () => {
+  const h = html.vendored
+  const link = h.indexOf("What does this mean?")
+  assert.ok(link > h.indexOf("88%"), "after Confidence")
+  assert.equal(h.split("What does this mean?").length - 1, 1)
+  assert.ok(link > h.indexOf("</dl>") - 400 && !h.slice(h.indexOf("Stage</dt>"), h.indexOf("<dt", h.indexOf("Stage</dt>"))).includes("What does this mean?"), "not inside the Stage cell")
 })

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { z } from "zod"
@@ -35,6 +36,37 @@ const RATINGS = ["Generally Harmless", "Use With Caution", "Mature Themes", "Off
 // - refusal:      inputs the gate should refuse;
 // - safeguarding: inputs the gate should route to the safeguarding panel.
 
+// Discovery-case tags (W18EDATE-70), so results can be split by kind of word,
+// scored on unseen data and compared across varieties of English:
+// - wordType: what the string is.
+//   invented-random     not a word and no slang pattern (zorbleflux, asdfgh);
+//   invented-plausible  made up but built like slang or a near-miss of a real
+//                       term (toastmaxxing, plimbcore, the misspelling brianrot);
+//   real-new            real slang in wide use from 2023 on, i.e. near or after
+//                       a typical model's training cut-off (skibidi, aura farming);
+//   real-old            real slang, or an ordinary word, established before 2023
+//                       (bae, on fleek, kangaroo);
+//   new-sense           an ordinary English word with a slang meaning (glazing,
+//                       ratio, cooked). Takes priority over real-new/real-old.
+//   Dates are approximate; the second reviewer confirms them.
+// - split: "held-out" cases are kept for the final score only; prompts and
+//   settings are tuned on "dev". The split comes from a hash of the id
+//   (splitFor below), never from looking at results.
+// - dialect: the English variety the term mainly belongs to. US is the default
+//   for global internet English and for invented words.
+export const WORD_TYPES = ["invented-random", "invented-plausible", "real-new", "real-old", "new-sense"] as const
+export const SPLITS = ["dev", "held-out"] as const
+export const DIALECTS = ["US", "UK", "AU"] as const
+export type WordType = (typeof WORD_TYPES)[number]
+export type Split = (typeof SPLITS)[number]
+
+// About 30% of cases are held out. Stable: adding a case never moves another.
+export const HELD_OUT_SHARE = 0.3
+export function splitFor(id: string): Split {
+  const hash = createHash("sha256").update(`w18edate-golden:${id}`).digest()
+  return hash.readUInt16BE(0) / 0x10000 < HELD_OUT_SHARE ? "held-out" : "dev"
+}
+
 export const EVAL_CATEGORIES = ["valid_slang", "non_slang", "invented", "ambiguous", "refusal", "safeguarding"] as const
 export type EvalCategory = (typeof EVAL_CATEGORIES)[number]
 
@@ -68,6 +100,9 @@ export const goldenCaseSchema = z.discriminatedUnion("kind", [
       isRealSlang: z.boolean(),
       currency: z.enum(["current", "outdated"]).optional(),
       minSensitivity: z.enum(RATINGS).optional(),
+      wordType: z.enum(WORD_TYPES),
+      split: z.enum(SPLITS),
+      dialect: z.enum(DIALECTS),
     }),
   }),
   z.object({
@@ -257,6 +292,17 @@ export function labelProblems(c: GoldenCase): string[] {
     }
     if (c.category !== "valid_slang" && c.category !== "ambiguous" && c.discovery.isRealSlang) {
       problems.push(`${c.id}: category "${c.category}" but isRealSlang is true`)
+    }
+    const inventedType = c.discovery.wordType.startsWith("invented")
+    if (c.category === "invented" && !inventedType) {
+      problems.push(`${c.id}: category "invented" but wordType "${c.discovery.wordType}"`)
+    }
+    // (an "invented" case marked real is already reported above)
+    if (c.discovery.isRealSlang && inventedType && c.category !== "invented") {
+      problems.push(`${c.id}: isRealSlang is true but wordType "${c.discovery.wordType}"`)
+    }
+    if (c.discovery.split !== splitFor(c.id)) {
+      problems.push(`${c.id}: split must be "${splitFor(c.id)}" (from splitFor(id)), not "${c.discovery.split}"`)
     }
     return problems
   }

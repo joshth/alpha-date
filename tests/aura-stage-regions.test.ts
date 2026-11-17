@@ -32,3 +32,15 @@ test("lifecycle chart shades fitted stages with tokens, patterns and a table alt
   assert.match(source, /aria-label="Aura stage regions"/)
   assert.match(source, /label: "Fitted stage"/)
 })
+
+test("lifecycle chart marks stage changes and the latest week with four distinct symbols", () => {
+  const source = readFileSync("components/aura/lifecycle-charts.tsx", "utf8")
+  for (const symbol of ["triangle-up", "diamond", "triangle-down", "square"]) {
+    assert.ok(source.includes(`symbol: "${symbol}"`), `${symbol} identifies one stage`)
+  }
+  assert.match(source, /stages\[i\] !== stages\[i - 1\]/)
+  assert.match(source, /i === rows\.length - 1/)
+  assert.match(source, /<Line dataKey="marker"/)
+  assert.doesNotMatch(source, /<Scatter/, "Scatter forces a numeric x-axis and collapses the weekly category axis")
+  assert.match(source, /aria-label="Aura stage regions"[\s\S]*?symbol/)
+})
