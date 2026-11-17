@@ -1,6 +1,6 @@
 import type React from "react"
 import Link from "next/link"
-import { Activity, ArrowLeft, BarChart3, BookOpen, ClipboardCheck, Database, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, type LucideIcon } from "lucide-react"
+import { Activity, ArrowLeft, BarChart3, BookOpen, ClipboardCheck, Database, FileBarChart, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, type LucideIcon } from "lucide-react"
 import { LAB_NAV } from "./nav"
 import { ThemeToggle } from "./theme-toggle"
 import type { ThemePref } from "./theme"
@@ -10,7 +10,7 @@ const ROOT = { href: "/lab", label: "Lexicon Lab" }
 const items = LAB_NAV.flatMap((g) => g.items)
 const icons: Record<string, LucideIcon> = {
   Dashboard: LayoutDashboard, Search, "Review queue": ClipboardCheck,
-  Evaluation: BarChart3, "Safety activity": Activity,
+  Evaluation: BarChart3, "Model reports": FileBarChart, "Safety activity": Activity,
   "Safety incidents": ShieldAlert, Aura: Activity, Dedup: Database, Docs: BookOpen,
 }
 
