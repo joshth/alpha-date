@@ -17,7 +17,15 @@ import { normalizeKey, trigramSimilarity } from "./similarity"
 
 // Increment whenever normaliseSuggestion's output changes,
 // so stored keys can be told apart from stale ones.
-export const NORMALISER_VERSION = 1
+export const NORMALISER_VERSION = 2
+
+export const CHINESE_NUMBER_EXAMPLES = [
+  { number: "520", phrase: "我爱你", meaning: "I love you" },
+  { number: "521", phrase: "我爱你", meaning: "I love you too (reply)" },
+  { number: "886", phrase: "拜拜咯", meaning: "bye-bye" },
+  { number: "1314", phrase: "一生一世", meaning: "forever" },
+  { number: "5201314", phrase: "我爱你一生一世", meaning: "I love you forever" },
+] as const
 
 // Nothing alike.
 export const MATCH_SCORE_MIN = 0
@@ -102,7 +110,8 @@ export function normaliseSuggestion(text: string): string {
 
   // Strip punctuation first so it cannot split a repeated-letter run.
   const key = normalizeKey(expandedText)
-  return collapseRepeatedLetters(foldJapanese(key))
+  const folded = collapseRepeatedLetters(foldJapanese(key))
+  return CHINESE_NUMBER_EXAMPLES.find((example) => example.number === folded)?.phrase ?? folded
 }
 
 /** Best matches for `text` among `candidates` (lexicon terms and/or other suggestions), best first. */
