@@ -91,3 +91,14 @@ test("AuraGlossary trigger reports whether the glossary is open", () => {
   assert.match(render(false), /<button[^>]*aria-expanded="false"/)
   assert.match(render(true), /<button[^>]*aria-expanded="true"/)
 })
+
+test("AuraBadge can leave out the glossary so the page can place it elsewhere", () => {
+  const html = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    const React = require("react");
+    const { renderToStaticMarkup } = require("react-dom/server");
+    globalThis.React = React;
+    const { AuraBadge } = require("./components/aura/aura-badge.tsx");
+    console.log(renderToStaticMarkup(React.createElement(AuraBadge, { stage: "peaking", confidence: 0.9, glossary: false })));
+  `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
+  assert.ok(html.includes("Peaking") && !html.includes("What does this mean?"))
+})
