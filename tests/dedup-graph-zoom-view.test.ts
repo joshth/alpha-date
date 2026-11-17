@@ -20,3 +20,17 @@ test("GraphView uses the zoomed view for its viewBox", () => {
 test("GraphView keeps the full viewBox when no view is given", () => {
   assert.match(render({}), /viewBox="0 0 640 400"/)
 })
+
+
+test("clicking graph space clears selection but clicking a node does not", () => {
+  const result = execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
+    globalThis.React = require("react");
+    const { GraphView } = require("./components/aura/similarity-graph.tsx");
+    const selected = [];
+    const svg = GraphView({ ...${JSON.stringify({ graph, positions, selectedId: "a", threshold: 0.5 })}, onSelect: (id) => selected.push(id) });
+    svg.props.onClick({ target: { closest: () => null } });
+    svg.props.onClick({ target: { closest: () => ({}) } });
+    console.log(JSON.stringify(selected));
+  `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
+  assert.deepEqual(JSON.parse(result), [null])
+})
