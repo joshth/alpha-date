@@ -16,6 +16,7 @@
     "eval": "tsx --conditions=react-server scripts/eval.ts",
     "eval:validate": "tsx --conditions=react-server scripts/eval.ts --validate-only",
     "aura:plot": "tsx scripts/aura-plot.ts",
+    "sirs:setup": "node scripts/sirs-setup.mjs",
     "mcp": "tsx --conditions=react-server scripts/mcp-server.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
