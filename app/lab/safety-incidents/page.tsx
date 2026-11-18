@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
 import { getSessionUser, isReviewer } from "@/lib/_stubs/auth"
-import { isIncidentDemoEnabled } from "@/lib/safety/incident-demo"
 import { readRecentSafetyIncidentDetails } from "@/lib/safety/incident-store"
 
 export const metadata = { title: "Safety incidents" }
@@ -11,7 +10,6 @@ const triageLabel = { high: "High", medium: "Medium", moderation_only: "Moderati
 const alertLabel = { pending: "Pending", not_required: "Not required", simulated: "Simulated", failed: "Failed" }
 
 export default async function SafetyIncidentsPage() {
-  if (!isIncidentDemoEnabled()) notFound()
   const user = await getSessionUser()
   if (!user || !isReviewer(user)) notFound()
   const incidents = await readRecentSafetyIncidentDetails().catch(() => null)
@@ -19,7 +17,7 @@ export default async function SafetyIncidentsPage() {
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-bold text-foreground">Safety incidents</h1>
-      <p className="text-muted-foreground">Local demo for synthetic inputs. Submitted phrases are redacted for personal information before incident review; alerts are simulated.</p>
+      <p className="text-muted-foreground">Submitted phrases are redacted for personal information before incident review. Alerts are simulated.</p>
       {incidents === null ? <p role="alert">Could not load incidents. Please try again.</p> : incidents.length === 0 ? (
         <p>No incidents recorded yet.</p>
       ) : (

@@ -88,9 +88,8 @@ test("Dashboard link is current on /lab", () => {
   assert.ok(!current(dash).some((a) => a.includes('href="/lab/aura"')))
 })
 
-test("demo-only nav items stay hidden unless the server turns the demo on", () => {
-  const demo = items.filter((i) => i.demoOnly)
-  assert.deepEqual(demo.map((i) => i.href), ["/lab/safety-incidents"])
+test("incident navigation is available without enabling demo pages", () => {
+  assert.equal(items.find(i => i.href === "/lab/safety-incidents")?.demoOnly, undefined)
   const nav = (flag: boolean) => execFileSync(process.execPath, ["--require", "tsx/cjs", "-e", `
     const React = require("react");
     const { renderToStaticMarkup } = require("react-dom/server");
@@ -98,7 +97,7 @@ test("demo-only nav items stay hidden unless the server turns the demo on", () =
     globalThis.React = React;
     console.log(renderToStaticMarkup(React.createElement(LabShellView, { pathname: "/lab", userName: "x", mockLlm: true, showDemoPages: ${flag}, children: null })));
   `], { cwd: process.cwd(), encoding: "utf8", env: { ...process.env, NODE_OPTIONS: "" } })
-  assert.ok(!nav(false).includes(">Safety incidents<"))
+  assert.ok(nav(false).includes(">Safety incidents<"))
   assert.ok(nav(true).includes(">Safety incidents<"))
 })
 

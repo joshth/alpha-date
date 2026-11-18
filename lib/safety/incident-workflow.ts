@@ -9,7 +9,7 @@ type DemoAlert = Pick<SafetyIncident, "referenceId" | "surface" | "crisis" | "tr
 export function createIncidentSafetyCheck(
   check: typeof checkInputSafety,
   demo: {
-    enabled: () => boolean
+    enabled?: () => boolean
     save: (incident: SafetyIncident) => Promise<void>
     notify: (alert: DemoAlert) => void
     recordAlertResult: (reference: string, result: AlertResult) => Promise<void>
@@ -17,7 +17,7 @@ export function createIncidentSafetyCheck(
 ): RequestSafetyCheck {
   return async (text, surface, originalText) => {
     const verdict = await check(text, surface, originalText)
-    if (verdict.action !== "safeguarding" || !demo.enabled()) return verdict
+    if (verdict.action !== "safeguarding" || demo.enabled?.() === false) return verdict
 
     let incident: SafetyIncident
     try {
