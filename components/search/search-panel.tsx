@@ -18,6 +18,14 @@ import { AiCallsAvoidedBadge } from "@/components/search/ai-calls-avoided-badge"
 import type { SearchOutcome } from "@/lib/types"
 import type { SlangTerm } from "@/app/types"
 
+function PrivacyNotice({ redacted }: { redacted?: boolean }) {
+  return redacted ? (
+    <p role="status" className="text-sm leading-relaxed text-foreground">
+      Personal information was redacted from your submission to protect your privacy.
+    </p>
+  ) : null
+}
+
 function TermCard({ term, badge, note, query }: { term: SlangTerm; badge: string; note?: string; query: string }) {
   return (
     <Card>
@@ -54,6 +62,7 @@ function SuggestForm({ query }: { query: string }) {
   const [context, setContext] = useState("")
   const [message, setMessage] = useState<string | null>(null)
   const [verdict, setVerdict] = useState<SafetyVerdict | null>(null)
+  const [privacyRedacted, setPrivacyRedacted] = useState(false)
   const [busy, setBusy] = useState(false)
   return (
     <form
@@ -62,10 +71,13 @@ function SuggestForm({ query }: { query: string }) {
         event.preventDefault()
         setBusy(true)
         setVerdict(null)
+        setMessage(null)
+        setPrivacyRedacted(false)
         try {
           const result = await suggestTerm(query, context)
           setMessage(result.message)
           setVerdict(result.data ?? null)
+          setPrivacyRedacted(result.privacyRedacted === true)
         } catch {
           setMessage("Could not reach the service. Please try again.")
         } finally {
@@ -89,6 +101,7 @@ function SuggestForm({ query }: { query: string }) {
           {message}
         </p>
       )}
+      <PrivacyNotice redacted={privacyRedacted} />
     </form>
   )
 }
@@ -172,6 +185,7 @@ export function SearchPanel({ initialAvoided }: { initialAvoided: number }) {
             Safety gate: {outcome.verdict.action} · decided by {outcome.verdict.decidedBy} · {outcome.verdict.reason}
           </p>
         )}
+        <PrivacyNotice redacted={outcome?.privacyRedacted} />
         </>}
       </div>
       <AiCallsAvoidedBadge value={avoided} />

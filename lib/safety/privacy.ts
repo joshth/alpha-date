@@ -10,17 +10,25 @@ const RULES: [RegExp, string][] = [
   [/(?<!\w)(?:\+\d{1,3}[ .-]?)?(?:\(\d{2,4}\)[ .-]?)?\d(?:[\d .-]{6,18}\d)(?!\w)/g, "[REDACTED_PHONE]"],
 ]
 
-export function redactPersonalInformation(text: string): string {
+export function redactPersonalInformationWithResult(text: string): { text: string; redacted: boolean } {
   if (typeof text !== "string" || text.length > 10000) throw new Error("Could not inspect input safely.")
   let result = text.normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g, "")
+  let redacted = false
   for (const [pattern, replacement] of RULES) {
     result = result.replace(pattern, match => {
-      if (replacement !== "[REDACTED_PHONE]") return replacement
-      const digits = match.replace(/\D/g, "").length
-      return (digits >= 9 && digits <= 15) || /^\d{3}[ .-]\d{4}$/.test(match) ? replacement : match
+      if (replacement === "[REDACTED_PHONE]") {
+        const digits = match.replace(/\D/g, "").length
+        if (!((digits >= 9 && digits <= 15) || /^\d{3}[ .-]\d{4}$/.test(match))) return match
+      }
+      redacted ||= match !== replacement
+      return replacement
     })
   }
-  return result
+  return { text: result, redacted }
+}
+
+export function redactPersonalInformation(text: string): string {
+  return redactPersonalInformationWithResult(text).text
 }
 
 export function redactTextFields<T>(value: T): T {
