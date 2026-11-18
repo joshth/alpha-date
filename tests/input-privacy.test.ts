@@ -1,7 +1,7 @@
 import "./setup"
 import assert from "node:assert/strict"
 import test from "node:test"
-import { redactPersonalInformation } from "@/lib/safety/privacy"
+import { redactPersonalInformation, redactPersonalInformationWithResult } from "@/lib/safety/privacy"
 import { isPromptInjection } from "@/lib/safety/injection"
 import { createInputSafetyGate } from "@/lib/safety/gate"
 import { createSearchTerm } from "@/lib/search"
@@ -37,6 +37,8 @@ const piiCases = [
 for (const [index, [input, expected]] of piiCases.entries()) {
   test(`PII fixture ${index + 1} redacts the sensitive value`, () => {
     assert.equal(redactPersonalInformation(input), expected)
+    assert.deepEqual(redactPersonalInformationWithResult(input), { text: expected, redacted: true })
+    assert.equal(redactPersonalInformationWithResult(expected).redacted, false)
     assert.equal(redactPersonalInformation(expected), expected, "redaction is idempotent")
   })
 }
@@ -91,6 +93,7 @@ test("search sends only redacted text to moderation, discovery, events and stora
   })
   const result = await search("rizz student@example.test")
   assert.equal(result.kind, "discovered")
+  assert.equal(result.privacyRedacted, true)
   assert.ok(seen.some(text => text.includes("[REDACTED_EMAIL]")))
   assert.ok(seen.every(text => !text.includes("student@example.test")))
   assert.ok(!JSON.stringify(result).includes("student@example.test"))
@@ -103,7 +106,10 @@ test("suggestions redact both fields and their original incident text before dep
     checkInputSafety: async (text, surface, original) => { seen.push(text, original); return gate(text, surface) },
     recordSuggestion: async (term, context) => { seen.push(term, context ?? ""); return {merged:false} },
   })
-  assert.equal((await suggest("student@example.test", "Call 0412 345 678 at 123 Example Street")).success, true)
+  const result = await suggest("student@example.test", "Call 0412 345 678 at 123 Example Street")
+  assert.equal(result.success, true)
+  assert.equal(result.privacyRedacted, true)
+  assert.equal((await suggest("rizz", "ordinary context")).privacyRedacted, undefined)
   assert.ok(seen.every(text => !/student@example\.test|0412|123 Example/.test(text)))
   assert.ok(seen.some(text => text.includes("[REDACTED_PHONE]")))
 })
@@ -156,4 +162,30 @@ test("PII before a crisis sentence cannot consume the first-person safety signal
   const suggest = createSuggestTerm({checkInputSafety:createInputSafetyGate(async () => {throw Error("no external check needed")}),recordSuggestion:async () => {throw Error("must not save")}})
   const result = await suggest("rizz", "student@example.test. I want to kill myself")
   assert.equal(result.data?.action,"safeguarding")
+})
+
+test("normalisation alone does not claim personal information was redacted", () => {
+  assert.deepEqual(redactPersonalInformationWithResult("ｒｉｚｚ"), { text: "rizz", redacted: false })
+  assert.equal(redactPersonalInformationWithResult("12345678").redacted, false)
+})
+
+test("privacy metadata follows each search response, including safeguarding and errors", async () => {
+  const search = createSearchTerm({
+    checkInputSafety: createInputSafetyGate(async () => ({ status: "safe", categories: [], provider: "test", latencyMs: 0 })),
+    getTermByKey: async () => { throw Error("test lookup unavailable") },
+    logTermEvent: async () => {},
+    generateDiscoveryObject: async () => { throw Error("must not generate") },
+    saveDiscoveredTerm: async () => null,
+  })
+  const crisis = "I want to kill myself"
+  assert.equal((await search(crisis)).privacyRedacted, undefined)
+  for (const contact of ["student@example.test", "0412 345 678", "123 Example Street"]) {
+    const result = await search(`${crisis}. ${contact}`)
+    assert.equal(result.kind, "safeguarding")
+    assert.equal(result.privacyRedacted, true)
+  }
+  const failed = await search("rizz student@example.test")
+  assert.equal(failed.kind, "error")
+  assert.equal(failed.privacyRedacted, true)
+  assert.equal((await search(crisis)).privacyRedacted, undefined)
 })

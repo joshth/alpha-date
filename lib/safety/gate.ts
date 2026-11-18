@@ -3,7 +3,7 @@ import { moderate, type ModerationResult } from "@/lib/_stubs/moderation"
 import { decideSafetyVerdict } from "@/lib/safety/policy"
 import { assessContextualSafety } from "@/lib/safety/context"
 import { redactPersonalInformation } from "@/lib/safety/privacy"
-import { isPromptInjection } from "@/lib/safety/injection"
+import { detectPromptInjection, type InjectionAssessment } from "@/lib/safety/injection"
 
 export type SafetyAction = "safe" | "gentle_support" | "refuse" | "safeguarding"
 
@@ -16,13 +16,14 @@ export interface SafetyVerdict {
   /** Short machine-readable reason, for logs and the eval report. Never the input text. */
   reason: string
   incidentReference?: string
+  injection?: InjectionAssessment
 }
 
 export type SafetySurface = "search" | "suggestion"
 export type RequestSafetyCheck = (text: string, surface: SafetySurface, originalText: string) => Promise<SafetyVerdict>
 
 export function createInputSafetyGate(moderator: (text: string) => Promise<ModerationResult>) {
-  return async (text: string, surface: SafetySurface = "search"): Promise<SafetyVerdict> => {
+  return async (text: string, surface: SafetySurface = "search", originalText: string = text): Promise<SafetyVerdict> => {
     const assessment = assessSafety(text)
     if (assessment.crisis) {
       return {
@@ -39,9 +40,17 @@ export function createInputSafetyGate(moderator: (text: string) => Promise<Moder
       return { ...contextual, categories: [...new Set([...assessment.categories, ...contextual.categories])] }
     }
 
-    if (isPromptInjection(text)) {
+    const screenedInjection = detectPromptInjection(text)
+    const originalInjection = originalText === text ? screenedInjection : detectPromptInjection(originalText)
+    const injection = originalInjection.score >= screenedInjection.score ? originalInjection : screenedInjection
+    if (injection.unsafe) {
       if (contextual?.action === "gentle_support") return contextual
-      return { action: "refuse", categories: assessment.categories, crisis: null, decidedBy: "rules", reason: "prompt_injection" }
+      const oversized = injection.signals.includes("input_limit")
+      return {
+        action: "refuse", categories: assessment.categories, crisis: null,
+        decidedBy: oversized ? "fail_closed" : "rules",
+        reason: oversized ? "input_too_long" : "prompt_injection", injection,
+      }
     }
 
     let result: ModerationResult
@@ -69,6 +78,6 @@ export function createInputSafetyGate(moderator: (text: string) => Promise<Moder
 
 const inputSafetyGate = createInputSafetyGate(moderate)
 
-export async function checkInputSafety(text: string, surface: SafetySurface = "search"): Promise<SafetyVerdict> {
-  return inputSafetyGate(text, surface)
+export async function checkInputSafety(text: string, surface: SafetySurface = "search", originalText: string = text): Promise<SafetyVerdict> {
+  return inputSafetyGate(text, surface, originalText)
 }

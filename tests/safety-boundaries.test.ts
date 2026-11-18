@@ -159,12 +159,12 @@ test("blank context remains optional while nonblank context is never silently lo
   }
 })
 
-test("large whitespace groups produce a bounded safety payload and canonical lookup", async () => {
+test("excessive raw padding is rejected before screening or lookup", async () => {
   const h = harness()
   const input = "rizz" + " \r\n\t".repeat(10000) + "ordinary"
-  assert.equal((await h.search(input)).kind, "not_found")
-  assert.deepEqual(h.screened, ["rizz\nordinary"])
-  assert.deepEqual(h.lookups, ["rizzordinary"])
+  assert.equal((await h.search(input)).kind, "error")
+  assert.deepEqual(h.screened, [])
+  assert.deepEqual(h.lookups, [])
 })
 
 test("screening retains line breaks while stored suggestion text stays canonical", async () => {
