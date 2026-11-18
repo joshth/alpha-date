@@ -62,27 +62,52 @@ pnpm --dir website serve   # http://localhost:3000, or add --port 3001
 
 The API reference page is not searchable.
 
-## The aura:plot Python venv
+## Set up the Aura graphs {#sirs-setup}
 
-`pnpm aura:plot` and the MCP Aura graph need a Python 3.12 venv in `sirs/`. The [assistant setup](./connect-assistant.md) makes it automatically. For a manual app setup, make it once:
+Aura graphs (`pnpm aura:plot` and the graph in the AI assistant) are drawn by a small Python program. It needs its own private workspace, called a **venv**, inside the `sirs/` folder. The venv is not shared through Git, so **everyone sets it up once on their own computer**, and again after a fresh download of the project.
 
-macOS or Linux:
+If you used the [assistant setup](./connect-assistant.md), it already did this for you. You can skip this section.
+
+### Before you start
+
+1. Install [Node.js](https://nodejs.org/en/download) (version 20 or newer) and run `pnpm install` once in the project folder.
+2. Install [Python 3.12](https://www.python.org/downloads/). On Windows, tick **Add Python to PATH** in the installer.
+
+### Steps
+
+1. Open **Terminal** (Mac or Linux) or **PowerShell** (Windows).
+2. Go to the project folder. For example: `cd alpha-date`
+3. Copy this line, paste it, and press Enter:
 
 ```sh
-uv venv --python 3.12 sirs/.venv && uv pip install --python sirs/.venv/bin/python -r sirs/requirements.txt
+pnpm sirs:setup
 ```
 
-Windows (PowerShell):
+4. Wait. The first time takes a few minutes while it downloads about 8 packages. Lines of text scrolling past is normal.
+5. You are done when you see this message:
 
-```powershell
-py -3.12 -m venv sirs\.venv; sirs\.venv\Scripts\pip install -r sirs\requirements.txt
+```text
+SIRS environment ready.
 ```
 
-On macOS, if `aura:plot` fails with "The compiled dtaidistance C library is not available", rebuild that one package from source. You need `brew install libomp` first:
+It is safe to run again. If nothing needs changing, it finishes in a second.
+
+### Check that it worked
+
+Run this. A chart window opens, or a file called `chart.png` appears in the project folder:
 
 ```sh
-uv pip install --python sirs/.venv/bin/python --reinstall --no-binary dtaidistance dtaidistance==2.5.1
+pnpm aura:plot bussin --out chart.png
 ```
+
+### If something goes wrong
+
+| What you see | What to do |
+|---|---|
+| `Python 3.12 (or uv) is required.` | Install Python 3.12 from the link above, close and reopen the terminal, then run `pnpm sirs:setup` again. |
+| `pnpm: command not found` | Install Node.js, close and reopen the terminal, then run `corepack enable`. |
+| `Run pnpm sirs:setup first` | The venv is missing. Run `pnpm sirs:setup`. |
+| `The compiled dtaidistance C library is not available` (Mac) | Run `brew install libomp`, then `uv pip install --python sirs/.venv/bin/python --reinstall --no-binary dtaidistance dtaidistance==2.5.1`. |
 
 ## Next steps
 

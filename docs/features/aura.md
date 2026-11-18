@@ -200,14 +200,7 @@ pnpm aura:plot bussin --out chart.png        # saves the chart instead
 pnpm aura:plot --list                        # every term it accepts, by generation
 ```
 
-It needs a Python 3.12 environment in `sirs/`, made once:
-
-```
-# macOS / Linux
-uv venv --python 3.12 sirs/.venv && uv pip install --python sirs/.venv/bin/python -r sirs/requirements.txt
-# Windows (PowerShell)
-py -3.12 -m venv sirs\.venv; sirs\.venv\Scripts\pip install -r sirs\requirements.txt
-```
+It needs a Python 3.12 environment in `sirs/`, made once with `pnpm sirs:setup`. Step-by-step instructions are in [Set up the Aura graphs](../getting-started.md#sirs-setup).
 
 Set `SIRS_DIR` to use a copy of the plotter somewhere else.
 
