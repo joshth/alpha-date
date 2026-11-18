@@ -80,7 +80,7 @@ The docs are private (NDA). The site tells search engines not to index it, and C
 | `pnpm docs:dev` | Docs site from `docs/`, with the Swagger API reference at `/api`, on http://localhost:3001 (Node 20+; install once with `pnpm --dir website install --ignore-workspace`) |
 | `pnpm --dir website build` | Build the docs site; broken links fail it (what CI's `docs` job runs) |
 
-`aura:plot` and the MCP Aura graph need a Python 3.12 venv in `sirs/`, made once. The guided assistant setup creates it automatically:
+`aura:plot` and the MCP Aura graph need a Python 3.12 venv in `sirs/` (git-ignored, so everyone makes their own after pulling). Run `pnpm sirs:setup` once; it is safe to re-run. The guided assistant setup does the same. Manual equivalent:
 
 ```sh
 # macOS / Linux
