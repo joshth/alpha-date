@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react"
 import { ExportMenu } from "@/components/aura/export-menu"
 import { GraphInfoButton } from "@/components/aura/graph-info"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -8,10 +8,10 @@ import { Slider } from "@/components/ui/slider"
 import { ClusterTable, GraphLegend, GraphView, NodePanel } from "@/components/aura/similarity-graph"
 import { similarityGraph, type DedupGraphData, type Graph } from "@/lib/dedup/graph"
 import type { SemanticEdge } from "@/lib/dedup/semantic"
-import { layoutGraph } from "@/lib/dedup/layout"
+import { graphSimulation, layoutGraph } from "@/lib/dedup/layout"
 import { CLUSTER_COLUMNS, clusterRows, mergeCount, nextNeighbour } from "@/lib/dedup/nav"
 import { mergeQuality } from "@/lib/dedup/threshold"
-import { fullView, panView, screenToGraph, zoomView, type View } from "@/lib/dedup/zoom"
+import { overviewView, panView, screenToGraph, zoomView, type View } from "@/lib/dedup/zoom"
 import { MATCH_THRESHOLD } from "@/lib/normalise"
 
 const BASE = { width: 640, height: 400 }
@@ -25,41 +25,49 @@ export const defaultShowTable = (viewportWidth: number) => viewportWidth < 768
 
 const fmt = (n: number | null) => (n === null ? "n/a" : n.toFixed(2))
 
-export function GraphExplorerView({ graph, positions, threshold, onThreshold, selectedId, showTable, onToggleTable, quality, onSelect, onMove, semanticOn, onToggleSemantic, semanticEdges, view, onZoom, onResetZoom, onPan }: {
+export function GraphExplorerView({ graph, positions, threshold, onThreshold, selectedId, showTable, onToggleTable, quality, onSelect, onMove, semanticOn, onToggleSemantic, semanticEdges, view, onZoom, onResetZoom, onPan, onNodeDrag, onNodeRelease }: {
   graph: Graph; positions: Record<string, Pos>; threshold: number; onThreshold?: (n: number) => void; selectedId: string | null
   view?: View; onZoom?: (factor: number, cx?: number, cy?: number) => void; onResetZoom?: () => void; onPan?: (dx: number, dy: number) => void
+  onNodeDrag?: (id: string, x: number, y: number) => void; onNodeRelease?: (id: string) => void
   semanticOn?: boolean; onToggleSemantic?: () => void; semanticEdges?: SemanticEdge[]
-  showTable: boolean; onToggleTable?: () => void; quality: Quality; onSelect?: (id: string) => void; onMove?: (key: Key) => void
+  showTable: boolean; onToggleTable?: () => void; quality: Quality; onSelect?: (id: string | null) => void; onMove?: (key: Key) => void
 }) {
   const graphRef = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
+  const drag = useRef<{ x: number; y: number; moved: boolean; nodeId?: string } | null>(null)
   const getSvg = () => graphRef.current?.querySelector<SVGSVGElement>('svg[aria-label="Similarity graph"]') ?? null
-  const zoomed = !!view && view.w < BASE.width
-  // Ctrl/⌘+wheel (and trackpad pinch, which browsers send as ctrl+wheel) zooms about the pointer; a plain wheel still scrolls the page.
+  const zoomed = !!view
   // React's onWheel is passive, so preventDefault needs a native listener.
   useEffect(() => {
     const el = graphRef.current, svg = getSvg()
     if (!el || !svg || !view || !onZoom) return
     const wheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return
       e.preventDefault()
       const p = screenToGraph(view, svg.getBoundingClientRect(), e.clientX, e.clientY)
-      onZoom(Math.exp(-e.deltaY * 0.01), p.x, p.y)
+      onZoom(Math.exp(-e.deltaY * 0.002), p.x, p.y)
     }
     el.addEventListener("wheel", wheel, { passive: false })
     return () => el.removeEventListener("wheel", wheel)
   }, [view, onZoom, showTable])
-  const panStart = (e: PointerEvent<HTMLDivElement>) => { if (zoomed && e.button === 0) drag.current = { x: e.clientX, y: e.clientY, moved: false } }
+  const panStart = (e: PointerEvent<HTMLDivElement>) => {
+    if (zoomed && e.button === 0) drag.current = { x: e.clientX, y: e.clientY, moved: false, nodeId: (e.target as Element).closest("[data-node-id]")?.getAttribute("data-node-id") ?? undefined }
+  }
   const panMove = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current, svg = getSvg()
-    if (!d || !svg || !view || !onPan) return
+    if (!d || !svg || !view || (!onPan && !onNodeDrag)) return
     if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 4) return
     if (!d.moved) e.currentTarget.setPointerCapture(e.pointerId) // only after a real drag, so node clicks still work
     d.moved = true
     const rect = svg.getBoundingClientRect()
-    onPan((-e.movementX / rect.width) * view.w, (-e.movementY / rect.height) * view.h)
+    if (d.nodeId) {
+      const p = screenToGraph(view, rect, e.clientX, e.clientY)
+      onNodeDrag?.(d.nodeId, p.x, p.y)
+    } else onPan?.((-(e.clientX - d.x) / rect.width) * view.w, (-(e.clientY - d.y) / rect.height) * view.h)
+    d.x = e.clientX; d.y = e.clientY
   }
-  const panEnd = () => { if (drag.current && !drag.current.moved) drag.current = null }
+  const panEnd = () => {
+    if (drag.current?.moved && drag.current.nodeId) onNodeRelease?.(drag.current.nodeId)
+    if (drag.current && !drag.current.moved) drag.current = null
+  }
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -106,24 +114,52 @@ export function GraphExplorer({ graphAction, semanticAction }: { graphAction: ()
   const [threshold, setThreshold] = useState(MATCH_THRESHOLD)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showTable, setShowTable] = useState(false)
-  const [view, setView] = useState<View>(fullView(BASE))
-  const zoom = (factor: number, cx?: number, cy?: number) => setView((v) => zoomView(v, BASE, factor, cx ?? v.x + v.w / 2, cy ?? v.y + v.h / 2))
-  const pan = (dx: number, dy: number) => setView((v) => panView(v, BASE, dx, dy))
+  const [view, setView] = useState<View>(overviewView(BASE))
+  const zoom = useCallback((factor: number, cx?: number, cy?: number) => setView((v) => zoomView(v, BASE, factor, cx ?? v.x + v.w / 2, cy ?? v.y + v.h / 2)), [])
+  const pan = useCallback((dx: number, dy: number) => setView((v) => panView(v, BASE, dx, dy)), [])
   useEffect(() => {
     setShowTable(defaultShowTable(window.innerWidth))
     graphAction().then(setData)
   }, [graphAction])
-  // Built once at the lowest slider value; the slider only filters edges, so nodes never move.
+  // Built once at the lowest slider value; changing the threshold never moves nodes.
   const graph = useMemo(() => (data ? similarityGraph(data.rows, data.lexicon, 0.3) : null), [data])
   const positions = useMemo(() => (graph ? layoutGraph(graph) : {}), [graph])
+  const [live, setLive] = useState<{ graph: Graph; positions: Record<string, Pos> } | null>(null)
+  const nodesRef = useRef<Map<string, Pos & { id: string; fx?: number | null; fy?: number | null }>>(new Map())
+  const simRef = useRef<ReturnType<typeof graphSimulation> | null>(null)
+  useEffect(() => {
+    if (!graph) return
+    const nodes = graph.nodes.map((n) => ({ id: n.id, ...positions[n.id], fx: null as number | null, fy: null as number | null }))
+    nodesRef.current = new Map(nodes.map((n) => [n.id, n]))
+    const sim = graphSimulation(graph, nodes).stop()
+    sim.on("tick", () => setLive({ graph, positions: Object.fromEntries(nodes.map(({ id, x, y, r }) => [id, { x, y, r }])) }))
+    simRef.current = sim
+    return () => { sim.stop(); simRef.current = null }
+  }, [graph, positions])
+  const dragNode = (id: string, x: number, y: number) => {
+    const node = nodesRef.current.get(id), sim = simRef.current
+    if (!node || !sim || !graph) return
+    node.fx = node.x = Math.max(node.r, Math.min(BASE.width - node.r, x))
+    node.fy = node.y = Math.max(node.r, Math.min(BASE.height - node.r, y))
+    setLive({ graph, positions: Object.fromEntries([...nodesRef.current].map(([key, n]) => [key, { x: n.x, y: n.y, r: n.r }])) })
+    if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) sim.alphaTarget(0.3).restart()
+  }
+  const releaseNode = (id: string) => {
+    const node = nodesRef.current.get(id), sim = simRef.current
+    if (!node || !sim) return
+    node.fx = node.fy = null
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) sim.stop()
+    else sim.alphaTarget(0).alpha(0.3).restart()
+  }
+  const shownPositions = live?.graph === graph ? live.positions : positions
   if (!data || !graph) return <div role="status" aria-label="Loading similarity graph"><span className="sr-only">Loading similarity graph…</span><Skeleton className="h-64 w-full" /></div>
   if (!data.rows.length) return <p className="text-sm text-lab-muted">No suggestions to graph yet.</p>
   const quality = data.golden.length ? { ...mergeQuality(data.golden, threshold), cases: data.golden.length } : null
   const onMove = (key: Key) => {
-    const id = selectedId ? nextNeighbour(graph, positions, selectedId, key) : null
+    const id = selectedId ? nextNeighbour(graph, shownPositions, selectedId, key) : null
     if (!id) return
     setSelectedId(id)
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-node-id="${CSS.escape(id)}"]`)?.focus())
   }
-  return <GraphExplorerView graph={graph} positions={positions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} semanticOn={semanticOn} onToggleSemantic={toggleSemantic} semanticEdges={semantic ?? undefined} view={view} onZoom={zoom} onPan={pan} onResetZoom={() => setView(fullView(BASE))} />
+  return <GraphExplorerView graph={graph} positions={shownPositions} threshold={threshold} onThreshold={setThreshold} selectedId={selectedId} showTable={showTable} onToggleTable={() => setShowTable((v) => !v)} quality={quality} onSelect={setSelectedId} onMove={onMove} semanticOn={semanticOn} onToggleSemantic={toggleSemantic} semanticEdges={semantic ?? undefined} view={view} onZoom={zoom} onPan={pan} onNodeDrag={dragNode} onNodeRelease={releaseNode} onResetZoom={() => setView(overviewView(BASE))} />
 }

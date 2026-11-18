@@ -15,7 +15,7 @@ function MinutesInput({ value, onChange }: { value: number; onChange?: (n: numbe
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-xs text-lab-muted">Minutes per review</label>
       <input id={id} type="number" min="0" step="1" value={value} onChange={(e) => onChange?.(e.target.valueAsNumber)}
-        className="h-9 w-20 rounded border border-lab-border-strong bg-lab-input px-3 text-sm" />
+        className="h-9 w-20 rounded border border-lab-border-strong bg-lab-input px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
     </div>
   )
 }
@@ -54,7 +54,6 @@ export function DedupTab({ savingsAction, graphAction, semanticAction }: { savin
   return (
     <div className="space-y-6">
       <div role="status" aria-live="polite" className="sr-only">{pending ? "Updating…" : savings ? "Dedup counts updated" : ""}</div>
-      {pending && savings && <div role="status" aria-label="Updating deduplication counts"><span className="sr-only">Updating deduplication counts…</span><Skeleton className="h-1 w-full max-w-sm" /></div>}
       {savings ? <DedupResult savings={savings} minutesPerReview={minutes} onMinutesChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /> : <><MinutesInput value={minutes} onChange={(n) => setMinutes(Number.isFinite(n) ? n : 2)} /><div role="status" aria-label="Loading deduplication counts" className="grid grid-cols-2 gap-3 sm:grid-cols-6"><span className="sr-only">Loading deduplication counts…</span>{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div></>}
       <GraphExplorer graphAction={graphAction} semanticAction={semanticAction} />
     </div>

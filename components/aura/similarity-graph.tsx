@@ -16,17 +16,19 @@ const ARROWS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]
 
 export function GraphView({ graph, positions, selectedId, threshold, size, view, onSelect, onMove, semanticEdges }: {
   graph: Graph; positions: Record<string, Pos>; selectedId: string | null; threshold: number; semanticEdges?: SemanticEdge[]
-  size?: { width: number; height: number }; view?: View; onSelect?: (id: string) => void; onMove?: (key: Key) => void
+  size?: { width: number; height: number }; view?: View; onSelect?: (id: string | null) => void; onMove?: (key: Key) => void
 }) {
   const edges = edgesAt(graph, threshold)
   const linked = new Set(selectedId ? edges.filter((e) => e.source === selectedId || e.target === selectedId).flatMap((e) => [e.source, e.target]) : [])
   const stop = selectedId ?? graph.nodes[0]?.id
+  const width = size?.width ?? 640
+  const labelOpacity = view ? Math.max(0, Math.min(1, (width - view.w) / (width / 4))) : undefined
   const keys = (id: string) => (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(id) }
     else if (ARROWS.includes(e.key)) { e.preventDefault(); onMove?.(e.key as Key) }
   }
   return (
-    <svg role="group" aria-label="Similarity graph" viewBox={view ? `${view.x} ${view.y} ${view.w} ${view.h}` : `0 0 ${size?.width ?? 640} ${size?.height ?? 400}`} className="h-auto w-full">
+    <svg role="group" aria-label="Similarity graph" viewBox={view ? `${view.x} ${view.y} ${view.w} ${view.h}` : `0 0 ${size?.width ?? 640} ${size?.height ?? 400}`} className="h-auto w-full" onClick={(e) => { if (!(e.target as Element).closest("[data-node-id]")) onSelect?.(null) }}>
       {edges.map((e) => {
         const a = positions[e.source], b = positions[e.target]
         return <line key={e.id} data-edge-id={e.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={tok("border-strong")} strokeWidth={1.5} strokeDasharray={DASH[e.reason]} />
@@ -49,7 +51,7 @@ export function GraphView({ graph, positions, selectedId, threshold, size, view,
             aria-label={`${n.label}, ${n.kind}, ${plural(n.count, "submission")}, ${plural(matches, "match", "matches")}`} opacity={dim ? 0.25 : undefined}
             onClick={() => onSelect?.(n.id)} onKeyDown={keys(n.id)} className="cursor-pointer outline-none [&:focus-visible>circle]:stroke-[hsl(var(--lab-primary))]">
             <circle cx={p.x} cy={p.y} r={p.r} fill={n.kind === "suggestion" ? tok("text-muted") : "none"} stroke={tok("text")} strokeWidth={n.id === selectedId ? 3 : 1.5} />
-            <text x={p.x} y={p.y + p.r + 12} textAnchor="middle" fontSize={11} fill={tok("text")}>{n.label}</text>
+            <text x={p.x} y={p.y + p.r + 12} textAnchor="middle" fontSize={11} fill={tok("text")} opacity={labelOpacity} pointerEvents={labelOpacity === 0 ? "none" : undefined} className="motion-safe:transition-opacity">{n.label}</text>
           </g>
         )
       })}
