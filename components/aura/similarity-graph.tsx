@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react"
 import type { Graph } from "@/lib/dedup/graph"
 import { clusters, edgesAt } from "@/lib/dedup/nav"
 import type { SemanticEdge } from "@/lib/dedup/semantic"
+import type { View } from "@/lib/dedup/zoom"
 
 const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`
 
@@ -13,9 +14,9 @@ const tok = (n: string) => `hsl(var(--lab-${n}))`
 const DASH = { same_key: undefined, trigram: "6 4", stem: "2 3" } as Record<string, string | undefined>
 const ARROWS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]
 
-export function GraphView({ graph, positions, selectedId, threshold, size, onSelect, onMove, semanticEdges }: {
+export function GraphView({ graph, positions, selectedId, threshold, size, view, onSelect, onMove, semanticEdges }: {
   graph: Graph; positions: Record<string, Pos>; selectedId: string | null; threshold: number; semanticEdges?: SemanticEdge[]
-  size?: { width: number; height: number }; onSelect?: (id: string) => void; onMove?: (key: Key) => void
+  size?: { width: number; height: number }; view?: View; onSelect?: (id: string) => void; onMove?: (key: Key) => void
 }) {
   const edges = edgesAt(graph, threshold)
   const linked = new Set(selectedId ? edges.filter((e) => e.source === selectedId || e.target === selectedId).flatMap((e) => [e.source, e.target]) : [])
@@ -25,7 +26,7 @@ export function GraphView({ graph, positions, selectedId, threshold, size, onSel
     else if (ARROWS.includes(e.key)) { e.preventDefault(); onMove?.(e.key as Key) }
   }
   return (
-    <svg role="group" aria-label="Similarity graph" viewBox={`0 0 ${size?.width ?? 640} ${size?.height ?? 400}`} className="h-auto w-full">
+    <svg role="group" aria-label="Similarity graph" viewBox={view ? `${view.x} ${view.y} ${view.w} ${view.h}` : `0 0 ${size?.width ?? 640} ${size?.height ?? 400}`} className="h-auto w-full">
       {edges.map((e) => {
         const a = positions[e.source], b = positions[e.target]
         return <line key={e.id} data-edge-id={e.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={tok("border-strong")} strokeWidth={1.5} strokeDasharray={DASH[e.reason]} />

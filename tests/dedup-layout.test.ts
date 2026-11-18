@@ -43,3 +43,13 @@ test("no overlap", () => {
 test("empty graph", () => {
   assert.deepEqual(layoutGraph({ nodes: [], edges: [] }), {})
 })
+
+test("labels stay inside the bounds (about 6.5px per char, 11px text drawn below the node)", () => {
+  const many: Graph = { nodes: Array.from({ length: 40 }, (_, i) => ({ id: `n${i}`, label: `long label number ${i}`, kind: "suggestion" as const, count: i % 6 })), edges: [] }
+  const p = layoutGraph(many, size)
+  for (const { id, label } of many.nodes) {
+    const { x, y, r } = p[id], half = (label.length * 6.5) / 2
+    assert.ok(x - half >= 0 && x + half <= size.width, `${id} horizontal`)
+    assert.ok(y + r + 16 <= size.height, `${id} below`)
+  }
+})

@@ -1,8 +1,17 @@
+import { realpathSync } from "node:fs"
+import { turbopackRoot } from "./lib/turbopack-root.mjs"
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // A symlinked node_modules (e.g. a second checkout sharing one install) must sit inside Turbopack's root.
+  turbopack: { root: turbopackRoot(process.cwd(), realpathSync("node_modules")) },
   // PGlite ships WASM + data files that must be loaded from node_modules at
   // runtime rather than bundled.
   serverExternalPackages: ["@electric-sql/pglite"],
+  // Import only the icons/charts/animations a page uses, not each whole package.
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "motion"],
+  },
   images: {
     unoptimized: true,
   },
