@@ -14,10 +14,11 @@ const crisis: SafetyVerdict = {
   decidedBy: "rules", reason: "crisis:self_harm",
 }
 
-test("incident demo requires opt-in, mock moderation and an embedded database", () => {
+test("incident recording requires opt-in and an embedded database, independently of AI mode", () => {
   assert.equal(isIncidentDemoEnabled(demoEnv), true)
   assert.equal(isIncidentDemoEnabled({ ...demoEnv, SAFETY_INCIDENT_DEMO: "false" }), false)
-  assert.equal(isIncidentDemoEnabled({ ...demoEnv, MOCK_LLM: "false" }), false)
+  assert.equal(isIncidentDemoEnabled({ ...demoEnv, MOCK_LLM: "false" }), true)
+  assert.equal(isIncidentDemoEnabled({ ...demoEnv, MOCK_LLM: undefined }), true)
   assert.equal(isIncidentDemoEnabled({ ...demoEnv, DATABASE_URL: "postgresql://example.test/db" }), false)
 })
 
@@ -121,4 +122,54 @@ test("search and suggestion persist incidents and keep support on alert failure"
   const off = await searchTerm(rawSearch)
   assert.ok(off.kind === "safeguarding" && !off.verdict.incidentReference)
   assert.equal((await readRecentSafetyIncidents()).length, 3)
+})
+
+
+test("rule-detected search and suggestion crises are recorded with mock and live AI without external calls", async () => {
+  const keys = ["SAFETY_INCIDENT_DEMO", "MOCK_LLM", "DATABASE_URL", "SAFETY_DEMO_ALERT_FAILURE"] as const
+  const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]))
+  const fetch = globalThis.fetch
+  let externalCalls = 0
+  globalThis.fetch = async () => {
+    externalCalls++
+    throw new Error("This rule-detected crisis must not call an external service.")
+  }
+  try {
+    const before = await readRecentSafetyIncidentDetails()
+    for (const mock of ["true", "false"]) {
+      Object.assign(process.env, demoEnv, { MOCK_LLM: mock, SAFETY_DEMO_ALERT_FAILURE: "false" })
+      const search = await searchTerm("I want to kill myself. Email demo@example.test.")
+      assert.equal(search.kind, "safeguarding")
+      assert.ok(search.kind === "safeguarding" && search.verdict.incidentReference)
+      assert.equal(search.verdict.decidedBy, "rules")
+
+      const suggestion = await suggestTerm("classroom slang", "I want to kill my classmate. Email demo@example.test.")
+      assert.equal(suggestion.success, false)
+      assert.ok(suggestion.data?.incidentReference)
+
+      const rows = await readRecentSafetyIncidentDetails()
+      for (const [reference, surface, crisis] of [
+        [search.verdict.incidentReference, "search", "self_harm"],
+        [suggestion.data.incidentReference, "suggestion", "harm_to_others"],
+      ] as const) {
+        const record = rows.find(row => row.referenceId === reference)
+        assert.ok(record)
+        assert.equal(record.surface, surface)
+        assert.equal(record.crisis, crisis)
+        assert.equal(record.alertStatus, "simulated")
+        assert.match(record.query, /\[REDACTED_EMAIL\]/)
+        assert.ok(!record.query.includes("demo@example.test"))
+        assert.ok(Number.isFinite(record.recordedAtUtc.getTime()))
+        assert.match(record.recordedAtSydney, /T/)
+      }
+    }
+    assert.equal((await readRecentSafetyIncidentDetails()).length, before.length + 4)
+    assert.equal(externalCalls, 0)
+  } finally {
+    globalThis.fetch = fetch
+    for (const key of keys) {
+      if (previous[key] === undefined) delete process.env[key]
+      else process.env[key] = previous[key]
+    }
+  }
 })
