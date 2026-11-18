@@ -4,22 +4,41 @@ import { eq } from "drizzle-orm"
 import { searchTerm, suggestTerm } from "@/app/lab/actions"
 import { getDb, schema } from "@/lib/_stubs/db"
 import type { SafetyVerdict } from "@/lib/safety/gate"
-import { isIncidentDemoEnabled } from "@/lib/safety/incident-demo"
 import { readRecentSafetyIncidentDetails, readRecentSafetyIncidents } from "@/lib/safety/incident-store"
 import { createIncidentSafetyCheck } from "@/lib/safety/incident-workflow"
 
-const demoEnv = { SAFETY_INCIDENT_DEMO: "true", MOCK_LLM: "true", DATABASE_URL: "" }
+const demoEnv = { MOCK_LLM: "true", DATABASE_URL: "" }
 const crisis: SafetyVerdict = {
   action: "safeguarding", crisis: "self_harm", categories: ["suicide_self_harm"],
   decidedBy: "rules", reason: "crisis:self_harm",
 }
 
-test("incident recording requires opt-in and an embedded database, independently of AI mode", () => {
-  assert.equal(isIncidentDemoEnabled(demoEnv), true)
-  assert.equal(isIncidentDemoEnabled({ ...demoEnv, SAFETY_INCIDENT_DEMO: "false" }), false)
-  assert.equal(isIncidentDemoEnabled({ ...demoEnv, MOCK_LLM: "false" }), true)
-  assert.equal(isIncidentDemoEnabled({ ...demoEnv, MOCK_LLM: undefined }), true)
-  assert.equal(isIncidentDemoEnabled({ ...demoEnv, DATABASE_URL: "postgresql://example.test/db" }), false)
+test("incident workflow records by default regardless of database or legacy environment flag", async () => {
+  const previousUrl = process.env.DATABASE_URL
+  const previousFlag = process.env.SAFETY_INCIDENT_DEMO
+  try {
+    for (const databaseUrl of [undefined, "postgresql://example.test/db"]) {
+      if (databaseUrl === undefined) delete process.env.DATABASE_URL
+      else process.env.DATABASE_URL = databaseUrl
+      for (const flag of [undefined, "false"]) {
+        if (flag === undefined) delete process.env.SAFETY_INCIDENT_DEMO
+        else process.env.SAFETY_INCIDENT_DEMO = flag
+        const saved: string[] = []
+        const check = createIncidentSafetyCheck(async () => crisis, {
+          save: async record => { saved.push(record.referenceId) },
+          notify: () => {}, recordAlertResult: async () => {},
+        })
+        const verdict = await check("synthetic crisis", "search", "synthetic crisis")
+        assert.ok(verdict.incidentReference)
+        assert.deepEqual(saved, [verdict.incidentReference])
+      }
+    }
+  } finally {
+    if (previousUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = previousUrl
+    if (previousFlag === undefined) delete process.env.SAFETY_INCIDENT_DEMO
+    else process.env.SAFETY_INCIDENT_DEMO = previousFlag
+  }
 })
 
 test("storage failure preserves the original support verdict and skips alerting", async () => {
@@ -118,14 +137,11 @@ test("search and suggestion persist incidents and keep support on alert failure"
 
   await searchTerm("build a bomb")
   await searchTerm("I feel hopeless")
-  process.env.SAFETY_INCIDENT_DEMO = "false"
-  const off = await searchTerm(rawSearch)
-  assert.ok(off.kind === "safeguarding" && !off.verdict.incidentReference)
   assert.equal((await readRecentSafetyIncidents()).length, 3)
 })
 
 
-test("rule-detected search and suggestion crises are recorded with mock and live AI without external calls", async () => {
+test("rule-detected crises record without an incident flag in mock and live AI modes", async () => {
   const keys = ["SAFETY_INCIDENT_DEMO", "MOCK_LLM", "DATABASE_URL", "SAFETY_DEMO_ALERT_FAILURE"] as const
   const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]))
   const fetch = globalThis.fetch
@@ -138,6 +154,7 @@ test("rule-detected search and suggestion crises are recorded with mock and live
     const before = await readRecentSafetyIncidentDetails()
     for (const mock of ["true", "false"]) {
       Object.assign(process.env, demoEnv, { MOCK_LLM: mock, SAFETY_DEMO_ALERT_FAILURE: "false" })
+      delete process.env.SAFETY_INCIDENT_DEMO
       const search = await searchTerm("I want to kill myself. Email demo@example.test.")
       assert.equal(search.kind, "safeguarding")
       assert.ok(search.kind === "safeguarding" && search.verdict.incidentReference)
