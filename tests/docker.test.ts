@@ -66,3 +66,12 @@ test("docs Dockerfile pins the same pnpm as the root package.json", () => {
   assert.ok(pinned, "root package.json should pin pnpm")
   assert.ok(read("website/Dockerfile").includes(`corepack prepare ${pinned} --activate`))
 })
+
+test("app image builds the SIRS Python environment (uv + pnpm sirs:setup) as the node user", () => {
+  const file = read("Dockerfile")
+  const copy = file.indexOf("COPY --chown=node:node . .")
+  const setup = file.indexOf("RUN pnpm sirs:setup")
+  assert.match(file, /^COPY --from=ghcr\.io\/astral-sh\/uv:[\w.]+ \/uv \/usr\/local\/bin\/uv$/m, "uv downloads Python 3.12, which bookworm lacks")
+  assert.ok(setup > copy && copy > -1, "run sirs:setup after the sources (and sirs/) are copied")
+  assert.ok(file.indexOf("USER node") < setup, "venv must belong to the node user")
+})
