@@ -1,0 +1,12 @@
+.env*
+!.env.example
+node_modules
+website/node_modules
+.next
+.data
+.git
+.pnpm-store
+sirs/.venv
+junit.xml
+eval-report.txt
+.DS_Store
