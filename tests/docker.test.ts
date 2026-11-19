@@ -85,5 +85,5 @@ test("README Docker section says the Aura charts (SIRS) run in the container and
   const section = /^## Docker$([\s\S]*?)^## /m.exec(read("README.md"))?.[1] ?? ""
   assert.match(section, /SIRS/)
   assert.match(section, /Aura/)
-  assert.match(section, /3\.\d GB/, "state the app image size so nobody is surprised by the first build")
+  assert.match(section, /about 2\.7 GB/, "state the measured app image size (2.65 GB cold build) so the first build is not a surprise")
 })
