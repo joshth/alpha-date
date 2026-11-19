@@ -169,8 +169,22 @@ CI cannot run the real AI provider. It needs a paid key and gives a different an
 4. Search `kms`. Expect the help resources, with no AI answer.
 5. Open http://localhost:3001. Expect the docs site.
 
+### Coverage
+
+Run `pnpm test:coverage`. It runs the TypeScript tests under `c8` and prints a table per folder. It counts every file in `lib/`, `components/` and `app/`, including files that no test loads.
+
+| Area | Lines | Branches |
+| --- | --- | --- |
+| `lib/` (business logic, safety, MCP, Aura, dedup) | 98.1% | 89.1% |
+| `components/` | 52.7% | 83.3% |
+| `app/` (Next.js pages and routes) | 14.4% | 64.1% |
+| All three | 76.0% | 86.8% |
+
+These numbers come from the run on 19 Nov 2026. The logic is well covered. The weak parts are the page and layout files, which Next.js renders itself. `components/review` and `components/search` have no tests yet. The Python tests in `sirs/tests` are not in this table.
+
 ### Known gaps
 
+- `components/review`, `components/search` and most `app/lab` pages have 0% coverage.
 - No test forces two requests at the same time, so race conditions are not covered.
 - The real AI provider and real moderation endpoint are never tested.
 
