@@ -67,11 +67,16 @@ test("docs Dockerfile pins the same pnpm as the root package.json", () => {
   assert.ok(read("website/Dockerfile").includes(`corepack prepare ${pinned} --activate`))
 })
 
-test("app image builds the SIRS Python environment (uv + pnpm sirs:setup) as the node user", () => {
+test("SIRS venv is built in its own stage with a C compiler, then copied into the app image", () => {
   const file = read("Dockerfile")
-  const copy = file.indexOf("COPY --chown=node:node . .")
-  const setup = file.indexOf("RUN pnpm sirs:setup")
-  assert.match(file, /^COPY --from=ghcr\.io\/astral-sh\/uv:[\w.]+ \/uv \/usr\/local\/bin\/uv$/m, "uv downloads Python 3.12, which bookworm lacks")
-  assert.ok(setup > copy && copy > -1, "run sirs:setup after the sources (and sirs/) are copied")
-  assert.ok(file.indexOf("USER node") < setup, "venv must belong to the node user")
+  const sirsStage = file.slice(file.indexOf("AS sirs"), file.indexOf("\nFROM node:24.18.0-slim\n"))
+  assert.match(file, /^FROM node:24\.18\.0-slim AS sirs$/m)
+  assert.match(sirsStage, /build-essential/, "dtaidistance compiles its C library; there is no wheel for every CPU")
+  assert.match(sirsStage, /^COPY --from=ghcr\.io\/astral-sh\/uv:[\w.]+ \/uv \/usr\/local\/bin\/uv$/m)
+  assert.match(sirsStage, /^RUN pnpm sirs:setup$/m)
+  assert.match(sirsStage, /UV_PYTHON_INSTALL_DIR=\/opt\/uv-python/, "keep Python outside root's home so it can be copied")
+  const final = file.slice(file.lastIndexOf("\nFROM node:24.18.0-slim\n"))
+  assert.doesNotMatch(final, /build-essential/, "no compiler in the runtime image")
+  assert.match(final, /^COPY --from=sirs --chown=node:node \/app\/sirs\/\.venv \/app\/sirs\/\.venv$/m)
+  assert.match(final, /^COPY --from=sirs \/opt\/uv-python \/opt\/uv-python$/m)
 })
