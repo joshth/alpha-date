@@ -80,3 +80,10 @@ test("SIRS venv is built in its own stage with a C compiler, then copied into th
   assert.match(final, /^COPY --from=sirs --chown=node:node \/app\/sirs\/\.venv \/app\/sirs\/\.venv$/m)
   assert.match(final, /^COPY --from=sirs \/opt\/uv-python \/opt\/uv-python$/m)
 })
+
+test("README Docker section says the Aura charts (SIRS) run in the container and warns about image size", () => {
+  const section = /^## Docker$([\s\S]*?)^## /m.exec(read("README.md"))?.[1] ?? ""
+  assert.match(section, /SIRS/)
+  assert.match(section, /Aura/)
+  assert.match(section, /3\.\d GB/, "state the app image size so nobody is surprised by the first build")
+})
