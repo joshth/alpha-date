@@ -58,6 +58,28 @@ pnpm dev:all                                   # app: http://localhost:3000, doc
 
 The docs are private (NDA). The site tells search engines not to index it, and CI builds it as a check only.
 
+## Docker
+
+The course requires the final system to run in a container. Install Docker Desktop (or Docker Engine with the Compose plugin), then from the repo root:
+
+```bash
+docker compose up --build   # app: http://localhost:3000, docs: http://localhost:3001
+docker compose down         # stop; the database volume is kept
+docker compose down -v      # stop and delete the database volume (reset to seed data)
+```
+
+It runs offline with mock AI, mock moderation and synthetic data, so no keys or `.env.local` are needed. Build one image on its own:
+
+```bash
+docker build -t alpha-date .                                    # app
+docker build -f website/Dockerfile -t alpha-date-docs .         # docs (context is the repo root)
+docker run --rm -p 3000:3000 alpha-date
+```
+
+The docs build fails on broken links, as in CI. Both images run as a non-root user.
+
+The app image also contains the vendored SIRS plotter (Python 3.12 plus its scientific packages), so the Aura charts work in the container. That makes the app image about 2.7 GB, and the first build takes about 6 minutes; later builds reuse the cached Python layer.
+
 ## Commands
 
 | Command | Purpose |

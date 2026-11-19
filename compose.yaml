@@ -1,0 +1,26 @@
+# Start the whole system: docker compose up --build
+#   app:  http://localhost:3000
+#   docs: http://localhost:3001 (API reference at /api)
+# Offline by default (mock AI, mock moderation, embedded PGlite, synthetic data).
+# To change settings, edit the environment below; never commit real keys.
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      MOCK_LLM: "true"
+    volumes:
+      - app-data:/app/.data
+    restart: unless-stopped
+
+  docs:
+    build:
+      context: .
+      dockerfile: website/Dockerfile
+    ports:
+      - "3001:8080"
+    restart: unless-stopped
+
+volumes:
+  app-data:
