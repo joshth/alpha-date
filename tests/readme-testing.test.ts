@@ -56,3 +56,10 @@ test("README lists the race-condition test and no longer calls it a gap", () => 
   assert.ok(section.includes("`tests/discovery-race.test.ts`"))
   assert.ok(!section.includes("No test forces two requests"))
 })
+
+test("README links to the Testing section before the Quick start", () => {
+  const readme = readFileSync("README.md", "utf8")
+  const link = readme.indexOf("](#testing)")
+  assert.ok(link !== -1, "link to #testing missing")
+  assert.ok(link < readme.indexOf("## Quick start"), "put the link above Quick start")
+})
