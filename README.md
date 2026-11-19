@@ -114,6 +114,16 @@ py -3.12 -m venv sirs\.venv; sirs\.venv\Scripts\pip install -r sirs\requirements
 On macOS, if `aura:plot` fails with "The compiled dtaidistance C library is not available", rebuild that one package
 from source (needs `brew install libomp`): `uv pip install --python sirs/.venv/bin/python --reinstall --no-binary dtaidistance dtaidistance==2.5.1`.
 
+## Testing
+
+Run the tests from the repo root. They run offline and need no keys.
+
+| Layer | Command |
+| --- | --- |
+| TypeScript tests (app, safety, MCP, docs) | `pnpm test` |
+| Same tests with a JUnit report (CI) | `pnpm test:ci` |
+| Python tests (SIRS plotter) | `sirs/.venv/bin/pytest sirs/tests` |
+
 ## What already works (baseline)
 
 **Search** → **safety gate** → lexicon lookup → AI discovery → saved as `pending_review` →
