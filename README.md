@@ -12,6 +12,7 @@
 Full scope, schedule and success criteria: [docs/SCOPE.md](docs/SCOPE.md).
 Developer docs (guides, architecture, CI) and the Swagger API reference: see [Documentation site](#documentation-site).
 To connect Claude Desktop, Gemini CLI, or ChatGPT on macOS, Linux, or Windows, use [Connect your AI assistant](docs/connect-assistant.md).
+For the test approach, coverage numbers and manual test steps, see [Testing](#testing).
 
 ## Quick start
 
