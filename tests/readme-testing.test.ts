@@ -39,3 +39,14 @@ test("README Testing section covers frontend, backend, end-to-end limits and kno
   assert.match(section, /docker compose up --build/)
   assert.match(section, /real (AI|provider)/i)
 })
+
+test("a coverage script exists and the README quotes it with measured numbers", () => {
+  const pkg = JSON.parse(readFileSync("package.json", "utf8"))
+  assert.match(pkg.scripts["test:coverage"] ?? "", /^c8 /)
+  assert.ok(pkg.devDependencies?.c8, "c8 should be a devDependency")
+  const section = testingSection()
+  assert.match(section, /pnpm test:coverage/)
+  assert.match(section, /### Coverage/)
+  // The table must hold real percentages, for example "82.4%".
+  assert.ok((section.match(/\d+(\.\d+)?%/g) ?? []).length >= 3, "quote measured percentages")
+})
