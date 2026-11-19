@@ -124,6 +124,16 @@ Run the tests from the repo root. They run offline and need no keys.
 | Same tests with a JUnit report (CI) | `pnpm test:ci` |
 | Python tests (SIRS plotter) | `sirs/.venv/bin/pytest sirs/tests` |
 
+### Test layers
+
+| Layer | What it checks | Example files |
+| --- | --- | --- |
+| Unit | One function or component, with its dependencies replaced | `tests/normalise.test.ts`, `tests/termKey.test.ts`, `tests/safety-boundaries.test.ts` |
+| Integration | Several parts together: pipeline, API routes, MCP server, database | `tests/pipeline.test.ts`, `tests/api-routes.test.ts`, `tests/mcp-server.test.ts`, `tests/search-merge-integration.test.ts` |
+| Safety evaluation | The safety classifier against the golden set of phrases | `tests/golden.test.ts` |
+| Python | The SIRS curve fit and plot code | `sirs/tests/test_fit_term.py` |
+| End-to-end | The built container, run by hand (see below) | `tests/docker.test.ts` checks the container files |
+
 ## What already works (baseline)
 
 **Search** → **safety gate** → lexicon lookup → AI discovery → saved as `pending_review` →
