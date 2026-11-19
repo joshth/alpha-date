@@ -60,3 +60,9 @@ test("README documents how to build and run the containers (course report requir
   assert.match(readme, /docker build -t alpha-date \./)
   assert.match(readme, /docker compose down -v/)
 })
+
+test("docs Dockerfile pins the same pnpm as the root package.json", () => {
+  const pinned = /"packageManager": "(pnpm@[\d.]+)"/.exec(read("package.json"))?.[1]
+  assert.ok(pinned, "root package.json should pin pnpm")
+  assert.ok(read("website/Dockerfile").includes(`corepack prepare ${pinned} --activate`))
+})
