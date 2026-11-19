@@ -30,3 +30,12 @@ test("README Testing section explains mocking and the sad cases that tests cover
     assert.ok(section.includes(term), `${term} missing`)
   }
 })
+
+test("README Testing section covers frontend, backend, end-to-end limits and known gaps", () => {
+  const section = testingSection()
+  for (const heading of ["### Frontend", "### Backend", "### End-to-end", "### Known gaps"]) {
+    assert.ok(section.includes(heading), `${heading} missing`)
+  }
+  assert.match(section, /docker compose up --build/)
+  assert.match(section, /real (AI|provider)/i)
+})
