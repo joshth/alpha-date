@@ -144,6 +144,36 @@ Each feature has happy cases and sad cases. A sad case is a test where something
 - Forced failure: `tests/setup.ts` sets `MOCK_MODERATION_FAILURE_RATE` to 0. A safety test sets it to 1 so every moderation call fails (`tests/safety-responses.test.ts`).
 - Hostile input: prompt injection, and personal data that must be redacted from a query (`tests/prompt-injection.test.ts`, `tests/input-privacy.test.ts`).
 
+### Frontend
+
+Component tests render each component to HTML and check the result. They also check the logic behind each user interaction, such as keyboard focus in the drawer and the zoom controls.
+
+- Rendering: `tests/aura-chart-panel.test.ts`, `tests/safety-response-ui.test.ts`
+- Interaction: `tests/lab-drawer-focus.test.ts`, `tests/dedup-zoom-controls.test.ts`, `tests/export-menu.test.ts`
+
+### Backend
+
+Backend tests call the route handlers and the stores directly.
+
+- Input validation: `tests/api-routes.test.ts` (a blank query gives 400, a bad body gives 400)
+- Business logic: `tests/counter.test.ts` (the AI-calls-avoided counter), `tests/dedup-store.test.ts`
+- Error handling: `tests/moderation-recovery.test.ts`
+
+### End-to-end
+
+CI cannot run the real AI provider. It needs a paid key and gives a different answer each time, so a test would fail for reasons we do not control. The container is also not built in CI tests. Run this manual check instead:
+
+1. Run `docker compose up --build`.
+2. Open http://localhost:3000 and search `Rizz`. Expect the term with its definition.
+3. Search `zorbleflux`. Expect a pending, unverified result.
+4. Search `kms`. Expect the help resources, with no AI answer.
+5. Open http://localhost:3001. Expect the docs site.
+
+### Known gaps
+
+- No test forces two requests at the same time, so race conditions are not covered.
+- The real AI provider and real moderation endpoint are never tested.
+
 ## What already works (baseline)
 
 **Search** → **safety gate** → lexicon lookup → AI discovery → saved as `pending_review` →
