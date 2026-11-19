@@ -34,3 +34,15 @@ test("docs Dockerfile builds the Docusaurus site with its content folders and se
   assert.match(file, /COPY --from=build .*\/build /)
   assert.match(file, /^EXPOSE 8080$/m)
 })
+
+test("compose.yaml starts the app on 3000 and the docs on 3001 with the offline defaults", () => {
+  const file = read("compose.yaml")
+  assert.match(file, /^  app:$/m)
+  assert.match(file, /^  docs:$/m)
+  assert.match(file, /"3000:3000"/)
+  assert.match(file, /"3001:8080"/)
+  assert.match(file, /dockerfile: website\/Dockerfile/)
+  assert.match(file, /MOCK_LLM: "true"/)
+  assert.match(file, /\.\/\.data|app-data:\/app\/\.data/, "keep the PGlite database between runs")
+  assert.doesNotMatch(file, /OPENAI_API_KEY\s*:\s*\S*sk-/, "no real keys in compose")
+})
