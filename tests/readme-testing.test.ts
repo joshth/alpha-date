@@ -50,3 +50,9 @@ test("a coverage script exists and the README quotes it with measured numbers", 
   // The table must hold real percentages, for example "82.4%".
   assert.ok((section.match(/\d+(\.\d+)?%/g) ?? []).length >= 3, "quote measured percentages")
 })
+
+test("README lists the race-condition test and no longer calls it a gap", () => {
+  const section = testingSection()
+  assert.ok(section.includes("`tests/discovery-race.test.ts`"))
+  assert.ok(!section.includes("No test forces two requests"))
+})
