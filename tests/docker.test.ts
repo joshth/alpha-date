@@ -50,3 +50,13 @@ test("compose.yaml starts the app on 3000 and the docs on 3001 with the offline 
 test("app image creates /app/.data as the node user so the data volume is writable", () => {
   assert.match(read("Dockerfile"), /^RUN mkdir \.data$/m)
 })
+
+test("README documents how to build and run the containers (course report requirement)", () => {
+  const readme = read("README.md")
+  assert.match(readme, /^## Docker$/m)
+  assert.match(readme, /docker compose up --build/)
+  assert.match(readme, /http:\/\/localhost:3000/)
+  assert.match(readme, /http:\/\/localhost:3001/)
+  assert.match(readme, /docker build -t alpha-date \./)
+  assert.match(readme, /docker compose down -v/)
+})
