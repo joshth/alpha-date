@@ -134,6 +134,16 @@ Run the tests from the repo root. They run offline and need no keys.
 | Python | The SIRS curve fit and plot code | `sirs/tests/test_fit_term.py` |
 | End-to-end | The built container, run by hand (see below) | `tests/docker.test.ts` checks the container files |
 
+### Mocks and sad cases
+
+Tests never call a real service. `MOCK_LLM=true` replaces the AI model and the moderation endpoint. The database is PGlite, which runs in memory. Mocking lets a test force the failures that a real service gives only by chance.
+
+Each feature has happy cases and sad cases. A sad case is a test where something goes wrong. These tests cover:
+
+- Moderation failure: a stubbed network error or bad response makes moderation fail. The system must fail-closed, which means it blocks the write. The next request must work again (`tests/moderation-recovery.test.ts`).
+- Forced failure: `tests/setup.ts` sets `MOCK_MODERATION_FAILURE_RATE` to 0. A safety test sets it to 1 so every moderation call fails (`tests/safety-responses.test.ts`).
+- Hostile input: prompt injection, and personal data that must be redacted from a query (`tests/prompt-injection.test.ts`, `tests/input-privacy.test.ts`).
+
 ## What already works (baseline)
 
 **Search** → **safety gate** → lexicon lookup → AI discovery → saved as `pending_review` →
