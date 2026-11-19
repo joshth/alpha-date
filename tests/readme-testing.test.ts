@@ -23,3 +23,10 @@ test("README Testing section names the test layers and the files that cover each
   assert.ok(files.length >= 6, "name at least six example test files")
   for (const file of files) assert.ok(existsSync(file), `${file} does not exist`)
 })
+
+test("README Testing section explains mocking and the sad cases that tests cover", () => {
+  const section = testingSection()
+  for (const term of ["MOCK_LLM", "MOCK_MODERATION_FAILURE_RATE", "PGlite", "fail-closed", "sad case"]) {
+    assert.ok(section.includes(term), `${term} missing`)
+  }
+})
