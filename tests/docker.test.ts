@@ -46,3 +46,7 @@ test("compose.yaml starts the app on 3000 and the docs on 3001 with the offline 
   assert.match(file, /\.\/\.data|app-data:\/app\/\.data/, "keep the PGlite database between runs")
   assert.doesNotMatch(file, /OPENAI_API_KEY\s*:\s*\S*sk-/, "no real keys in compose")
 })
+
+test("app image creates /app/.data as the node user so the data volume is writable", () => {
+  assert.match(read("Dockerfile"), /^RUN mkdir \.data$/m)
+})
