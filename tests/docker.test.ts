@@ -11,3 +11,14 @@ test(".dockerignore keeps secrets, dependencies and local data out of the image"
   }
   assert.ok(lines.includes("!.env.example"), "keep .env.example so the build context stays documented")
 })
+
+test("app Dockerfile pins the CI Node image, installs from the lockfile and runs as non-root", () => {
+  const file = read("Dockerfile")
+  assert.match(file, /^FROM node:24\.18\.0-slim/m, "use the same Node image as .gitlab-ci.yml")
+  assert.match(file, /pnpm install --frozen-lockfile/)
+  assert.match(file, /pnpm build/)
+  assert.match(file, /^USER node$/m)
+  assert.match(file, /^EXPOSE 3000$/m)
+  assert.match(file, /^ENV .*MOCK_LLM=true/m, "container defaults to the offline mock mode")
+  assert.match(file, /^CMD \["pnpm", "start"\]$/m)
+})
