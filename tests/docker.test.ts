@@ -22,3 +22,15 @@ test("app Dockerfile pins the CI Node image, installs from the lockfile and runs
   assert.match(file, /^ENV .*MOCK_LLM=true/m, "container defaults to the offline mock mode")
   assert.match(file, /^CMD \["pnpm", "start"\]$/m)
 })
+
+test("docs Dockerfile builds the Docusaurus site with its content folders and serves it as non-root", () => {
+  const file = read("website/Dockerfile")
+  assert.match(file, /^FROM node:24\.18\.0-slim AS build/m)
+  assert.match(file, /pnpm install --frozen-lockfile --ignore-workspace/)
+  assert.match(file, /COPY .*docs.* \.\.?\/?docs|COPY docs \.\.\/docs|COPY .*\/docs/, "the site reads ../docs")
+  assert.match(file, /openapi/, "the site serves ../openapi as static files")
+  assert.match(file, /pnpm build/)
+  assert.match(file, /^FROM nginxinc\/nginx-unprivileged:[\w.-]+/m)
+  assert.match(file, /COPY --from=build .*\/build /)
+  assert.match(file, /^EXPOSE 8080$/m)
+})
