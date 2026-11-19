@@ -13,6 +13,7 @@ COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --prod=false
 
 COPY --chown=node:node . .
+RUN mkdir .data
 RUN pnpm build
 
 EXPOSE 3000
