@@ -157,6 +157,7 @@ Backend tests call the route handlers and the stores directly.
 
 - Input validation: `tests/api-routes.test.ts` (a blank query gives 400, a bad body gives 400)
 - Business logic: `tests/counter.test.ts` (the AI-calls-avoided counter), `tests/dedup-store.test.ts`
+- Race condition: `tests/discovery-race.test.ts` (two simultaneous saves of one new term store one row)
 - Error handling: `tests/moderation-recovery.test.ts`
 
 ### End-to-end
@@ -185,7 +186,7 @@ These numbers come from the run on 19 Nov 2026. The logic is well covered. The w
 ### Known gaps
 
 - `components/review`, `components/search` and most `app/lab` pages have 0% coverage.
-- No test forces two requests at the same time, so race conditions are not covered.
+- Only the discovery save is tested for race conditions. Other writes are not.
 - The real AI provider and real moderation endpoint are never tested.
 
 ## What already works (baseline)
