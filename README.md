@@ -78,7 +78,7 @@ docker run --rm -p 3000:3000 alpha-date
 
 The docs build fails on broken links, as in CI. Both images run as a non-root user.
 
-The app image also contains the vendored SIRS plotter (Python 3.12 plus its scientific packages), so the Aura charts work in the container. That makes the app image about 3.5 GB, and the first build takes several minutes; later builds reuse the cached Python layer.
+The app image also contains the vendored SIRS plotter (Python 3.12 plus its scientific packages), so the Aura charts work in the container. That makes the app image about 2.7 GB, and the first build takes about 6 minutes; later builds reuse the cached Python layer.
 
 ## Commands
 
