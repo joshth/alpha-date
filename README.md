@@ -12,6 +12,7 @@
 Full scope, schedule and success criteria: [docs/SCOPE.md](docs/SCOPE.md).
 Developer docs (guides, architecture, CI) and the Swagger API reference: see [Documentation site](#documentation-site).
 To connect Claude Desktop, Gemini CLI, or ChatGPT on macOS, Linux, or Windows, use [Connect your AI assistant](docs/connect-assistant.md).
+For the test approach, coverage numbers and manual test steps, see [Testing](#testing).
 
 ## Quick start
 
@@ -58,6 +59,28 @@ pnpm dev:all                                   # app: http://localhost:3000, doc
 
 The docs are private (NDA). The site tells search engines not to index it, and CI builds it as a check only.
 
+## Docker
+
+The course requires the final system to run in a container. Install Docker Desktop (or Docker Engine with the Compose plugin), then from the repo root:
+
+```bash
+docker compose up --build   # app: http://localhost:3000, docs: http://localhost:3001
+docker compose down         # stop; the database volume is kept
+docker compose down -v      # stop and delete the database volume (reset to seed data)
+```
+
+It runs offline with mock AI, mock moderation and synthetic data, so no keys or `.env.local` are needed. Build one image on its own:
+
+```bash
+docker build -t alpha-date .                                    # app
+docker build -f website/Dockerfile -t alpha-date-docs .         # docs (context is the repo root)
+docker run --rm -p 3000:3000 alpha-date
+```
+
+The docs build fails on broken links, as in CI. Both images run as a non-root user.
+
+The app image also contains the vendored SIRS plotter (Python 3.12 plus its scientific packages), so the Aura charts work in the container. That makes the app image about 2.7 GB, and the first build takes about 6 minutes; later builds reuse the cached Python layer.
+
 ## Commands
 
 | Command | Purpose |
@@ -91,6 +114,81 @@ py -3.12 -m venv sirs\.venv; sirs\.venv\Scripts\pip install -r sirs\requirements
 
 On macOS, if `aura:plot` fails with "The compiled dtaidistance C library is not available", rebuild that one package
 from source (needs `brew install libomp`): `uv pip install --python sirs/.venv/bin/python --reinstall --no-binary dtaidistance dtaidistance==2.5.1`.
+
+## Testing
+
+Run the tests from the repo root. They run offline and need no keys.
+
+| Layer | Command |
+| --- | --- |
+| TypeScript tests (app, safety, MCP, docs) | `pnpm test` |
+| Same tests with a JUnit report (CI) | `pnpm test:ci` |
+| Python tests (SIRS plotter) | `sirs/.venv/bin/pytest sirs/tests` |
+
+### Test layers
+
+| Layer | What it checks | Example files |
+| --- | --- | --- |
+| Unit | One function or component, with its dependencies replaced | `tests/normalise.test.ts`, `tests/termKey.test.ts`, `tests/safety-boundaries.test.ts` |
+| Integration | Several parts together: pipeline, API routes, MCP server, database | `tests/pipeline.test.ts`, `tests/api-routes.test.ts`, `tests/mcp-server.test.ts`, `tests/search-merge-integration.test.ts` |
+| Safety evaluation | The safety classifier against the golden set of phrases | `tests/golden.test.ts` |
+| Python | The SIRS curve fit and plot code | `sirs/tests/test_fit_term.py` |
+| End-to-end | The built container, run by hand (see below) | `tests/docker.test.ts` checks the container files |
+
+### Mocks and sad cases
+
+Tests never call a real service. `MOCK_LLM=true` replaces the AI model and the moderation endpoint. The database is PGlite, which runs in memory. Mocking lets a test force the failures that a real service gives only by chance.
+
+Each feature has happy cases and sad cases. A sad case is a test where something goes wrong. These tests cover:
+
+- Moderation failure: a stubbed network error or bad response makes moderation fail. The system must fail-closed, which means it blocks the write. The next request must work again (`tests/moderation-recovery.test.ts`).
+- Forced failure: `tests/setup.ts` sets `MOCK_MODERATION_FAILURE_RATE` to 0. A safety test sets it to 1 so every moderation call fails (`tests/safety-responses.test.ts`).
+- Hostile input: prompt injection, and personal data that must be redacted from a query (`tests/prompt-injection.test.ts`, `tests/input-privacy.test.ts`).
+
+### Frontend
+
+Component tests render each component to HTML and check the result. They also check the logic behind each user interaction, such as keyboard focus in the drawer and the zoom controls.
+
+- Rendering: `tests/aura-chart-panel.test.ts`, `tests/safety-response-ui.test.ts`
+- Interaction: `tests/lab-drawer-focus.test.ts`, `tests/dedup-zoom-controls.test.ts`, `tests/export-menu.test.ts`
+
+### Backend
+
+Backend tests call the route handlers and the stores directly.
+
+- Input validation: `tests/api-routes.test.ts` (a blank query gives 400, a bad body gives 400)
+- Business logic: `tests/counter.test.ts` (the AI-calls-avoided counter), `tests/dedup-store.test.ts`
+- Race condition: `tests/discovery-race.test.ts` (two simultaneous saves of one new term store one row)
+- Error handling: `tests/moderation-recovery.test.ts`
+
+### End-to-end
+
+CI cannot run the real AI provider. It needs a paid key and gives a different answer each time, so a test would fail for reasons we do not control. The container is also not built in CI tests. Run this manual check instead:
+
+1. Run `docker compose up --build`.
+2. Open http://localhost:3000 and search `Rizz`. Expect the term with its definition.
+3. Search `zorbleflux`. Expect a pending, unverified result.
+4. Search `kms`. Expect the help resources, with no AI answer.
+5. Open http://localhost:3001. Expect the docs site.
+
+### Coverage
+
+Run `pnpm test:coverage`. It runs the TypeScript tests under `c8` and prints a table per folder. It counts every file in `lib/`, `components/` and `app/`, including files that no test loads.
+
+| Area | Lines | Branches |
+| --- | --- | --- |
+| `lib/` (business logic, safety, MCP, Aura, dedup) | 98.1% | 89.1% |
+| `components/` | 52.7% | 83.3% |
+| `app/` (Next.js pages and routes) | 14.4% | 64.1% |
+| All three | 76.0% | 86.8% |
+
+These numbers come from the run on 19 Nov 2026. The logic is well covered. The weak parts are the page and layout files, which Next.js renders itself. `components/review` and `components/search` have no tests yet. The Python tests in `sirs/tests` are not in this table.
+
+### Known gaps
+
+- `components/review`, `components/search` and most `app/lab` pages have 0% coverage.
+- Only the discovery save is tested for race conditions. Other writes are not.
+- The real AI provider and real moderation endpoint are never tested.
 
 ## What already works (baseline)
 
